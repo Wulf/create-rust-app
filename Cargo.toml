@@ -6,7 +6,7 @@ edition = "2018"
 readme = "README.md"
 repository = "https://github.com/Wulf/create-rust-app"
 license = "MIT OR Apache-2.0"
-keywords = ["react", "backend", "typescript", "generation", "fullstack", "rest", "api"]
+keywords = ["react", "typescript", "generation", "backend", "frontend"]
 categories = ["command-line-utilities", "development-tools", "web-programming", "config", "database"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
