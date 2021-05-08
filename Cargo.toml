@@ -1,5 +1,6 @@
 [package]
 name = "create-rust-app"
+description = "Set up a modern rust+react web app by running one command."
 version = "0.1.0"
 authors = ["Haris <4259838+Wulf@users.noreply.github.com>"]
 edition = "2018"
