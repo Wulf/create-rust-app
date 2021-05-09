@@ -13,4 +13,6 @@ categories = ["command-line-utilities", "development-tools", "web-programming", 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+console = "0.14.1"
+dialoguer = "0.8.0"
 structopt = "0.3.21"
