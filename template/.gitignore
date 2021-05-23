@@ -1,0 +1,4 @@
+/target
+.env*
+!.env.example
+build-log*.txt

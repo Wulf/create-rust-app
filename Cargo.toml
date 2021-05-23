@@ -13,6 +13,11 @@ categories = ["command-line-utilities", "development-tools", "web-programming", 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+Inflector = "0.11.4"
+anyhow = "1.0.40"
 console = "0.14.1"
 dialoguer = "0.8.0"
+indoc = "1.0.3"
+rust-embed = "5.9.0"
 structopt = "0.3.21"
+toml = "0.5.8"

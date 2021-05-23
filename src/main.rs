@@ -1,89 +1,57 @@
-use std::path::{PathBuf};
-use structopt::StructOpt;
-use console::{Style, style};
-use dialoguer::{
-    Confirm,
-    theme::ColorfulTheme
-};
+extern crate inflector;
 
+mod project;
+mod logger;
+mod model;
+mod service;
+
+use structopt::StructOpt;
+use anyhow::Result;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "create-rust-app")]
-struct Opt {
+pub struct Opt {
     #[structopt(long, short)]
     verbose: Option<bool>,
     
-    #[structopt(name = "DIRECTORY", parse(from_os_str))]
-    project_dir: PathBuf,
+    #[structopt(long, short)]
+    project: Option<bool>,
+    
+    #[structopt(long, short)]
+    add: Option<String>,
+    
+    #[structopt(name = "...")]
+    target: String,
 }
 
-fn message(msg: &str) {
-    println!("[{}] {}", style("create-rust-app").blue(), msg)
-}
-
-fn error(msg: &str) {
-    message(&format!("{} {}", style("ERROR: ").red(), msg))
-}
-
-fn exit(err: std::io::Error) -> ! {
-    eprintln!("Canonicalization Error: {:?}", err);
-    std::process::exit(1);
-}
-
-fn main() -> Result<(), std::io::Error> {
+fn main() -> Result<()> {
     let opt = Opt::from_args();
     let debug = opt.verbose.is_some();
+    let build_project = opt.project.is_some();
+    let add_to_project = opt.add.is_some();
 
     if debug {
         println!("CLI options\n{:#?}\n", opt)
     }
 
-    let project_dir = match std::fs::canonicalize(opt.project_dir) {
-        Ok(p) => p,
-        Err(err) => exit(err)
-    };
-    
-    if project_dir.exists() {
-        error("Directory already exists");
+    if build_project {
+        project::create(opt)?;
+        std::process::exit(0);
+    }
 
-        let proceed = Confirm::with_theme(&ColorfulTheme::default())
-            .with_prompt("Delete directory contents?")
-            .default(false)
-            .interact()?;
-
-        if proceed {
-            match std::fs::remove_dir_all(&project_dir) {
-                Ok(_) => {},
-                Err(err) => exit(err)
+    if add_to_project {
+        let add_type = opt.add.clone().unwrap();
+        match add_type.as_str() {
+            "resource" => {
+                project::create_resource(opt)?;
+                std::process::exit(0);
+            },
+            _ => {
+                logger::error("Invalid type specified for --add option");
+                std::process::exit(1);
             }
-        } else {
-            std::process::exit(0);
         }
     }
-    
-    let project_name = project_dir.components().last().unwrap().as_os_str().to_str().unwrap();
-        
-    message(&format!("Creating project {}", style(project_name).yellow()));
 
-    message("Creating directories...");
-        
-    match std::fs::create_dir_all(&project_dir) {
-        Ok(_) => {},
-        Err(err) => exit(err)
-    }
-
-    message(&format!("Running `{}`", style("cargo init").green()));
-    
-    let cargo_init = std::process::Command::new("cargo")
-        .current_dir(project_dir)
-        .arg("init")
-        .status()
-        .expect("failed to execute process");
-
-    if !cargo_init.success() {
-        error("Failed to execute `cargo init`");
-        std::process::exit(1);
-    }
-    
     Ok(())
 }
