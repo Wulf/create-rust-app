@@ -1,5 +1,7 @@
 # Create Rust App
 
+<a href="https://crates.io/crates/create-rust-app"><img src="https://img.shields.io/crates/v/create-rust-app.svg?style=for-the-badge" height="20" alt="License: MIT OR Apache-2.0" /></a>
+
  Set up a modern rust+react web app by running one command. 
 
 # Features
