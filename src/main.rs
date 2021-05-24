@@ -15,7 +15,7 @@ pub struct Opt {
     verbose: Option<bool>,
     
     #[structopt(long, short)]
-    project: Option<bool>,
+    project: bool,
     
     #[structopt(long, short)]
     add: Option<String>,
@@ -27,7 +27,7 @@ pub struct Opt {
 fn main() -> Result<()> {
     let opt = Opt::from_args();
     let debug = opt.verbose.is_some();
-    let build_project = opt.project.is_some();
+    let build_project = opt.project;
     let add_to_project = opt.add.is_some();
 
     if debug {
