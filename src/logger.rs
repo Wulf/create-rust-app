@@ -12,6 +12,14 @@ pub fn file_msg(file: &str) {
   message(&format!("Adding {}", style(file).yellow()));
 }
 
+pub fn modify_file_msg(file: &str) {
+  message(&format!("Modifying {}", style(file).yellow()));
+}
+
+pub fn plugin_msg(name: &str) {
+  message(&format!("Installing {} plugin", style(name).yellow()));
+}
+
 pub fn error(msg: &str) {
   message(&format!("{} {}", style("ERROR: ").red(), msg))
 }

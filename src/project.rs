@@ -7,16 +7,17 @@ use dialoguer::{
     theme::ColorfulTheme
 };
 use rust_embed::RustEmbed;
-
 use crate::logger::{message, command_msg, error, exit, file_msg, dependency_msg};
 
 #[derive(RustEmbed)]
 #[folder = "template"]
 struct Asset;
 
-fn add_dependency(project_dir: &std::path::PathBuf, name: &str, version: toml::Value) -> Result<(), std::io::Error> {
+pub fn add_dependency(project_dir: &std::path::PathBuf, name: &str, version: toml::Value) -> Result<(), std::io::Error> {
   let mut path = std::path::PathBuf::from(project_dir);
   path.push("Cargo.toml");
+
+  println!("path={:#?}", path);
   
   let toml: String = std::fs::read_to_string(&path)?;
 
@@ -106,14 +107,13 @@ pub fn create(opt: crate::Opt) -> Result<()> {
     add_dependency(&project_dir, "sentry", toml::Value::String("0.22.0".into()))?;
     add_dependency(&project_dir, "serde", "version = \"1.0.117\"\nfeatures = [\"derive\"]".parse::<toml::Value>().unwrap())?;
     add_dependency(&project_dir, "serde_derive", toml::Value::String("1.0.117".into()))?;
-    add_dependency(&project_dir, "serde_json", toml::Value::String("1.0.59".into()))?;
-    add_dependency(&project_dir, "tsync", toml::Value::String("1.0.1".into()))?;
+    add_dependency(&project_dir, "serde_json", toml::Value::String("1.0.64".into()))?;
+    add_dependency(&project_dir, "tsync", toml::Value::String("1.0.4".into()))?;
     add_dependency(&project_dir, "uuid", "version = \"0.8.1\"\nfeatures = [\"serde\", \"v4\"]".parse::<toml::Value>().unwrap())?;
 
     /*
         Populate with project files
     */
-
     for filename in Asset::iter() {
         let file_contents = Asset::get(filename.as_ref()).unwrap();
         let mut file_path = std::path::PathBuf::from(&project_dir);
@@ -191,6 +191,19 @@ pub fn create(opt: crate::Opt) -> Result<()> {
         std::process::exit(1);
     }
 
+    command_msg("chmod +x ./tsync.sh");
+
+    let chmod_tsync = std::process::Command::new("chmod")
+        .current_dir(&project_dir)
+        .arg("+x")
+        .arg("./tsync.sh")
+        .status()
+        .expect("failed to execute process");
+
+    if !chmod_tsync.success() {
+        error("Failed to execute `chmod +x ./tsync.sh`");
+    }
+
     message("   ");
     message(&format!("   {}", style("ALL DONE!").underlined()));
     message(&format!("   1. Enable continuous-compilation!"));
@@ -199,7 +212,13 @@ pub fn create(opt: crate::Opt) -> Result<()> {
     message(&format!("      {}", style("cargo install cargo-edit").cyan()));
     message(&format!("   3. Get the diesel CLI to manage your database:"));
     message(&format!("      {}", style("cargo install diesel_cli").cyan()));
-    message(&format!("   4. Develop! Run the following for continuous compilation:"));
+    message(&format!("   4. (optional) Add other plugins to your project:"));
+    message(&format!("      {}", style("create-rust-app --add plugin auth").cyan()));
+    message(&format!("   5. Copy `.env.example` to `.env` and edit it:"));
+    message(&format!("      {}", style("cp .env.example .env").cyan()));
+    message(&format!("   6. Setup your database:"));
+    message(&format!("      {}", style("diesel migration run").cyan()));
+    message(&format!("   7. Develop! Run the following for continuous compilation:"));
     message(&format!("      (terminal 1) {}", style("cd app && yarn start").cyan()));
     message(&format!("      (terminal 2) {}", style("cargo watch -x run -i app/").cyan()));
     message("   ");
@@ -217,84 +236,12 @@ pub fn create_resource(opt: crate::Opt) -> Result<()> {
         std::process::exit(1);
     }
     
-    let model_name = args[0].to_pascal_case();
-    let file_name = model_name.to_snake_case();
-    let table_name = model_name.to_table_case();
+    let resource_name = args[0].to_pascal_case();
 
-    message(&format!("Creating resource '{}'", model_name));
+    message(&format!("Creating resource '{}'", resource_name));
     
-    add_rust_file(
-        "src/models",
-        file_name.as_str(),
-        crate::model::generate_model(model_name.as_str(), table_name.as_str())        
-    )?;
-
-    add_rust_file(
-        "src/services",
-        file_name.as_str(),
-        crate::service::generate_service(file_name.as_str(), model_name.as_str(), table_name.as_str())
-    )?;
-
-    register_service(file_name.as_str())?;
-    
-    Ok(())
-}
-
-fn register_service(service_file_name: &str) -> Result<()> {
-    message(&format!("Registering service {}", service_file_name));
-    
-    let main_file_path = PathBuf::from("src/main.rs");
-    if main_file_path.exists() && main_file_path.is_file() {
-        let mut main_file_contents = std::fs::read_to_string(&main_file_path)?;
-        
-        main_file_contents = main_file_contents.replace("web::scope(\"/api\")", "web::scope(\"/api\")\n                    .service(services::{}::endpoints(web::scope(\"/{}\")))");
-        std::fs::write(main_file_path, main_file_contents)?;
-    }
-
-    Ok(())
-}
-
-fn add_rust_file(file_directory: &str, file_name: &str, file_contents: String) -> Result<()> {
-    let file_path = PathBuf::from(format!("{}/{}.rs", file_directory, file_name));
-    let mod_file_path = PathBuf::from(format!("{}/mod.rs", file_directory));
-    let file_directory = PathBuf::from(file_directory);
-    
-    if !file_directory.exists() {
-        let proceed = Confirm::with_theme(&ColorfulTheme::default())
-            .with_prompt(format!("Directory does not exist, create '{:#?}' directory?", &file_directory))
-            .default(false)
-            .interact()?;
-
-        if proceed {
-            match std::fs::create_dir_all(file_directory) {
-                Ok(_) => {},
-                Err(err) => exit("std::fs::create_dir_all(file_directory):", err)
-            }
-        } else {
-            return Ok(());
-        }
-    }
-
-    file_msg(&format!("{:#?}", &file_path));
-
-    let mut mod_file_contents: String;
-    
-    if mod_file_path.exists() {
-        mod_file_contents = std::fs::read_to_string(&mod_file_path)?;
-        mod_file_contents.push('\n');
-    } else {
-        mod_file_contents = String::new();
-    }
-    
-    mod_file_contents.push_str("pub mod ");
-    mod_file_contents.push_str(file_name);
-    mod_file_contents.push_str(";\n");
-    std::fs::write(mod_file_path, mod_file_contents)?;
-    
-    std::fs::write(
-        file_path,
-        file_contents
-    )?;
+    crate::service::create(resource_name.as_str(), resource_name.to_snake_case().as_str())?;
+    crate::model::create(resource_name.as_str())?;
 
     Ok(())
 }

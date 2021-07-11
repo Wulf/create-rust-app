@@ -14,13 +14,18 @@
   }
 }
 
-.App-header {
-  background-color: palegoldenrod;
-  min-height: 100vh;
+.App-nav-header {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  background: goldenrod;
+  color: white;
+  height: 65px;
+  padding: 0 30px;
   justify-content: center;
+  align-items: center;
+}
+
+body {
+  background-color: palegoldenrod;
   font-size: calc(10px + 2vmin);
   color: goldenrod;
 }
@@ -78,4 +83,33 @@
 .todos-pagination button {
   width: 40px;
   height: 18px;
+}
+
+.NavButton {
+  height: 65px;
+  padding: 0 15px;
+  background-color: goldenrod;
+  cursor: pointer;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+}
+
+.NavButton:hover {
+  background-color: #d9b048;
+}
+
+.Form {
+  margin-top: 40px;
+  display: flex;
+  flex-flow: column;
+}
+
+.Form input {
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.Form button {
+  padding: 10px;
 }

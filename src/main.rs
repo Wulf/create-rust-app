@@ -4,7 +4,12 @@ mod project;
 mod logger;
 mod model;
 mod service;
+mod fs;
+mod db;
+mod plugins;
+mod mail;
 
+use std::path::PathBuf;
 use structopt::StructOpt;
 use anyhow::Result;
 
@@ -45,6 +50,22 @@ fn main() -> Result<()> {
             "resource" => {
                 project::create_resource(opt)?;
                 std::process::exit(0);
+            },
+            "plugin" => {
+                match opt.target.as_str() {
+                    "auth" => {
+                        // TODO: confirm that the current directory actually is a project!
+                        let project_dir = &PathBuf::from(".");
+                        
+                        plugins::install(plugins::auth::Auth {}, plugins::InstallConfig {
+                            project_dir: PathBuf::from(&project_dir)
+                        })?;
+                    },
+                    _ => {
+                        logger::error(&format!("Plugin '{}' not found", opt.target));
+                        std::process::exit(1);
+                    }
+                }
             },
             _ => {
                 logger::error("Invalid type specified for --add option");

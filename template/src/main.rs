@@ -16,6 +16,7 @@ use diesel::r2d2::{self, ConnectionManager, PooledConnection};
 use diesel::PgConnection;
 use env_logger::Env;
 use serde::{Deserialize, Serialize};
+use mail::Mailer;
 
 pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 pub type DB = PooledConnection<ConnectionManager<PgConnection>>;
@@ -31,10 +32,16 @@ struct HealthCheckResponse {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    if dotenv::dotenv().is_err() {
+        panic!("ERROR: Could not load environment variables from dotenv file");
+    }
+    
     #[cfg(not(debug_assertions))]
     env::set_var("RUST_BACKTRACE", "1");
 
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+
+    let mailer = Mailer::new();
 
     let database_url =
         std::env::var("DATABASE_URL").expect("DATABASE_URL environment variable expected.");
@@ -46,6 +53,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Logger::default())
             .data(database_pool.clone())
+            .data(mailer.clone())
             .service(
                 web::scope("/api")
                     .service(services::todos_service::endpoints(web::scope("/todos")))

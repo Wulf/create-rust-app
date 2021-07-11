@@ -66,3 +66,6 @@ cd app && yarn && yarn start
 cargo watch -x run -i app/
 ```
 
+## Todo
+
+* Implement a CSRF mitigation technique

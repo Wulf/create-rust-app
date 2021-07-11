@@ -1,15 +1,52 @@
-extern crate inflector;
-
+use crate::inflector::Inflector;
 use indoc::indoc;
+use anyhow::Result;
 
-pub fn generate_model(model_name: &str, table_name: &str) -> String {
+pub struct Model {
+  pub config: ModelConfig,
+  pub file_contents: String
+}
+
+pub struct ModelConfig {
+  pub model_name: String,
+  pub table_name: String,
+  pub file_name: String,
+}
+
+pub fn create(resource_name: &str) -> Result<Model> {
+  let resource = generate(resource_name);
+  
+  crate::fs::add_rust_file(
+    "src/models",
+    resource.config.file_name.as_str(),
+    resource.file_contents.as_str()
+  )?;
+
+  Ok(resource)
+}
+
+fn config(resource_name: &str) -> ModelConfig {
+  let model_name = resource_name.to_pascal_case();
+  let file_name = model_name.to_snake_case();
+  let table_name = model_name.to_table_case();
+
+  return ModelConfig {
+    model_name: model_name,
+    file_name: file_name,
+    table_name: table_name,
+  };
+}
+
+pub fn generate(resource_name: &str) -> Model {
+  let config = config(resource_name);
+  
   let contents_template: &str = indoc! {"
         use crate::schema::*;
         use crate::diesel::*;
         
         use diesel::QueryResult;
         use serde::{Serialize, Deserialize};
-        use crate::models::{PaginationParams, ID, UTC};
+        use crate::models::*;
         use crate::DB;
         
         #[tsync::tsync]
@@ -76,7 +113,12 @@ pub fn generate_model(model_name: &str, table_name: &str) -> String {
         }
     "};
 
-    let contents = String::from(contents_template).replace("$MODEL_NAME", model_name).replace("$TABLE_NAME", table_name);
+    let contents = String::from(contents_template)
+      .replace("$MODEL_NAME", config.model_name.as_str())
+      .replace("$TABLE_NAME", config.table_name.as_str());
 
-    contents
+    Model {
+      config: config,
+      file_contents: contents
+    }
 }

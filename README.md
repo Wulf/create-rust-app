@@ -6,14 +6,27 @@
 
 # Features
 
-* Project creation
+* Project creation (`create-rust-app --project my_project`)
   * Rust backend (using actix_web, diesel, r2d2)
   * Typescript frontend (using react)!
-* Code-gen for easy CRUD scaffolding!
+  * 1:1 synchronization of frontend <=> backend types (`rust <=> typescript`)
+* Resource creation (`create-rust-app --add resource UserRatings`)
+  * CRUD code-gen to reduce boileplate
+* Auth plugin (`create-rust-app --add plugin auth`)
+  * Add JWT token-based auth in a simple command
+
+# Walkthrough
+
+Video: 
+https://github.com/Wulf/create-rust-app/tree/main/src/docs/create-rust-app.mp4
+
+![Gif](docs/create-rust-app_fast.gif)
 
 # Requirements
 
 * [tsync](https://github.com/Wulf/tsync) (see install section)
+* `yarn` (or `npm`)
+* Stable rust
 
 # Install
 
@@ -30,6 +43,14 @@ create-rust-app --project ./workspace/my-todo-app
 
 cd my-todo-app
 
-# Scaffold CRUD for Todo model
-create-rust-app --add resource todo
+# Add authentication to your app
+create-rust-app --add plugin auth
+
+# Scaffold CRUD for a Note model
+create-rust-app --add resource note
 ```
+
+# Todo
+
+- [ ] Ensure current directory belongs to a project when adding plugins
+- [ ] Single binary build output for created projects
