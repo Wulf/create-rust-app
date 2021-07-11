@@ -10,17 +10,15 @@
   * Rust backend (using actix_web, diesel, r2d2)
   * Typescript frontend (using react)!
   * 1:1 synchronization of frontend <=> backend types (`rust <=> typescript`)
+  * Hot reloading
 * Resource creation (`create-rust-app --add resource UserRatings`)
   * CRUD code-gen to reduce boileplate
 * Auth plugin (`create-rust-app --add plugin auth`)
-  * Add JWT token-based auth in a simple command
+  * Add JWT token-based auth with a simple command
 
 # Walkthrough
 
-Video: 
-https://github.com/Wulf/create-rust-app/tree/main/src/docs/create-rust-app.mp4
-
-![Gif](docs/create-rust-app_fast.gif)
+[![Gif](docs/create-rust-app_fast.gif)](https://github.com/Wulf/create-rust-app/blob/main/docs/create-rust-app.mp4)
 
 # Requirements
 
