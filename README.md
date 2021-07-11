@@ -7,14 +7,26 @@
 # Features
 
 * Project creation (`create-rust-app --project my_project`)
-  * Rust backend (using actix_web, diesel, r2d2)
-  * Typescript frontend (using react)!
-  * 1:1 synchronization of frontend <=> backend types (`rust <=> typescript`)
-  * Hot reloading
+  * Rust backend
+    * Fastest backend server (via actix_web)
+    * Database migrations (via diesel.rs)
+    * Sending mail (via lettre)
+    * PostgreSQL (via r2d2)
+  * React frontend
+    * Typescript, with backend type definition generation (via `tsync`)
+    * Routing (via `react-router-dom`)
+    * Update to latest create-react-app (generated frontend is not ejected from `create-react-app`)
 * Resource creation (`create-rust-app --add resource UserRatings`)
   * CRUD code-gen to reduce boileplate
 * Auth plugin (`create-rust-app --add plugin auth`)
   * Add JWT token-based auth with a simple command
+  * Session management: restoration of previous session, revoking of refresh tokens
+  * Credentials management/recovery
+  * Email validation / activation flow
+  * Adds frontend UI + react hooks
+  * Adds auth service, and user / session models
+  * Block your endpoints via `Auth` guard
+  * Follows OWASP security best practices
 
 # Walkthrough
 
