@@ -18,6 +18,10 @@ impl Plugin for Container {
 
   fn install(&self, install_config: InstallConfig) -> Result<()> {
     for filename in Asset::iter() {
+      if filename.contains(".cargo/admin") && !filename.contains(".cargo/admin/dist") {
+        continue
+      }
+
       let file_contents = Asset::get(filename.as_ref()).unwrap();
       let mut file_path = std::path::PathBuf::from(&install_config.project_dir);
       file_path.push(filename.as_ref());
@@ -41,7 +45,7 @@ impl Plugin for Container {
 ## Running the container
 `docker run -e SECRET_KEY=123 -e DATABASE_URL=postgres://postgres:postgres@localhost/database -p 8080:8080 image-name`
 
-"##);
+"##)?;
     
     Ok(())
   }

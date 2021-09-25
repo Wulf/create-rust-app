@@ -40,12 +40,12 @@ impl Plugin for Admin {
 
     // TODO: Fix these appends/prepends by prepending the filepath with project_dir
     // currently, this works because we assume the current working directory is the project's root
-    fs::replace(r#""concurrently": "^6.2.1""#, r#",
-    "react-query": "^3.21.0""#);
+    fs::replace("frontend/package.json", r#""concurrently": "^6.2.1""#, r#",
+    "react-query": "^3.21.0""#)?;
 
-    fs::replace("const App = () => {", r#"if (process.env.NODE_ENV === 'development') require('./setupDevelopment')
+    fs::replace("frontend/src/App.tsx", "const App = () => {", r#"if (process.env.NODE_ENV === 'development') require('./setupDevelopment')
     
-    const App = () => {"#);
+    const App = () => {"#)?;
     
     Ok(())
   }
