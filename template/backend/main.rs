@@ -22,7 +22,7 @@ pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 pub type DB = PooledConnection<ConnectionManager<PgConnection>>;
 
 async fn app_index() -> actix_web::Result<NamedFile, actix_web::Error> {
-    Ok(NamedFile::open("./app/build/index.html")?)
+    Ok(NamedFile::open("./frontend/build/index.html")?)
 }
 
 #[derive(Serialize, Deserialize)]
@@ -32,13 +32,11 @@ struct HealthCheckResponse {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    #[cfg(debug_assertions)]
     if dotenv::dotenv().is_err() {
         panic!("ERROR: Could not load environment variables from dotenv file");
     }
     
-    #[cfg(not(debug_assertions))]
-    env::set_var("RUST_BACKTRACE", "1");
-
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
 
     let mailer = Mailer::new();
@@ -60,13 +58,13 @@ async fn main() -> std::io::Result<()> {
                     .route("/health", web::get().to(|| HttpResponse::Ok().json(HealthCheckResponse { message: "healthy".to_string() })))
             )
             .service(
-                Files::new("*", "./app/build")
+                Files::new("*", "./frontend/build")
                     .index_file("index.html")
                     .default_handler(web::get().to(app_index))
             )
             .default_service(web::route().to(|| HttpResponse::NotFound()))
     })
-    .bind("127.0.0.1:8080")?
+    .bind("0.0.0.0:8080")?
     .run()
     .await
 }

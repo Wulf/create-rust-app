@@ -17,7 +17,7 @@ struct ServiceConfig {
 pub fn create(resource_name: &str, base_endpoint_path: &str) -> Result<()> {
   let resource = generate(resource_name);
   crate::fs::add_rust_file(
-    "src/services",
+    "backend/services",
     resource.config.file_name.as_str(),
     resource.file_contents.as_str(),
   )?;
@@ -131,11 +131,11 @@ fn generate(service_name: &str) -> Service {
 
 pub fn register_service(service_file_name: &str, service_base_endpoint_path: &str) -> Result<()> {
   message(&format!("Registering service {}", service_file_name));
-  let main_file_path = PathBuf::from("src/main.rs");
+  let main_file_path = PathBuf::from("backend/main.rs");
   if main_file_path.exists() && main_file_path.is_file() {
     let mut main_file_contents = std::fs::read_to_string(&main_file_path)?;
 
-    main_file_contents = main_file_contents.replace("web::scope(\"/api\")", &format!("web::scope(\"/api\")\n                    .service(services::{}::endpoints(web::scope(\"{}\")))", service_file_name, service_base_endpoint_path));
+    main_file_contents = main_file_contents.replace("web::scope(\"/api\")", &format!("web::scope(\"/api\")\n            .service(services::{}::endpoints(web::scope(\"{}\")))", service_file_name, service_base_endpoint_path));
     std::fs::write(main_file_path, main_file_contents)?;
   }
 

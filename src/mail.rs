@@ -22,7 +22,7 @@ pub fn create(file_name: &str, vars: Vec<&str>, subject: &str, text: &str, html:
     .replace("$MAIL_INJECT_VARIABLES", vars.join(", ").as_str());
 
   crate::fs::add_rust_file(
-    "src/mail",
+    "backend/mail",
     file_name,
     contents.as_str()
   )?;

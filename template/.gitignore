@@ -1,4 +1,4 @@
-/target
+/backend/.build
 .env*
 !.env.example
 build-log*.txt

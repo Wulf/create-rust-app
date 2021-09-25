@@ -17,7 +17,7 @@ pub fn create(resource_name: &str) -> Result<Model> {
   let resource = generate(resource_name);
   
   crate::fs::add_rust_file(
-    "src/models",
+    "backend/models",
     resource.config.file_name.as_str(),
     resource.file_contents.as_str()
   )?;
