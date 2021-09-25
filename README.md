@@ -61,5 +61,8 @@ create-rust-app
   * Moreover, the devbox displays when migrations are pending + includes a "run migrations" button
 
 # Walkthrough
-(outdated)
-[![Gif](docs/create-rust-app_fast.gif)](https://github.com/Wulf/create-rust-app/blob/main/docs/create-rust-app.mp4)
+
+(the full video can be found in the repo at this path: [`docs/create-rust-app-v2.mp4`](https://github.com/Wulf/create-rust-app/blob/main/docs/create-rust-app-v2.mp4)
+)
+
+[![Gif](docs/create-rust-app-v2.gif)](https://github.com/Wulf/create-rust-app/blob/main/docs/create-rust-app-v2.mp4)
