@@ -73,7 +73,7 @@ fn main() -> Result<()> {
         logger::message("Please select plugins for your new project:");
         logger::message("Use UP/DOWN arrows to navigate, SPACE to enable/disable a plugin, and ENTER to confirm.");
 
-        let items = vec!["Plugin: local auth", "Plugin: dockerfile"];
+        let items = vec!["Plugin: local auth", "Plugin: dockerfile", "Plugin: development box + admin portal"];
         let chosen: Vec<usize> = MultiSelect::with_theme(&ColorfulTheme::default())
             .items(&items)
             .defaults(&[true, true])
@@ -88,6 +88,7 @@ fn main() -> Result<()> {
 
         let add_plugin_auth = chosen.iter().position(|x| *x == 0).is_some();
         let add_plugin_dockerfile = chosen.iter().position(|x| *x == 1).is_some();
+        let add_plugin_admin = chosen.iter().position(|x| *x == 2).is_some();
         
         if add_plugin_auth {
             plugins::install(plugins::auth::Auth {}, plugins::InstallConfig {
@@ -97,6 +98,12 @@ fn main() -> Result<()> {
 
         if add_plugin_dockerfile {
             plugins::install(plugins::container::Container {}, plugins::InstallConfig {
+                project_dir: PathBuf::from(".")
+            })?;
+        }
+
+        if add_plugin_admin {
+            plugins::install(plugins::admin::Admin {}, plugins::InstallConfig {
                 project_dir: PathBuf::from(".")
             })?;
         }
