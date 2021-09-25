@@ -47,6 +47,8 @@ impl Plugin for Admin {
     fs::replace("frontend/src/App.tsx", "const App = () => {", r#"if (process.env.NODE_ENV === 'development') require('./setupDevelopment')
     
     const App = () => {"#)?;
+
+    fs::append("backend/services/mod.rs", "\n#[cfg(debug_assertions)]\npub mod development;\n")?;
     
     Ok(())
   }

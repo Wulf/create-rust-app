@@ -74,7 +74,7 @@ pub fn project_created_msg(project_dir: std::path::PathBuf) {
   message(&format!("     $ {}", style(format!("cd {:#?}", project_dir).to_string()).cyan()));
   message(&format!("  2. Open `.env` and set the DATABASE_URL"));
   message(&format!("  3. Setup your database:"));
-  message(&format!("     $ {}", style("diesel database setup").cyan()));
+  message(&format!("     $ {}", style("diesel database reset").cyan()));
   message(&format!("  4. Develop! Run the following for continuous compilation:"));
   message(&format!("     $ {}", style("cargo fullstack").cyan()));
   message(&format!("• Enjoy!"));
