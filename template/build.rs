@@ -31,9 +31,9 @@ fn shell(command: &str) {
 fn main() {
     // Only install frontend dependencies when building release
     #[cfg(not(debug_assertions))]
-    shell("cd app && yarn install");
+    shell("cd frontend && yarn install");
 
     // Only build frontend when building a release
     #[cfg(not(debug_assertions))]
-    shell("cd app && yarn build");
+    shell("cd frontend && yarn build");
 }

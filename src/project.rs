@@ -17,8 +17,6 @@ pub fn add_dependency(project_dir: &std::path::PathBuf, name: &str, version: tom
   let mut path = std::path::PathBuf::from(project_dir);
   path.push("Cargo.toml");
 
-  println!("path={:#?}", path);
-  
   let toml: String = std::fs::read_to_string(&path)?;
 
   let mut parsed_toml = toml.parse::<toml::Value>().unwrap();
@@ -39,11 +37,58 @@ pub fn add_dependency(project_dir: &std::path::PathBuf, name: &str, version: tom
   Ok(())
 }
 
+pub fn update_cargo_toml(project_dir: &std::path::PathBuf) -> Result<(), std::io::Error> {
+    let mut path = std::path::PathBuf::from(project_dir);
+    path.push("Cargo.toml");
+
+    let toml: String = std::fs::read_to_string(&path)?;
+
+    let mut parsed_toml = toml.parse::<toml::Value>().unwrap();
+
+    // println!("Parsed toml:\n{:#?}", &parsed_toml);
+
+    let root: &mut toml::value::Table = parsed_toml.as_table_mut().unwrap();
+
+    let deps_table: &mut toml::value::Table = root.get_mut("package").unwrap().as_table_mut().unwrap();
+
+    let mut project_name: Option<String> = None;
+    
+    match deps_table.get("name") {
+        Some(name) => {
+            project_name = Some(name.as_str().unwrap().to_string());
+            let project_name_toml_value = toml::value::Value::String(project_name.clone().unwrap());
+            deps_table.insert("default-run".to_string(), project_name_toml_value);
+        },
+        None => panic!("Could not determine project name from generated Cargo.toml")
+    };
+    
+    let updated_toml = toml::to_string(&parsed_toml).unwrap();
+
+    let append_to_toml = format!(r##"
+[[bin]]
+name = "fullstack"
+path = "bin/fullstack.rs"
+
+[[bin]]
+name = "{project_name}"
+path = "backend/main.rs"
+"##, project_name=project_name.unwrap());
+
+    let mut final_toml = String::default();
+
+    final_toml.push_str(&updated_toml);
+    final_toml.push_str(&append_to_toml);
+
+    std::fs::write(&path, final_toml)?;
+
+    Ok(())
+}
+  
 /**
  * create-rust-app project generation
  */
-pub fn create(opt: crate::Opt) -> Result<()> {
-  let mut project_dir: PathBuf = PathBuf::from(opt.target);
+pub fn create(project_name: &str) -> Result<()> {
+    let mut project_dir: PathBuf = PathBuf::from(project_name);
     
     if project_dir.exists() {
         message("Directory already exists");
@@ -82,6 +127,8 @@ pub fn create(opt: crate::Opt) -> Result<()> {
     let cargo_init = std::process::Command::new("cargo")
         .current_dir(&project_dir)
         .arg("init")
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
         .status()
         .expect("failed to execute process");
 
@@ -89,6 +136,22 @@ pub fn create(opt: crate::Opt) -> Result<()> {
         error("Failed to execute `cargo init`");
         std::process::exit(1);
     }
+
+    // cleanup: remove src/main.rs
+    command_msg("rm src/main.rs");
+    let mut main_file = PathBuf::from(project_dir.clone());
+    main_file.push("src");
+    main_file.push("main.rs");
+    std::fs::remove_file(main_file)?;
+
+    // cleanup: remove src/
+    command_msg("rmdir src/main.rs");
+    let mut src_folder = PathBuf::from(project_dir.clone());
+    src_folder.push("src");
+    std::fs::remove_dir(src_folder)?;
+    
+    
+    update_cargo_toml(&project_dir)?;
 
     add_dependency(&project_dir, "actix-files", toml::Value::String("0.5.0".into()))?;
     add_dependency(&project_dir, "actix-http", toml::Value::String("2.2.0".into()))?;
@@ -124,6 +187,19 @@ pub fn create(opt: crate::Opt) -> Result<()> {
         file_msg(filename.as_ref());
         std::fs::create_dir_all(directory_path)?;
         std::fs::write(file_path, file_contents)?;
+    }
+
+    command_msg("chmod +x ./bin/tsync.sh");
+
+    let chmod_tsync = std::process::Command::new("chmod")
+        .current_dir(&project_dir)
+        .arg("+x")
+        .arg("./bin/tsync.sh")
+        .status()
+        .expect("failed to execute process");
+
+    if !chmod_tsync.success() {
+        error("Failed to execute `chmod +x ./bin/tsync.sh`");
     }
     
     /*
@@ -191,52 +267,11 @@ pub fn create(opt: crate::Opt) -> Result<()> {
         std::process::exit(1);
     }
 
-    command_msg("chmod +x ./tsync.sh");
-
-    let chmod_tsync = std::process::Command::new("chmod")
-        .current_dir(&project_dir)
-        .arg("+x")
-        .arg("./tsync.sh")
-        .status()
-        .expect("failed to execute process");
-
-    if !chmod_tsync.success() {
-        error("Failed to execute `chmod +x ./tsync.sh`");
-    }
-
-    message("   ");
-    message(&format!("   {}", style("ALL DONE!").underlined()));
-    message(&format!("   1. Enable continuous-compilation!"));
-    message(&format!("      {}", style("cargo install cargo-watch").cyan()));
-    message(&format!("   2. Add dependencies via 'cargo add <dep>':"));
-    message(&format!("      {}", style("cargo install cargo-edit").cyan()));
-    message(&format!("   3. Get the diesel CLI to manage your database:"));
-    message(&format!("      {}", style("cargo install diesel_cli").cyan()));
-    message(&format!("   4. (optional) Add other plugins to your project:"));
-    message(&format!("      {}", style("create-rust-app --add plugin auth").cyan()));
-    message(&format!("   5. Copy `.env.example` to `.env` and edit it:"));
-    message(&format!("      {}", style("cp .env.example .env").cyan()));
-    message(&format!("   6. Setup your database:"));
-    message(&format!("      {}", style("diesel migration run").cyan()));
-    message(&format!("   7. Develop! Run the following for continuous compilation:"));
-    message(&format!("      (terminal 1) {}", style("cd app && yarn start").cyan()));
-    message(&format!("      (terminal 2) {}", style("cargo watch -x run -i app/").cyan()));
-    message("   ");
-    message("   Enjoy :-)");
-
     Ok(())
 }
 
-pub fn create_resource(opt: crate::Opt) -> Result<()> {
-    let arg: String = opt.target;
-    let args: Vec<&str> = arg.split_whitespace().collect();
-
-    if args.len() == 0 {
-        error("No args given");
-        std::process::exit(1);
-    }
-    
-    let resource_name = args[0].to_pascal_case();
+pub fn create_resource(resource_name: &str) -> Result<()> {
+    let resource_name = resource_name.to_pascal_case();
 
     message(&format!("Creating resource '{}'", resource_name));
     

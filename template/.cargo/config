@@ -1,0 +1,5 @@
+[alias]
+fullstack="run --bin fullstack"
+
+[build]
+target-dir="backend/.build"

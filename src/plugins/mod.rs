@@ -77,3 +77,4 @@ pub fn install(plugin: impl Plugin, install_config: InstallConfig) -> Result<()>
 }
 
 pub mod auth;
+pub mod container;

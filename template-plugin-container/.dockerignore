@@ -1,0 +1,15 @@
+.env*
+.DS_Store
+
+/backend/.build
+/node_modules
+frontend/.pnp
+frontend/**/*.pnp.js
+frontend/coverage
+frontend/build
+Dockerfile
+
+build-log*.txt
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

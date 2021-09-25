@@ -6,9 +6,32 @@ use dialoguer::{
     theme::ColorfulTheme
 };
 
+pub fn is_rust_project(directory: &PathBuf) -> Result<bool> {
+  if !directory.is_dir() {
+    return Err(anyhow!("Expected a directory, but got: '{}'!", &directory.display()));
+  }
+
+  let is_verified_rust_project = std::process::Command::new("cargo")
+    .current_dir(&directory)
+    .arg("verify-project")
+    .stdout(std::process::Stdio::null())
+    .status()
+    .expect("failed to execute `cargo verify-project`")
+    .success();
+
+  return Ok(is_verified_rust_project);
+}
+
+pub fn get_current_working_directory() -> Result<PathBuf> {
+  return match std::env::current_dir() {
+    Ok(path) => Ok(path),
+    Err(_) => Err(anyhow!("Could not get current working directory."))
+  }
+}
+
 pub fn ensure_file(file: &PathBuf, contents: Option<&str>) -> Result<()> {
   if file.is_dir() {
-    return Err(anyhow!("Expected a file, but found a diretory at '{:#?}'!", &file));
+    return Err(anyhow!("Expected a file, but found a directory at '{:#?}'!", &file));
   }
   
   if contents.is_some() {

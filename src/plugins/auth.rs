@@ -33,47 +33,49 @@ impl Plugin for Auth {
     
     /* Add dependencies */
     add_dependency(&install_config.project_dir, "argonautica", toml::Value::String("0.2.0".into()))?;
-    fs::prepend("app/src/App.tsx", r#"
-    import { useAuth, useAuthCheck } from './hooks/useAuth'
-    import { AccountPage } from './containers/AccountPage'
-    import { LoginPage } from './containers/LoginPage'
-    import { ActivationPage } from './containers/ActivationPage'
-    import { RegistrationPage } from './containers/RegistrationPage'
-    import { RecoveryPage } from './containers/RecoveryPage'
-    import { ResetPage } from './containers/ResetPage'    
+
+    // TODO: Fix these appends/prepends by prepending the filepath with project_dir
+    // currently, this works because we assume the current working directory is the project's root
+    fs::prepend("frontend/src/App.tsx", r#"import { useAuth, useAuthCheck } from './hooks/useAuth'
+  import { AccountPage } from './containers/AccountPage'
+  import { LoginPage } from './containers/LoginPage'
+  import { ActivationPage } from './containers/ActivationPage'
+  import { RegistrationPage } from './containers/RegistrationPage'
+  import { RecoveryPage } from './containers/RecoveryPage'
+  import { ResetPage } from './containers/ResetPage'    
     "#)?;
-    fs::prepend("app/src/index.tsx", "import { AuthProvider } from './hooks/useAuth'")?;
-    fs::replace("app/src/App.tsx", "const App = () => {", r#"const App = () => {
-    useAuthCheck()
-    const auth = useAuth()
+    fs::prepend("frontend/src/index.tsx", "import { AuthProvider } from './hooks/useAuth'")?;
+    fs::replace("frontend/src/App.tsx", "const App = () => {", r#"const App = () => {
+  useAuthCheck()
+  const auth = useAuth()
     "#)?;
-    fs::replace("app/src/App.tsx", "{/* CRA: routes */}", r#"{/* CRA: routes */}
-    <Route path="/login"><LoginPage /></Route>
-    <Route path="/recovery"><RecoveryPage /></Route>
-    <Route path="/reset"><ResetPage /></Route>
-    <Route path="/activate"><ActivationPage /></Route>
-    <Route path="/register"><RegistrationPage /></Route>
-    <Route path="/account"><AccountPage /></Route>
+    fs::replace("frontend/src/App.tsx", "{/* CRA: routes */}", r#"{/* CRA: routes */}
+        <Route path="/login"><LoginPage /></Route>
+        <Route path="/recovery"><RecoveryPage /></Route>
+        <Route path="/reset"><ResetPage /></Route>
+        <Route path="/activate"><ActivationPage /></Route>
+        <Route path="/register"><RegistrationPage /></Route>
+        <Route path="/account"><AccountPage /></Route>
     "#)?;
-    fs::replace("app/src/App.tsx", "{/* CRA: left-aligned nav buttons */}", r#"{/* CRA: left-aligned nav buttons */}
-    <a className="NavButton" onClick={() => history.push('/account')}>Account</a>
+    fs::replace("frontend/src/App.tsx", "{/* CRA: left-aligned nav buttons */}", r#"{/* CRA: left-aligned nav buttons */}
+          <a className="NavButton" onClick={() => history.push('/account')}>Account</a>
     "#)?;
-    fs::replace("app/src/App.tsx", "{/* CRA: right-aligned nav buttons */}", r#"{/* CRA: right-aligned nav buttons */}
-    { auth.isAuthenticated && <a className="NavButton" onClick={() => auth.logout()}>Logout</a> }
-    { !auth.isAuthenticated && <a className="NavButton" onClick={() => history.push('/login')}>Login/Register</a> }
+    fs::replace("frontend/src/App.tsx", "{/* CRA: right-aligned nav buttons */}", r#"{/* CRA: right-aligned nav buttons */}
+          { auth.isAuthenticated && <a className="NavButton" onClick={() => auth.logout()}>Logout</a> }
+          { !auth.isAuthenticated && <a className="NavButton" onClick={() => history.push('/login')}>Login/Register</a> }
     "#)?;
-    fs::replace("app/src/index.tsx", "{/* CRA: Wrap */}", "{/* CRA: Wrap */}\n<AuthProvider>")?;
-    fs::replace("app/src/index.tsx", "{/* CRA: Unwrap */}", "{/* CRA: Unwrap */}\n</AuthProvider>")?;
-    fs::append("src/extractors/mod.rs", "\npub mod auth;")?;
-    fs::append("src/mail/mod.rs", "\npub mod auth_register;")?;
-    fs::append("src/mail/mod.rs", "\npub mod auth_activated;")?;
-    fs::append("src/mail/mod.rs", "\npub mod auth_recover_existent_account;")?;
-    fs::append("src/mail/mod.rs", "\npub mod auth_recover_nonexistent_account;")?;
-    fs::append("src/mail/mod.rs", "\npub mod auth_password_changed;")?;
-    fs::append("src/mail/mod.rs", "\npub mod auth_password_reset;")?;
-    fs::append("src/models/mod.rs", "\npub mod user;")?;
-    fs::append("src/models/mod.rs", "\npub mod user_session;")?;
-    fs::append("src/services/mod.rs", "\npub mod auth;")?;
+    fs::replace("frontend/src/index.tsx", "{/* CRA: Wrap */}", "{/* CRA: Wrap */}\n<AuthProvider>")?;
+    fs::replace("frontend/src/index.tsx", "{/* CRA: Unwrap */}", "{/* CRA: Unwrap */}\n</AuthProvider>")?;
+    fs::append("backend/extractors/mod.rs", "\npub mod auth;")?;
+    fs::append("backend/mail/mod.rs", "\npub mod auth_register;")?;
+    fs::append("backend/mail/mod.rs", "\npub mod auth_activated;")?;
+    fs::append("backend/mail/mod.rs", "\npub mod auth_recover_existent_account;")?;
+    fs::append("backend/mail/mod.rs", "\npub mod auth_recover_nonexistent_account;")?;
+    fs::append("backend/mail/mod.rs", "\npub mod auth_password_changed;")?;
+    fs::append("backend/mail/mod.rs", "\npub mod auth_password_reset;")?;
+    fs::append("backend/models/mod.rs", "\npub mod user;")?;
+    fs::append("backend/models/mod.rs", "\npub mod user_session;")?;
+    fs::append("backend/services/mod.rs", "\npub mod auth;")?;
 
     crate::db::create_migration("plugin_auth", indoc! {r#"
       CREATE TABLE users (
