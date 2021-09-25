@@ -4,6 +4,34 @@
 
  Set up a modern rust+react web app by running one command. 
 
+# Requirements
+
+* [`tsync`](https://github.com/Wulf/tsync) (see install section)
+* `yarn` (or `npm`)
+* Stable rust
+
+# Install
+
+```sh
+cargo install tsync
+cargo install create-rust-app
+```
+
+# Quick start
+
+```sh
+# Creates a new rust+react project
+create-rust-app --project ./workspace/my-todo-app
+
+cd my-todo-app
+
+# Add authentication to your app
+create-rust-app --add plugin auth
+
+# Scaffold CRUD for a Note model
+create-rust-app --add resource note
+```
+
 # Features
 
 * Project creation (`create-rust-app --project my_project`)
@@ -31,36 +59,3 @@
 # Walkthrough
 
 [![Gif](docs/create-rust-app_fast.gif)](https://github.com/Wulf/create-rust-app/blob/main/docs/create-rust-app.mp4)
-
-# Requirements
-
-* [tsync](https://github.com/Wulf/tsync) (see install section)
-* `yarn` (or `npm`)
-* Stable rust
-
-# Install
-
-```sh
-cargo install tsync
-cargo install create-rust-app
-```
-
-# Quick start
-
-```sh
-# Creates a new rust+react project
-create-rust-app --project ./workspace/my-todo-app
-
-cd my-todo-app
-
-# Add authentication to your app
-create-rust-app --add plugin auth
-
-# Scaffold CRUD for a Note model
-create-rust-app --add resource note
-```
-
-# Todo
-
-- [ ] Ensure current directory belongs to a project when adding plugins
-- [ ] Single binary build output for created projects
