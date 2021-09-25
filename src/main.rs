@@ -76,7 +76,7 @@ fn main() -> Result<()> {
         let items = vec!["Plugin: local auth", "Plugin: dockerfile", "Plugin: development box + admin portal"];
         let chosen: Vec<usize> = MultiSelect::with_theme(&ColorfulTheme::default())
             .items(&items)
-            .defaults(&[true, true])
+            .defaults(&[true, true, true])
             .interact()?;
 
         project::create(project_name.as_ref())?;

@@ -18,10 +18,6 @@ impl Plugin for Container {
 
   fn install(&self, install_config: InstallConfig) -> Result<()> {
     for filename in Asset::iter() {
-      if filename.contains(".cargo/admin") && !filename.contains(".cargo/admin/dist") {
-        continue
-      }
-
       let file_contents = Asset::get(filename.as_ref()).unwrap();
       let mut file_path = std::path::PathBuf::from(&install_config.project_dir);
       file_path.push(filename.as_ref());

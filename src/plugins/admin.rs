@@ -20,6 +20,10 @@ impl Plugin for Admin {
 
   fn install(&self, install_config: InstallConfig) -> Result<()> {
     for filename in Asset::iter() {
+      if filename.contains(".cargo/admin") && !filename.contains(".cargo/admin/dist") {
+        continue
+      }
+
       let file_contents = Asset::get(filename.as_ref()).unwrap();
       let mut file_path = std::path::PathBuf::from(&install_config.project_dir);
       file_path.push(".cargo/");
@@ -36,7 +40,7 @@ impl Plugin for Admin {
     
     /* Add dependencies */
     add_dependency(&install_config.project_dir, "diesel_migrations", toml::Value::String("1.4.0".into()))?;
-    add_dependency(&install_config.project_dir, "diesel_migrations", toml::Value::String("{version=\"0.19.1\", features=[\"with-serde_json-1\"]}".into()))?;
+    add_dependency(&install_config.project_dir, "postgres", "version = \"0.19.1\"\nfeatures = [\"with-serde_json-1\"]".parse::<toml::Value>().unwrap())?;
 
     // TODO: Fix these appends/prepends by prepending the filepath with project_dir
     // currently, this works because we assume the current working directory is the project's root
