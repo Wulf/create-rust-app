@@ -26,9 +26,6 @@ impl Plugin for Admin {
 
       let file_contents = Asset::get(filename.as_ref()).unwrap();
       let mut file_path = std::path::PathBuf::from(&install_config.project_dir);
-      file_path.push(".cargo/");
-      file_path.push("admin/");
-      file_path.push("dist/");
       file_path.push(filename.as_ref());
       let mut directory_path = std::path::PathBuf::from(&file_path);
       directory_path.pop();
@@ -44,7 +41,7 @@ impl Plugin for Admin {
 
     // TODO: Fix these appends/prepends by prepending the filepath with project_dir
     // currently, this works because we assume the current working directory is the project's root
-    fs::replace("frontend/package.json", r#""concurrently": "^6.2.1""#, r#",
+    fs::replace("frontend/package.json", r#""concurrently": "^6.2.1""#, r#""concurrently": "^6.2.1",
     "react-query": "^3.21.0""#)?;
 
     fs::replace("frontend/src/App.tsx", "const App = () => {", r#"if (process.env.NODE_ENV === 'development') require('./setupDevelopment')
