@@ -13,7 +13,6 @@
 # Install
 
 ```sh
-cargo install tsync
 cargo install create-rust-app
 ```
 
@@ -21,20 +20,19 @@ cargo install create-rust-app
 
 ```sh
 # Creates a new rust+react project
-create-rust-app --project ./workspace/my-todo-app
+create-rust-app my-todo-app
+# .. select plugins, etc.
 
-cd my-todo-app
-
-# Add authentication to your app
-create-rust-app --add plugin auth
-
-# Scaffold CRUD for a Note model
-create-rust-app --add resource note
+# Code-gen resources for your project
+cd ./my-todo-app
+create-rust-app 
+# .. select resource type / properties
 ```
 
 # Features
 
-* Project creation (`create-rust-app --project my_project`)
+* Project creation (`$ create-rust-app <project_name>`)
+  * Run frontend & backend with a single command: `cargo fullstack`
   * Rust backend
     * Fastest backend server (via actix_web)
     * Database migrations (via diesel.rs)
@@ -44,9 +42,9 @@ create-rust-app --add resource note
     * Typescript, with backend type definition generation (via `tsync`)
     * Routing (via `react-router-dom`)
     * Update to latest create-react-app (generated frontend is not ejected from `create-react-app`)
-* Resource creation (`create-rust-app --add resource UserRatings`)
+* Resource creation (`$ cd my_project && create-rust-app`)
   * CRUD code-gen to reduce boileplate
-* Auth plugin (`create-rust-app --add plugin auth`)
+* Auth plugin
   * Add JWT token-based auth with a simple command
   * Session management: restoration of previous session, revoking of refresh tokens
   * Credentials management/recovery
@@ -55,7 +53,13 @@ create-rust-app --add resource note
   * Adds auth service, and user / session models
   * Block your endpoints via `Auth` guard
   * Follows OWASP security best practices
+* Container plugin
+  * Dockerfile to containerize your rust app into a single image
+* Admin Portal plugin
+  * View your database via the admin portal (editing functionality coming soon™)
+  * A "devbox" on the frontend indicates when the backend is compiling or when the database is not reachable
+  * Moreover, the devbox displays when migrations are pending + includes a "run migrations" button
 
 # Walkthrough
-
+(outdated)
 [![Gif](docs/create-rust-app_fast.gif)](https://github.com/Wulf/create-rust-app/blob/main/docs/create-rust-app.mp4)
