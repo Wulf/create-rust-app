@@ -12,7 +12,7 @@ fn get_migration_number() -> usize {
   }
   
   let count = match migrations_dir.read_dir().unwrap() {
-    v => v.count() - 1 /* 0-indexed, so subtract 1 */,
+    v => v.count(),
     // Err(_) => 3 // guess the migration number
   };
   
