@@ -75,6 +75,7 @@ impl Plugin for Auth {
     fs::append("backend/mail/mod.rs", "\npub mod auth_password_reset;")?;
     fs::append("backend/models/mod.rs", "\npub mod user;")?;
     fs::append("backend/models/mod.rs", "\npub mod user_session;")?;
+    fs::append("backend/models/mod.rs", "\npub mod permissions;")?;
     fs::append("backend/services/mod.rs", "\npub mod auth;")?;
 
     crate::db::create_migration("plugin_auth", indoc! {r#"
@@ -99,9 +100,33 @@ impl Plugin for Auth {
       );
       
       SELECT diesel_manage_updated_at('user_sessions');
+
+      CREATE TABLE user_permissions (
+        user_id SERIAL NOT NULL REFERENCES users(id),
+        permission TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, permission)
+      );
+      
+      CREATE TABLE user_roles (
+        user_id SERIAL NOT NULL REFERENCES users(id),
+        role TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, role)
+      );
+      
+      CREATE TABLE role_permissions (
+        role TEXT NOT NULL PRIMARY KEY,
+        permission TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (role, permission)
+      );      
     "#}, indoc! {r#"
       DROP TABLE users CASCADE ALL;
       DROP TABLE user_sessions CASCADE ALL;
+      DROP TABLE user_permissions CASCADE ALL;
+      DROP TABLE role_permissions CASCADE ALL;
+      DROP TABLE user_roles CASCADE ALL;
     "#})?;
     
     crate::service::register_service("auth", "/auth")?;

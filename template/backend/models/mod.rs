@@ -1,6 +1,9 @@
 use chrono::{DateTime, Utc};
 
+#[tsync::tsync]
 pub type ID = i32;
+
+#[tsync::tsync]
 pub type UTC = DateTime<Utc>;
 
 #[tsync::tsync]

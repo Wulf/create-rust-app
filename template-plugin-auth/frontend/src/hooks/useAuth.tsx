@@ -1,19 +1,13 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
-interface AccessToken {
-  exp: number // DateTime in UTC seconds
-  sub: number // subject's ID
-  token_type: "access_token"
-}
-
 const MILLISECONDS_UNTIL_EXPIRY_CHECK = 10 * 1000 // check expiry every 10 seconds
 const REMAINING_TOKEN_EXPIRY_TIME_ALLOWED = 60 * 1000 // 1 minute before token should be refreshed
 
 interface AuthContext {
   accessToken: string | undefined
-  parsedToken: AccessToken | undefined
+  parsedToken: AccessTokenClaims | undefined
   setAccessToken: (accessToken: string | undefined) => void
-  setParsedToken: (parsedToken: AccessToken | undefined) => void
+  setParsedToken: (parsedToken: AccessTokenClaims | undefined) => void
 
   isCheckingAuth: boolean
   setCheckingAuth: (checking: boolean) => void
@@ -27,7 +21,7 @@ const Context = createContext<AuthContext>(undefined as any)
 
 export const AuthProvider = (props: AuthWrapperProps) => {
   const [accessToken, setAccessToken] = useState<string | undefined>()
-  const [parsedToken, setParsedToken] = useState<AccessToken | undefined>()
+  const [parsedToken, setParsedToken] = useState<AccessTokenClaims | undefined>()
   const [isCheckingAuth, setCheckingAuth] = useState<boolean>(false)
   
   return <Context.Provider value={{
@@ -109,7 +103,7 @@ export const useAuthCheck = () => {
     }
     
     if (!context.accessToken || isExpiringSoon()) {
-      console.log('Restoring session')
+      // console.log('Restoring session')
       const response = await fetch('/api/auth/refresh', {
         method: 'POST'
       })
@@ -124,7 +118,7 @@ export const useAuthCheck = () => {
         context.setParsedToken(undefined)
       }
     } else {
-      console.log(`${context.accessToken ? 'access token' : ''} ${isExpiringSoon() ? ' is not expiring' : ''}`)
+      // console.log(`${context.accessToken ? 'access token' : ''} ${isExpiringSoon() ? ' is not expiring' : ''}`)
     }
 
     context.setCheckingAuth(false)

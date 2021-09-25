@@ -21,7 +21,7 @@
   "scripts": {
     "start": "yarn tsync && react-scripts start",
     "build": "react-scripts build",
-    "fullstack": "yarn install && yarn concurrently --prefix-colors cyan,magenta --raw --kill-others -n backend,frontend \"cargo watch -x run -i frontend\" \"yarn start\"",
+    "fullstack": "yarn install && yarn concurrently --prefix-colors cyan,magenta --kill-others -n backend,frontend \"cargo --color always watch -x run -i frontend\" \"yarn start\"",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "tsync": "../bin/tsync.sh"

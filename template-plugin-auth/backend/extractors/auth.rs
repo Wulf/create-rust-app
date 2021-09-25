@@ -1,7 +1,7 @@
 use jsonwebtoken::Validation;
 use jsonwebtoken::DecodingKey;
+use crate::models::permissions::Permission;
 use crate::services::auth::AccessTokenClaims;
-use crate::Pool;
 use actix_http::http::HeaderValue;
 use actix_web::dev::Payload;
 use actix_web::error::ResponseError;
@@ -9,7 +9,6 @@ use actix_web::http::StatusCode;
 use actix_web::{FromRequest, HttpRequest, HttpResponse};
 use derive_more::{Display, Error};
 use futures_util::future::{ready, Ready};
-use serde::{Deserialize, Serialize};
 use crate::models::ID;
 use serde_json::json;
 use jsonwebtoken::decode;
@@ -21,7 +20,14 @@ impl Config {}
 
 #[derive(Debug, Clone)]
 pub struct Auth {
-  pub user_id: ID
+  pub user_id: ID,
+  pub permissions: Vec<Permission>
+}
+
+impl Auth {
+  pub fn has_permission(&self, permission: &str) -> bool {
+    self.permissions.iter().find(|perm| perm.permission == permission).is_some()
+  }
 }
 
 #[derive(Debug, Display, Error)]
@@ -81,10 +87,12 @@ impl FromRequest for Auth {
     }
   
     let user_id = access_token.claims.sub;
+    let permissions = access_token.claims.permissions;
 
     return ready(
       Ok(Auth {
-        user_id: user_id
+        user_id: user_id,
+        permissions
       })
     );
   }

@@ -78,7 +78,7 @@ export const AccountPage = () => {
   useEffect(() => {
     fetchSessions()
   }, [auth.isAuthenticated, page, pageSize])
-  
+
   const changePassword = async () => {
     setProcessing(true)
     const response = await (await fetch('/api/auth/change', {
@@ -97,13 +97,23 @@ export const AccountPage = () => {
     setPassword('')
     setProcessing(false)
   }
-  
+
   return (
     <div style={{ textAlign: 'left' }}>
       <h1>Account</h1>
       <br/>
       {auth.isAuthenticated && <div>
         User # {auth.parsedToken?.sub}
+        <div className="Form" style={{ textAlign: 'left'}}>
+          <h1>Permissions</h1>
+          <pre>
+            {!auth.parsedToken && <div>Error: Auth token was not parsed.</div>}
+            {auth.parsedToken?.permissions.map(perm => {
+              <div>{JSON.stringify(perm)}</div>
+            })}
+            {auth.parsedToken?.permissions.length === 0 && <div>No permissions granted.</div>}
+          </pre>
+        </div>
         <div className="Form" style={{ textAlign: 'left' }}>
           <h1>Change password</h1>
           <br/>

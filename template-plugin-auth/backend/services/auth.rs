@@ -3,6 +3,7 @@ use crate::extractors::auth::Auth;
 use actix_http::http::StatusCode;
 use crate::models::user::{User, UserChangeset};
 use crate::models::user_session::{UserSession, UserSessionChangeset};
+use crate::models::permissions::Permission;
 use crate::models::{UTC, ID, PaginationParams};
 use crate::Pool;
 use crate::mail;
@@ -136,11 +137,13 @@ struct LoginInput {
   device: Option<String>
 }
 
+#[tsync::tsync]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AccessTokenClaims {
     pub exp: usize,
     pub sub: ID,
-    pub token_type: String
+    pub token_type: String,
+    pub permissions: Vec<Permission>
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -176,7 +179,7 @@ async fn login(
   let user = user.unwrap();
 
   if !user.activated {
-    return Ok(HttpResponse::build(StatusCode::BAD_REQUEST).body("{ \"message\": \"Account has not been activated\" }"))
+    return Ok(HttpResponse::build(StatusCode::BAD_REQUEST).body("{ \"message\": \"Account has not been activated.\" }"))
   }
   
   let mut verifier = argonautica::Verifier::default();
@@ -194,10 +197,15 @@ async fn login(
     return Ok(HttpResponse::build(StatusCode::UNAUTHORIZED).body("{ \"message\": \"Invalid credentials.\" }"));
   }
 
+  let permissions = Permission::for_user(&db, user.id);
+  if permissions.is_err() { println!("{:#?}", permissions.err()); return Ok(HttpResponse::InternalServerError().body("{ \"message\": \"An internal server error occurred.\" }")) }
+  let permissions = permissions.unwrap();
+  
   let access_token_claims = AccessTokenClaims {
     exp: (chrono::Utc::now() + chrono::Duration::minutes(15)).timestamp() as usize,
     sub: user.id,
-    token_type: "access_token".to_string()
+    token_type: "access_token".to_string(),
+    permissions
   };
 
   let refresh_token_claims = RefreshTokenClaims {
@@ -304,7 +312,13 @@ async fn refresh(
     &refresh_token_str,
     &DecodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
     &Validation::default()
-  ).unwrap();
+  );
+
+  if refresh_token.is_err() {
+    return Ok(HttpResponse::build(StatusCode::UNAUTHORIZED).body("{ \"message\": \"Invalid token.\" }"));
+  }
+
+  let refresh_token = refresh_token.unwrap();
 
   if !refresh_token.claims.token_type.eq_ignore_ascii_case("refresh_token") {
     return Ok(HttpResponse::build(StatusCode::UNAUTHORIZED).body("{ \"message\": \"Invalid token.\" }"));
@@ -318,10 +332,15 @@ async fn refresh(
 
   let session = session.unwrap();
 
+  let permissions = Permission::for_user(&db, session.user_id);
+  if permissions.is_err() { return Ok(HttpResponse::InternalServerError().body("{ \"message\": \"An internal server error occurred.\" }")) }
+  let permissions = permissions.unwrap();
+
   let access_token_claims = AccessTokenClaims {
     exp: (chrono::Utc::now() + chrono::Duration::minutes(15)).timestamp() as usize,
     sub: session.user_id,
-    token_type: "access_token".to_string()
+    token_type: "access_token".to_string(),
+    permissions
   };
 
   let refresh_token_claims = RefreshTokenClaims {
@@ -447,7 +466,13 @@ async fn activate(
     &item.activation_token,
     &DecodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
     &Validation::default()
-  ).unwrap();
+  );
+
+  if token.is_err() {
+    return Ok(HttpResponse::build(StatusCode::UNAUTHORIZED).body("{ \"message\": \"Invalid token.\" }"));
+  }
+  
+  let token = token.unwrap();
 
   if !token.claims.token_type.eq_ignore_ascii_case("activation_token") {
     return Ok(HttpResponse::build(StatusCode::UNAUTHORIZED).body("{ \"message\": \"Invalid token.\" }"));
@@ -642,7 +667,13 @@ async fn reset_password(
     &item.reset_token,
     &DecodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
     &Validation::default()
-  ).unwrap();
+  );
+
+  if token.is_err() {
+    return Ok(HttpResponse::build(StatusCode::UNAUTHORIZED).body("{ \"message\": \"Invalid token.\" }"));
+  }
+
+  let token = token.unwrap();
 
   if !token.claims.token_type.eq_ignore_ascii_case("reset_token") {
     return Ok(HttpResponse::build(StatusCode::UNAUTHORIZED).body("{ \"message\": \"Invalid token.\" }"));
