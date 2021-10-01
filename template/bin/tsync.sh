@@ -1,3 +1,3 @@
 #!/bin/bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-tsync -i $SCRIPT_DIR/../**/*.rs $SCRIPT_DIR/../**/**/*.rs -o $SCRIPT_DIR/../frontend/src/types/rust.d.ts
+tsync -i $(find . -name "*.rs") -o $SCRIPT_DIR/../frontend/src/types/rust.d.ts
