@@ -14,11 +14,11 @@
 - [ ] Remove all plugins, just have a single template which builds the project
 - [ ] Move `bin/*` into `.cargo/*`
 - [ ] Move `target-dir="backend/.build"` into `.cargo`
-- [ ] Remove sentry crate
 - [ ] Move `migrations` folder to `backend/migrations`
 
 # Done
 
+- [x] Remove sentry crate
 - [x] Dockerfile
 - [x] Validate project name
 

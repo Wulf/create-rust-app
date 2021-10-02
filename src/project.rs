@@ -226,7 +226,6 @@ pub fn create(project_name: &str) -> Result<()> {
         "lettre_email",
         toml::Value::String("0.9.4".into()),
     )?;
-    add_dependency(&project_dir, "sentry", toml::Value::String("0.22.0".into()))?;
     add_dependency(
         &project_dir,
         "serde",
