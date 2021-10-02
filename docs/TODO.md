@@ -4,6 +4,7 @@
 - [ ] FIX tsync script to work on all rust files (not inluding .build) -- currently, `backend/models/permissions/*` are ignored
 - [ ] EASY: run cargo fmt on all code
 - [ ] EASY: Help user setup their database & automatically populate .env with the DATABASE_URL (warn them that the password will be written to a file in plaintext)
+  - [ ] Create 'superadmin' role+user as a step in project creation
 - [ ] EASY: Look over unwrap()s in the auth plugin to make sure errors are handled
 - [ ] The devbox plugin should not require the auth plugin (make an attempt at this)
 - [ ] EASY: use web::block|| for service files, see https://actix.rs/docs/databases/
@@ -13,6 +14,8 @@
 - [ ] Remove all plugins, just have a single template which builds the project
 - [ ] Move `bin/*` into `.cargo/*`
 - [ ] Move `target-dir="backend/.build"` into `.cargo`
+- [ ] Remove sentry crate
+- [ ] Move `migrations` folder to `backend/migrations`
 
 # Done
 
