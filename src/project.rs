@@ -244,7 +244,7 @@ pub fn create(project_name: &str) -> Result<()> {
         "serde_json",
         toml::Value::String("1.0.64".into()),
     )?;
-    add_dependency(&project_dir, "tsync", toml::Value::String("1.0.4".into()))?;
+    add_dependency(&project_dir, "tsync", toml::Value::String("1.2.1".into()))?;
     add_dependency(
         &project_dir,
         "uuid",
