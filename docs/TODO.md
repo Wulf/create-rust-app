@@ -14,6 +14,7 @@
 - [ ] Remove all plugins, just have a single template which builds the project
 - [ ] Move `bin/*` into `.cargo/*`
 - [ ] Move `target-dir="backend/.build"` into `.cargo`
+- [ ] IMPORTANT: Write tests
 
 # Done
 

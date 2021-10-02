@@ -52,10 +52,10 @@ impl User {
       users.filter(id.eq(item_id)).first::<User>(db)
   }
 
-  pub fn find_by_email(db: &DB, email: String) -> QueryResult<Self> {
+  pub fn find_by_email(db: &DB, item_email: String) -> QueryResult<Self> {
     use crate::schema::users::dsl::*;
 
-    users.filter(email.eq(email)).first::<User>(db)
+    users.filter(email.eq(item_email)).first::<User>(db)
   }
   
   pub fn read_all(db: &DB, pagination: &PaginationParams) -> QueryResult<Vec<Self>> {
