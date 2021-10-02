@@ -1,46 +1,46 @@
 use crate::inflector::Inflector;
-use indoc::indoc;
 use anyhow::Result;
+use indoc::indoc;
 
 pub struct Model {
-  pub config: ModelConfig,
-  pub file_contents: String
+    pub config: ModelConfig,
+    pub file_contents: String,
 }
 
 pub struct ModelConfig {
-  pub model_name: String,
-  pub table_name: String,
-  pub file_name: String,
+    pub model_name: String,
+    pub table_name: String,
+    pub file_name: String,
 }
 
 pub fn create(resource_name: &str) -> Result<Model> {
-  let resource = generate(resource_name);
-  
-  crate::fs::add_rust_file(
-    "backend/models",
-    resource.config.file_name.as_str(),
-    resource.file_contents.as_str()
-  )?;
+    let resource = generate(resource_name);
 
-  Ok(resource)
+    crate::fs::add_rust_file(
+        "backend/models",
+        resource.config.file_name.as_str(),
+        resource.file_contents.as_str(),
+    )?;
+
+    Ok(resource)
 }
 
 fn config(resource_name: &str) -> ModelConfig {
-  let model_name = resource_name.to_pascal_case();
-  let file_name = model_name.to_snake_case();
-  let table_name = model_name.to_table_case();
+    let model_name = resource_name.to_pascal_case();
+    let file_name = model_name.to_snake_case();
+    let table_name = model_name.to_table_case();
 
-  return ModelConfig {
-    model_name: model_name,
-    file_name: file_name,
-    table_name: table_name,
-  };
+    return ModelConfig {
+        model_name: model_name,
+        file_name: file_name,
+        table_name: table_name,
+    };
 }
 
 pub fn generate(resource_name: &str) -> Model {
-  let config = config(resource_name);
-  
-  let contents_template: &str = indoc! {"
+    let config = config(resource_name);
+
+    let contents_template: &str = indoc! {"
         use crate::schema::*;
         use crate::diesel::*;
         
@@ -114,11 +114,11 @@ pub fn generate(resource_name: &str) -> Model {
     "};
 
     let contents = String::from(contents_template)
-      .replace("$MODEL_NAME", config.model_name.as_str())
-      .replace("$TABLE_NAME", config.table_name.as_str());
+        .replace("$MODEL_NAME", config.model_name.as_str())
+        .replace("$TABLE_NAME", config.table_name.as_str());
 
     Model {
-      config: config,
-      file_contents: contents
+        config: config,
+        file_contents: contents,
     }
 }

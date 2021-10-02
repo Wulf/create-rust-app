@@ -5,41 +5,41 @@ use inflector::Inflector;
 use std::path::PathBuf;
 
 struct Service {
-  pub config: ServiceConfig,
-  pub file_contents: String,
+    pub config: ServiceConfig,
+    pub file_contents: String,
 }
 
 struct ServiceConfig {
-  pub model_name: String,
-  pub file_name: String,
+    pub model_name: String,
+    pub file_name: String,
 }
 
 pub fn create(resource_name: &str, base_endpoint_path: &str) -> Result<()> {
-  let resource = generate(resource_name);
-  crate::fs::add_rust_file(
-    "backend/services",
-    resource.config.file_name.as_str(),
-    resource.file_contents.as_str(),
-  )?;
+    let resource = generate(resource_name);
+    crate::fs::add_rust_file(
+        "backend/services",
+        resource.config.file_name.as_str(),
+        resource.file_contents.as_str(),
+    )?;
 
-  crate::service::register_service(resource.config.file_name.as_str(), base_endpoint_path)?;
+    crate::service::register_service(resource.config.file_name.as_str(), base_endpoint_path)?;
 
-  Ok(())
+    Ok(())
 }
 
 fn config(service_name: &str) -> ServiceConfig {
-  let model_name = service_name.to_pascal_case();
-  let file_name = model_name.to_snake_case();
+    let model_name = service_name.to_pascal_case();
+    let file_name = model_name.to_snake_case();
 
-  return ServiceConfig {
-    model_name: model_name,
-    file_name: file_name,
-  };
+    return ServiceConfig {
+        model_name: model_name,
+        file_name: file_name,
+    };
 }
 
 fn generate(service_name: &str) -> Service {
-  let config = config(service_name);
-  let contents_template: &str = indoc! {"
+    let config = config(service_name);
+    let contents_template: &str = indoc! {"
     use crate::models::$FILE_NAME::{$MODEL_NAME, $MODEL_NAMEChangeset};
     use crate::models::{ID, PaginationParams};
     use crate::Pool;
@@ -119,25 +119,25 @@ fn generate(service_name: &str) -> Service {
     }
   "};
 
-  let contents = String::from(contents_template)
-    .replace("$MODEL_NAME", config.model_name.as_str())
-    .replace("$FILE_NAME", config.file_name.as_str());
+    let contents = String::from(contents_template)
+        .replace("$MODEL_NAME", config.model_name.as_str())
+        .replace("$FILE_NAME", config.file_name.as_str());
 
-  Service {
-    config: config,
-    file_contents: contents,
-  }
+    Service {
+        config: config,
+        file_contents: contents,
+    }
 }
 
 pub fn register_service(service_file_name: &str, service_base_endpoint_path: &str) -> Result<()> {
-  message(&format!("Registering service {}", service_file_name));
-  let main_file_path = PathBuf::from("backend/main.rs");
-  if main_file_path.exists() && main_file_path.is_file() {
-    let mut main_file_contents = std::fs::read_to_string(&main_file_path)?;
+    message(&format!("Registering service {}", service_file_name));
+    let main_file_path = PathBuf::from("backend/main.rs");
+    if main_file_path.exists() && main_file_path.is_file() {
+        let mut main_file_contents = std::fs::read_to_string(&main_file_path)?;
 
-    main_file_contents = main_file_contents.replace("web::scope(\"/api\")", &format!("web::scope(\"/api\")\n            .service(services::{}::endpoints(web::scope(\"{}\")))", service_file_name, service_base_endpoint_path));
-    std::fs::write(main_file_path, main_file_contents)?;
-  }
+        main_file_contents = main_file_contents.replace("web::scope(\"/api\")", &format!("web::scope(\"/api\")\n            .service(services::{}::endpoints(web::scope(\"{}\")))", service_file_name, service_base_endpoint_path));
+        std::fs::write(main_file_path, main_file_contents)?;
+    }
 
-  Ok(())
+    Ok(())
 }
