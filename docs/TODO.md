@@ -11,6 +11,8 @@
 - [ ] Frontend: Add eslint, add prettier
 - [ ] EASY: Admin plugin: expose roles, make frontend useAuth() hook expose methods like hasPermission() hasRole()
 - [ ] Remove all plugins, just have a single template which builds the project
+- [ ] Move `bin/*` into `.cargo/*`
+- [ ] Move `target-dir="backend/.build"` into `.cargo`
 
 # Done
 
