@@ -2,7 +2,6 @@
 
 - [ ] EASY: write documentation (in another repo? create-rust-app-docs), maybe take `create-rust-app.dev`? (just like `create-react-app.dev`)
 - [ ] FIX tsync script to work on all rust files (not inluding .build) -- currently, `backend/models/permissions/*` are ignored
-- [ ] EASY: run cargo fmt on all code (including `template/*` files)
 - [ ] EASY: Help user setup their database & automatically populate .env with the DATABASE_URL (warn them that the password will be written to a file in plaintext)
   - [ ] Create 'superadmin' role+user as a step in project creation
 - [ ] EASY: Look over unwrap()s in the auth plugin to make sure errors are handled
@@ -15,12 +14,6 @@
 - [ ] Move `bin/*` into `.cargo/*`
 - [ ] Move `target-dir="backend/.build"` into `.cargo`
 - [ ] IMPORTANT: Write tests
-
-# Done
-
-- [x] Remove sentry crate
-- [x] Dockerfile
-- [x] Validate project name
 
 # Needs thought
 
@@ -41,3 +34,10 @@
 - [ ] Single binary build output for created projects (bundle assets in binary)
 
   NOTE: Single binary build output isn't a good idea as it will make the template project much harder to go about and modify for some users
+
+# Done
+
+- [x] EASY: run cargo fmt on all code (including `template/*` files)
+- [x] Remove sentry crate
+- [x] Dockerfile
+- [x] Validate project name

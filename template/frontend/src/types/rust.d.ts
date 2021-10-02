@@ -1,17 +1,4 @@
 /* This file is generated and managed by tsync */
 
-interface PaginationParams {
-  page: number
-  page_size: number
-}
-
-interface Todo {
-  id: number
-  text: string
-  created_at: Date
-  updated_at: Date
-}
-
-interface TodoJson {
-  text: string
-}
+// (1) run `yarn tsync` to generate this file (make sure you `cd` into the `frontend` folder)
+// (2) alternatively, run `cargo fullstack` which will also generate this file!

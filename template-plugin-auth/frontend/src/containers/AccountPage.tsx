@@ -12,10 +12,13 @@ export const AccountPage = () => {
 
   const [page, setPage] = useState<number>(0)
   const [pageSize, setPageSize] = useState<number>(10)
-  
+
   const [isFetchingSessions, setFetchingSessions] = useState<boolean>(false)
-  const [sessions, setSessions] = useState<UserSessionResponse>({ sessions: [], num_pages: 1 })
-  
+  const [sessions, setSessions] = useState<UserSessionResponse>({
+    sessions: [],
+    num_pages: 1,
+  })
+
   const [isDeleting, setDeleting] = useState<boolean>(false)
   const deleteSession = async (id: number) => {
     setDeleting(true)
@@ -23,8 +26,8 @@ export const AccountPage = () => {
     const response = await fetch(`/api/auth/sessions/${id}`, {
       method: 'DELETE',
       headers: {
-        Authorization: `${auth.accessToken}`
-      }
+        Authorization: `${auth.accessToken}`,
+      },
     })
 
     if (response.ok) {
@@ -33,7 +36,7 @@ export const AccountPage = () => {
       }
       await fetchSessions()
     }
-    
+
     setDeleting(false)
   }
 
@@ -43,33 +46,35 @@ export const AccountPage = () => {
     const response = await fetch(`/api/auth/sessions`, {
       method: 'DELETE',
       headers: {
-        Authorization: `${auth.accessToken}`
-      }
+        Authorization: `${auth.accessToken}`,
+      },
     })
 
     if (response.ok) {
       setPage(0)
       await fetchSessions()
     }
-    
+
     setDeleting(false)
   }
-  
+
   const fetchSessions = async () => {
     setFetchingSessions(true)
-    
+
     if (!auth.isAuthenticated) {
       setSessions({ sessions: [], num_pages: 1 })
       setFetchingSessions(false)
       return
     }
-    
-    const sessions = await (await fetch(`/api/auth/sessions?page=${page}&page_size=${pageSize}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `${auth.accessToken}`
-      }
-    })).json()
+
+    const sessions = await (
+      await fetch(`/api/auth/sessions?page=${page}&page_size=${pageSize}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `${auth.accessToken}`,
+        },
+      })
+    ).json()
 
     setSessions(sessions)
     setFetchingSessions(false)
@@ -81,17 +86,19 @@ export const AccountPage = () => {
 
   const changePassword = async () => {
     setProcessing(true)
-    const response = await (await fetch('/api/auth/change', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `${auth.accessToken}`
-      },
-      body: JSON.stringify({
-        old_password: originalPassword,
-        new_password: password
+    const response = await (
+      await fetch('/api/auth/change', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `${auth.accessToken}`,
+        },
+        body: JSON.stringify({
+          old_password: originalPassword,
+          new_password: password,
+        }),
       })
-    })).json()
+    ).json()
     console.log(response)
     setOriginalPassword('')
     setPassword('')
@@ -101,58 +108,89 @@ export const AccountPage = () => {
   return (
     <div style={{ textAlign: 'left' }}>
       <h1>Account</h1>
-      <br/>
-      {auth.isAuthenticated && <div>
-        User # {auth.parsedToken?.sub}
-        <div className="Form" style={{ textAlign: 'left'}}>
-          <h1>Permissions</h1>
-          <pre>
-            {!auth.parsedToken && <div>Error: Auth token was not parsed.</div>}
-            {auth.parsedToken?.permissions.map(perm => {
-              <div>{JSON.stringify(perm)}</div>
-            })}
-            {auth.parsedToken?.permissions.length === 0 && <div>No permissions granted.</div>}
-          </pre>
-        </div>
-        <div className="Form" style={{ textAlign: 'left' }}>
-          <h1>Change password</h1>
-          <br/>
-          <div style={{ display: 'flex', flexFlow: 'column' }}>
-            <label>Original Password</label>
-            <input type="password" value={originalPassword} onChange={e => setOriginalPassword(e.target.value)} />
-          </div>
-          <div style={{ display: 'flex', flexFlow: 'column' }}>
-            <label>New Password</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
-          </div>
-          <div style={{ display: 'flex', flexFlow: 'column' }}>
-            <button disabled={processing} onClick={changePassword}>Change Password</button>
-          </div>
-        </div>
+      <br />
+      {auth.isAuthenticated && (
         <div>
-          <h1>Sessions</h1>
-          <button disabled={isDeleting} onClick={() => deleteAllSessions()}>
-            Delete All
-          </button>
-          {sessions.sessions.map(session => (
-            <div>
-              {JSON.stringify(session, null, 2)}
-              <button disabled={isDeleting} onClick={() => deleteSession(session.id)}>
-                Delete
+          User # {auth.parsedToken?.sub}
+          <div className="Form" style={{ textAlign: 'left' }}>
+            <h1>Permissions</h1>
+            <pre>
+              {!auth.parsedToken && (
+                <div>Error: Auth token was not parsed.</div>
+              )}
+              {auth.parsedToken?.permissions.map((perm) => {
+                ;<div>{JSON.stringify(perm)}</div>
+              })}
+              {auth.parsedToken?.permissions.length === 0 && (
+                <div>No permissions granted.</div>
+              )}
+            </pre>
+          </div>
+          <div className="Form" style={{ textAlign: 'left' }}>
+            <h1>Change password</h1>
+            <br />
+            <div style={{ display: 'flex', flexFlow: 'column' }}>
+              <label>Original Password</label>
+              <input
+                type="password"
+                value={originalPassword}
+                onChange={(e) => setOriginalPassword(e.target.value)}
+              />
+            </div>
+            <div style={{ display: 'flex', flexFlow: 'column' }}>
+              <label>New Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <div style={{ display: 'flex', flexFlow: 'column' }}>
+              <button disabled={processing} onClick={changePassword}>
+                Change Password
               </button>
             </div>
-          ))}
-          {isFetchingSessions && <div>Fetching sessions...</div>}
+          </div>
           <div>
-            <button disabled={page <= 0} onClick={() => setPage(page - 1)}>{`<<`}</button>
-            <span>{page + 1} / {sessions.num_pages}</span>
-            <button disabled={(page + 1) >= sessions.num_pages} onClick={() => setPage(page + 1)}>{`>>`}</button>
+            <h1>Sessions</h1>
+            <button disabled={isDeleting} onClick={() => deleteAllSessions()}>
+              Delete All
+            </button>
+            {sessions.sessions.map((session) => (
+              <div>
+                {JSON.stringify(session, null, 2)}
+                <button
+                  disabled={isDeleting}
+                  onClick={() => deleteSession(session.id)}
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+            {isFetchingSessions && <div>Fetching sessions...</div>}
+            <div>
+              <button
+                disabled={page <= 0}
+                onClick={() => setPage(page - 1)}
+              >{`<<`}</button>
+              <span>
+                {page + 1} / {sessions.num_pages}
+              </span>
+              <button
+                disabled={page + 1 >= sessions.num_pages}
+                onClick={() => setPage(page + 1)}
+              >{`>>`}</button>
+            </div>
           </div>
         </div>
-      </div>}
-      {!auth.isAuthenticated && <div>
-        <a href="#" onClick={() => history.push('/login')}>Login to view your account detials</a>
-      </div>}
+      )}
+      {!auth.isAuthenticated && (
+        <div>
+          <a href="#" onClick={() => history.push('/login')}>
+            Login to view your account detials
+          </a>
+        </div>
+      )}
     </div>
   )
 }

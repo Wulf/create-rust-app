@@ -1,4 +1,10 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 
 const MILLISECONDS_UNTIL_EXPIRY_CHECK = 10 * 1000 // check expiry every 10 seconds
 const REMAINING_TOKEN_EXPIRY_TIME_ALLOWED = 60 * 1000 // 1 minute before token should be refreshed
@@ -21,19 +27,25 @@ const Context = createContext<AuthContext>(undefined as any)
 
 export const AuthProvider = (props: AuthWrapperProps) => {
   const [accessToken, setAccessToken] = useState<string | undefined>()
-  const [parsedToken, setParsedToken] = useState<AccessTokenClaims | undefined>()
+  const [parsedToken, setParsedToken] = useState<
+    AccessTokenClaims | undefined
+  >()
   const [isCheckingAuth, setCheckingAuth] = useState<boolean>(false)
-  
-  return <Context.Provider value={{
-    accessToken,
-    parsedToken,
-    setAccessToken,
-    setParsedToken,
-    isCheckingAuth,
-    setCheckingAuth
-  }}>
-    {props.children}
-  </Context.Provider>
+
+  return (
+    <Context.Provider
+      value={{
+        accessToken,
+        parsedToken,
+        setAccessToken,
+        setParsedToken,
+        isCheckingAuth,
+        setCheckingAuth,
+      }}
+    >
+      {props.children}
+    </Context.Provider>
+  )
 }
 
 export const useAuth = () => {
@@ -43,9 +55,9 @@ export const useAuth = () => {
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password }),
     })
 
     if (response.ok) {
@@ -63,7 +75,7 @@ export const useAuth = () => {
 
   const logout = async (): Promise<boolean> => {
     const response = await fetch('/api/auth/logout', {
-      method: 'POST'
+      method: 'POST',
     })
 
     if (response.ok) {
@@ -74,14 +86,14 @@ export const useAuth = () => {
       return false
     }
   }
-  
+
   return {
     accessToken: context.accessToken,
     parsedToken: context.parsedToken,
     isCheckingAuth: context.isCheckingAuth,
     isAuthenticated: !!context.accessToken,
     login,
-    logout
+    logout,
   }
 }
 
@@ -90,27 +102,29 @@ export const useAuthCheck = () => {
 
   const refreshIfNecessary = useCallback(async () => {
     context.setCheckingAuth(true)
-    
+
     const isExpiringSoon = () => {
       if (context.parsedToken?.exp) {
         const expireTimeMS = context.parsedToken.exp * 1000
         const currentTimeMS = Date.now()
-  
-        return (expireTimeMS - currentTimeMS) <= REMAINING_TOKEN_EXPIRY_TIME_ALLOWED
+
+        return (
+          expireTimeMS - currentTimeMS <= REMAINING_TOKEN_EXPIRY_TIME_ALLOWED
+        )
       }
-  
+
       return true
     }
-    
+
     if (!context.accessToken || isExpiringSoon()) {
       // console.log('Restoring session')
       const response = await fetch('/api/auth/refresh', {
-        method: 'POST'
+        method: 'POST',
       })
 
       if (response.ok) {
         const responseJson = await response.json()
-  
+
         context.setAccessToken(responseJson.access_token)
         context.setParsedToken(parseJwt(responseJson.access_token))
       } else {
@@ -134,7 +148,9 @@ export const useAuthCheck = () => {
         refreshIfNecessary()
       }, MILLISECONDS_UNTIL_EXPIRY_CHECK)
     }
-    return () => { if (intervalId) clearInterval(intervalId) }
+    return () => {
+      if (intervalId) clearInterval(intervalId)
+    }
   }, [refreshIfNecessary])
 }
 
@@ -142,9 +158,14 @@ export const useAuthCheck = () => {
 const parseJwt = (token: string) => {
   var base64Url = token.split('.')[1]
   var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-  var jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-  }).join(''))
+  var jsonPayload = decodeURIComponent(
+    atob(base64)
+      .split('')
+      .map(function (c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+      })
+      .join('')
+  )
 
   return JSON.parse(jsonPayload)
 }

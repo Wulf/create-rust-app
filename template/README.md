@@ -9,6 +9,7 @@ This project was bootstrapped with [Create Rust App](https://github.com/wulf/cre
 - Diesel CLI (after rust is installed: `cargo install diesel_cli`)
 
 - Other helpful tools
+
   - `cargo install cargo-edit` (makes it easy to add deps with `cargo add`)
   - `cargo install cargo-watch` (allows running `cargo watch -x run -i frontend/` for continuous compilation)
 
@@ -46,12 +47,12 @@ TODO
 
 ## Database Migrations
 
-* `diesel migration generate <migration_name>`
-* `diesel migration run`
-* `diesel migration revert`
+- `diesel migration generate <migration_name>`
+- `diesel migration run`
+- `diesel migration revert`
 
-* `diesel database setup`
-* `diesel database reset`
+- `diesel database setup`
+- `diesel database reset`
 
 ## Development
 
@@ -68,4 +69,4 @@ cargo watch -x run -i frontend/
 
 ## Todo
 
-* Implement a CSRF mitigation technique
+- Implement a CSRF mitigation technique

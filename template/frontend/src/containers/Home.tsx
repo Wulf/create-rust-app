@@ -14,7 +14,7 @@ export const Home = () => {
       <p>
         Edit <code>app/src/App.tsx</code> and save to reload.
       </p>
-      
+
       <div style={{ display: 'flex', justifyContent: 'center' }}>
         <a
           className="App-link"

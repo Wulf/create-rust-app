@@ -1,9 +1,9 @@
+use std::fs::File;
 ///
 /// Build Script
 /// This is run as a pre-build step -- before the rust backend is compiled.
 ///
-use std::{process::Command, io::Write};
-use std::fs::File;
+use std::{io::Write, process::Command};
 
 /*
  * Note: We're waiting for this feature: println!("cargo:info=...")
@@ -21,11 +21,16 @@ fn shell(command: &str) {
         .expect(format!("Failed to run {cmd}", cmd = command).as_str());
 
     // println!("build.rs => {:?}", output.stdout);
-    let mut file = File::create(format!("build-log-{}.txt", command)).expect("Couldn't create file...");
-    file.write(b"build log\n\n\n\nSTDOUT:\n").expect("Couldn't write to build log");
-    file.write_all(&output.stdout).expect("Couldn't write to build log");
-    file.write(b"\n\n\n\nSTDERR:\n").expect("Couldn't write to build log");
-    file.write_all(&output.stderr).expect("Couldn't write to build log");
+    let mut file =
+        File::create(format!("build-log-{}.txt", command)).expect("Couldn't create file...");
+    file.write(b"build log\n\n\n\nSTDOUT:\n")
+        .expect("Couldn't write to build log");
+    file.write_all(&output.stdout)
+        .expect("Couldn't write to build log");
+    file.write(b"\n\n\n\nSTDERR:\n")
+        .expect("Couldn't write to build log");
+    file.write_all(&output.stderr)
+        .expect("Couldn't write to build log");
 }
 
 fn main() {

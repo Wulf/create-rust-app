@@ -11,42 +11,50 @@ export const RegistrationPage = () => {
 
   const register = async () => {
     setProcessing(true)
-    const response = (await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email, password })
-    })).json()
+    const response = (
+      await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+    ).json()
     console.log(response)
     setProcessing(false)
     history.push('/activate')
   }
-  
+
   return (
     <div className="Form" style={{ textAlign: 'left' }}>
       <h1>Registration</h1>
-      <br/>
+      <br />
       <div style={{ display: 'flex', flexFlow: 'column' }}>
         <label>Email</label>
-        <input value={email} onChange={e => setEmail(e.target.value)} />
+        <input value={email} onChange={(e) => setEmail(e.target.value)} />
       </div>
       <div style={{ display: 'flex', flexFlow: 'column' }}>
         <label>Password</label>
-        <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
       </div>
       <div style={{ display: 'flex', flexFlow: 'column' }}>
-        <button disabled={processing} onClick={register}>Register</button>
+        <button disabled={processing} onClick={register}>
+          Register
+        </button>
       </div>
-      <a 
-        style={{marginTop: '30px'}}
+      <a
+        style={{ marginTop: '30px' }}
         href="#"
         onClick={() => history.push('/login')}
       >
         Already have an account? Click here to login.
       </a>
-      <a 
-        style={{marginTop: '30px'}}
+      <a
+        style={{ marginTop: '30px' }}
         href="#"
         onClick={() => history.push('/activate')}
       >

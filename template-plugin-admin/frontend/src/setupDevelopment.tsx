@@ -4,24 +4,54 @@
 
 /* require() this file in development mode to enable development hints */
 
-import React, { useEffect, useRef, useState } from 'react';
-import ReactDOM from 'react-dom';
-import { QueryClient, QueryClientProvider, useMutation, useQuery } from 'react-query';
+import React, { useEffect, useRef, useState } from 'react'
+import ReactDOM from 'react-dom'
+import {
+  QueryClient,
+  QueryClientProvider,
+  useMutation,
+  useQuery,
+} from 'react-query'
 
-const warning = <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="24px" width="24px" viewBox="0 0 24 24"><path d="M12 2.829l9.172 9.171-9.172 9.171-9.172-9.171 9.172-9.171zm0-2.829l-12 12 12 12 12-12-12-12zm-1 7h2v6h-2v-6zm1 10.25c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z"/></svg>
-const close = <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.151 17.943l-4.143-4.102-4.117 4.159-1.833-1.833 4.104-4.157-4.162-4.119 1.833-1.833 4.155 4.102 4.106-4.16 1.849 1.849-4.1 4.141 4.157 4.104-1.849 1.849z"/></svg>
+const warning = (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="currentColor"
+    height="24px"
+    width="24px"
+    viewBox="0 0 24 24"
+  >
+    <path d="M12 2.829l9.172 9.171-9.172 9.171-9.172-9.171 9.172-9.171zm0-2.829l-12 12 12 12 12-12-12-12zm-1 7h2v6h-2v-6zm1 10.25c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z" />
+  </svg>
+)
+const close = (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="currentColor"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+  >
+    <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.151 17.943l-4.143-4.102-4.117 4.159-1.833-1.833 4.104-4.157-4.162-4.119 1.833-1.833 4.155 4.102 4.106-4.16 1.849 1.849-4.1 4.141 4.157 4.104-1.849 1.849z" />
+  </svg>
+)
 
 interface Action {
-  label: string,
+  label: string
   fn: () => void
 }
 
-const DevBoxItem = (props: { actions?: Action[], children: React.ReactNode }) => {
+const DevBoxItem = (props: {
+  actions?: Action[]
+  children: React.ReactNode
+}) => {
   return (
     <div style={{ display: 'flex', flexFlow: 'column nowrap' }}>
       <div>{props.children}</div>
-      <div style={{display: 'flex'}}>
-        {props.actions?.map(action => <button onClick={() => action.fn()}>{action.label}</button>)}
+      <div style={{ display: 'flex' }}>
+        {props.actions?.map((action) => (
+          <button onClick={() => action.fn()}>{action.label}</button>
+        ))}
       </div>
     </div>
   )
@@ -29,26 +59,41 @@ const DevBoxItem = (props: { actions?: Action[], children: React.ReactNode }) =>
 
 const DevBox = () => {
   const [display, setDisplay] = useState<boolean>(true)
-  
-  const healthQuery = useQuery('health', () => fetch('/api/development/health').then(r => r.json()))
-  const dbMigrationQuery = useQuery('migrations', () => fetch('/api/development/db/needs-migration').then(r => r.json()))
-  const dbMigrateMutation = useMutation(() => fetch('/api/development/db/migrate').then(r => r.json()), {
-    onSuccess: () => queryClient.invalidateQueries('migrations')
-  })
+
+  const healthQuery = useQuery('health', () =>
+    fetch('/api/development/health').then((r) => r.json())
+  )
+  const dbMigrationQuery = useQuery('migrations', () =>
+    fetch('/api/development/db/needs-migration').then((r) => r.json())
+  )
+  const dbMigrateMutation = useMutation(
+    () => fetch('/api/development/db/migrate').then((r) => r.json()),
+    {
+      onSuccess: () => queryClient.invalidateQueries('migrations'),
+    }
+  )
   // const hasSystemRoleQuery = useQuery('role-check', () => fetch('/api/development/auth/has-system-role', { headers: { Authorization: `${auth.accessToken}` } }).then(r => r.json()))
   // const addSystemRoleMutation = useMutation(() => fetch('/api/development/auth/add-system-role', { headers: { Authorization: `${auth.accessToken}` } }).then(r => r.json()), {
   //   onSuccess: () => queryClient.invalidateQueries('role-check')
   // })
 
-  const isFetching = healthQuery.isFetching || dbMigrationQuery.isFetching /*|| hasSystemRoleQuery.isFetching*/
+  const isFetching =
+    healthQuery.isFetching ||
+    dbMigrationQuery.isFetching /*|| hasSystemRoleQuery.isFetching*/
   const shouldDisplay = useRef<boolean>(true)
 
-  shouldDisplay.current = !!(healthQuery.isError || dbMigrationQuery.isError || dbMigrationQuery.data /*|| hasSystemRoleQuery.data === false*/)
-  
+  shouldDisplay.current = !!(
+    (
+      healthQuery.isError ||
+      dbMigrationQuery.isError ||
+      dbMigrationQuery.data
+    ) /*|| hasSystemRoleQuery.data === false*/
+  )
+
   // useEffect(() => {
   //   hasSystemRoleQuery.refetch()
   // }, [auth.isAuthenticated, auth.accessToken])
-  
+
   useEffect(() => {
     setDisplay(shouldDisplay.current)
   }, [
@@ -59,25 +104,27 @@ const DevBox = () => {
   ])
 
   return (
-    <div style={{
-      display: display && shouldDisplay.current ? 'block' : 'none',
-      margin: '12px',
-      padding: '12px',
-      backgroundColor: 'white'
-    }}>
-      <div style={{position: 'absolute', height: '0px', width: '0px'}}>
-        <div style={{position: 'relative', left: '-36px', top: '-36px'}}>
+    <div
+      style={{
+        display: display && shouldDisplay.current ? 'block' : 'none',
+        margin: '12px',
+        padding: '12px',
+        backgroundColor: 'white',
+      }}
+    >
+      <div style={{ position: 'absolute', height: '0px', width: '0px' }}>
+        <div style={{ position: 'relative', left: '-36px', top: '-36px' }}>
           <a
-           style={{
+            style={{
               textDecoration: 'none',
               boxShadow: '0 4px 4px #00000066',
               color: '#fe4646',
               backgroundColor: '#FFF',
               borderRadius: '50%',
-              display: 'inline-flex'
+              display: 'inline-flex',
             }}
             href="/"
-            onClick={e => {
+            onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
               setDisplay(false)
@@ -87,38 +134,59 @@ const DevBox = () => {
           </a>
         </div>
       </div>
-      <div style={{display: 'flex', marginBottom: '12px', flexFlow: 'row nowrap'}}>
-        <span style={{
-          fontSize: '24px',
-          fontWeight: 'bolder',
-          flex: 1,
-          color: 'rgba(207,144,58,1)',
+      <div
+        style={{
           display: 'flex',
-          overflow: 'hidden',
-          height: '24px'
-        }}>
-          <div style={{flex: 1}}>DEVBOX</div> {isFetching && <div className={`${DEVBOX_ID}-loader`}></div>}
-        </span>
-        {!isFetching && <span style={{ color: 'rgba(207,144,58,1)'}}>{warning}</span>}
-      </div>
-      {(healthQuery.isError || healthQuery.isFetching) && <DevBoxItem>
-        <span style={{color:'hotpink'}}>WARN!</span>&nbsp;
-        {healthQuery.isError && 'The backend is not reachable.'}
-        {healthQuery.isFetching && 'Connecting to backend...'}
-      </DevBoxItem>}
-      {!healthQuery.isError && <>
-        {!dbMigrationQuery.isError && dbMigrationQuery.data && <DevBoxItem 
-          actions={[{
-            label: dbMigrateMutation.isLoading ? 'running...' : 'Run Migrations',
-            fn: () => {
-              if (dbMigrateMutation.isLoading) return
-              dbMigrateMutation.mutate()
-            }
-          }]}
+          marginBottom: '12px',
+          flexFlow: 'row nowrap',
+        }}
+      >
+        <span
+          style={{
+            fontSize: '24px',
+            fontWeight: 'bolder',
+            flex: 1,
+            color: 'rgba(207,144,58,1)',
+            display: 'flex',
+            overflow: 'hidden',
+            height: '24px',
+          }}
         >
-          <span style={{color: 'hotpink'}}>WARN!</span>&nbsp;Some migrations are pending!
-        </DevBoxItem>}
-        {/* {hasSystemRoleQuery.data === false && <DevBoxItem actions={[{
+          <div style={{ flex: 1 }}>DEVBOX</div>{' '}
+          {isFetching && <div className={`${DEVBOX_ID}-loader`}></div>}
+        </span>
+        {!isFetching && (
+          <span style={{ color: 'rgba(207,144,58,1)' }}>{warning}</span>
+        )}
+      </div>
+      {(healthQuery.isError || healthQuery.isFetching) && (
+        <DevBoxItem>
+          <span style={{ color: 'hotpink' }}>WARN!</span>&nbsp;
+          {healthQuery.isError && 'The backend is not reachable.'}
+          {healthQuery.isFetching && 'Connecting to backend...'}
+        </DevBoxItem>
+      )}
+      {!healthQuery.isError && (
+        <>
+          {!dbMigrationQuery.isError && dbMigrationQuery.data && (
+            <DevBoxItem
+              actions={[
+                {
+                  label: dbMigrateMutation.isLoading
+                    ? 'running...'
+                    : 'Run Migrations',
+                  fn: () => {
+                    if (dbMigrateMutation.isLoading) return
+                    dbMigrateMutation.mutate()
+                  },
+                },
+              ]}
+            >
+              <span style={{ color: 'hotpink' }}>WARN!</span>&nbsp;Some
+              migrations are pending!
+            </DevBoxItem>
+          )}
+          {/* {hasSystemRoleQuery.data === false && <DevBoxItem actions={[{
           label: addSystemRoleMutation.isLoading ? 'running...' : 'Add `developer` role to current user',
           fn: () => {
             if (addSystemRoleMutation.isLoading) return
@@ -127,18 +195,18 @@ const DevBox = () => {
         }]}>
           <span style={{color: 'deepskyblue'}}>INFO!</span>&nbsp;The logged in user doesn't have the developer role. You may not have access to administrative developer tasks.
         </DevBoxItem>} */}
-      </>}
-      
+        </>
+      )}
     </div>
   )
 }
 
 const DEVBOX_ID = 'create-rust-app-devbox'
 const existingDevBoxes = document.getElementsByClassName(DEVBOX_ID)
-if (existingDevBoxes.length > 0) { 
+if (existingDevBoxes.length > 0) {
   for (let i = 0; i < existingDevBoxes.length; i++) {
     const el = existingDevBoxes[i]
-    document.body.removeChild(el) 
+    document.body.removeChild(el)
   }
 }
 
@@ -230,12 +298,17 @@ devBox.appendChild(devBoxStyle)
 devBox.appendChild(document.createElement('div'))
 document.body.appendChild(devBox)
 
-const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+})
 
-ReactDOM.render(<>
-  <QueryClientProvider client={queryClient}>
-    <DevBox/>
-  </QueryClientProvider>
-</>, devBox.children[1])
+ReactDOM.render(
+  <>
+    <QueryClientProvider client={queryClient}>
+      <DevBox />
+    </QueryClientProvider>
+  </>,
+  devBox.children[1]
+)
 
 export {}

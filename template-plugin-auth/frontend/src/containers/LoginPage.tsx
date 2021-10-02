@@ -17,35 +17,39 @@ export const LoginPage = () => {
 
   if (auth.isAuthenticated) {
     history.push('/')
-    return <div>
-      Already logged in. Redirecting you to the home page...
-    </div>
+    return <div>Already logged in. Redirecting you to the home page...</div>
   }
 
   return (
     <div className="Form" style={{ textAlign: 'left' }}>
       <h1>Login</h1>
-      <br/>
+      <br />
       <div style={{ display: 'flex', flexFlow: 'column' }}>
         <label>Email</label>
-        <input value={email} onChange={e => setEmail(e.target.value)} />
+        <input value={email} onChange={(e) => setEmail(e.target.value)} />
       </div>
       <div style={{ display: 'flex', flexFlow: 'column' }}>
         <label>Password</label>
-        <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
       </div>
       <div style={{ display: 'flex', flexFlow: 'column' }}>
-        <button disabled={processing} onClick={login}>Login</button>
+        <button disabled={processing} onClick={login}>
+          Login
+        </button>
       </div>
-      <a 
-        style={{marginTop: '30px'}}
+      <a
+        style={{ marginTop: '30px' }}
         href="#"
         onClick={() => history.push('/register')}
       >
         Don't have an account? Click here to register.
       </a>
-      <a 
-        style={{marginTop: '30px'}}
+      <a
+        style={{ marginTop: '30px' }}
         href="#"
         onClick={() => history.push('/recovery')}
       >

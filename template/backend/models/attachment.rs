@@ -11,7 +11,7 @@
 // #[table_name = "attachments"]
 // pub struct Attachment {
 //   pub id: ID,
-  
+
 //   pub name: String,
 //   pub record_type: String,
 //   pub record_id: ID,
@@ -23,29 +23,29 @@
 // #[belongs_to(Attachment)]
 // pub struct AttachmentBlob {
 //   pub id: ID,
-  
+
 //   key character varying COLLATE pg_catalog."default" NOT NULL,
 //   filename character varying COLLATE pg_catalog."default" NOT NULL,
 //   content_type character varying COLLATE pg_catalog."default",
 //   metadata text COLLATE pg_catalog."default",
 //   byte_size bigint NOT NULL,
 //   pub checksum: String character varying COLLATE pg_catalog."default" NOT NULL,
-  
+
 //   pub created_at: UTC,
 // }
 
 // impl Todo {
 //   pub fn create(db: &DB, item: &TodoChangeset) -> QueryResult<Self> {
 //     use crate::schema::todos::dsl::*;
-    
+
 //     insert_into(todos)
 //       .values(item)
 //       .get_result::<Todo>(db)
 //   }
-  
+
 //   pub fn read(db: &DB, item_id: ID) -> QueryResult<Self> {
 //     use crate::schema::todos::dsl::*;
-    
+
 //     todos.filter(id.eq(item_id)).first::<Todo>(db)
 //   }
 

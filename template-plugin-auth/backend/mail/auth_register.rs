@@ -1,23 +1,29 @@
 use crate::mail::Mailer;
 
 pub fn send(mailer: &Mailer, to_email: &str, link: &str) {
-  let subject = "Registration Confirmation)";
-  let text = format!(r#"
+    let subject = "Registration Confirmation)";
+    let text = format!(
+        r#"
 (This is an automated message.)
 
 Hello,
 
 Please follow the link below to complete your registration:
 {link}
-"#, link=link);
-  let html = format!(r#"
+"#,
+        link = link
+    );
+    let html = format!(
+        r#"
 (This is an automated message.)
 
 Hello,
 
 Please follow the link below to complete your registration:
 {link}
-"#, link=link);
+"#,
+        link = link
+    );
 
-  mailer.send(to_email, &subject, &text, &html);
+    mailer.send(to_email, &subject, &text, &html);
 }

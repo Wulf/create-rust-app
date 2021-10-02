@@ -8,11 +8,14 @@ export const ActivationPage = () => {
 
   const activate = async () => {
     setProcessing(true)
-    const response = (await fetch(`/api/auth/activate?activation_token=${activationToken}`, {
-      headers: {
-        'Content-Type': 'application/json'
+    const response = await fetch(
+      `/api/auth/activate?activation_token=${activationToken}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
-    }))
+    )
     console.log(response)
     setProcessing(false)
   }
@@ -20,13 +23,19 @@ export const ActivationPage = () => {
   return (
     <div className="Form" style={{ textAlign: 'left' }}>
       <h1>Activate</h1>
-      <br/>
+      <br />
       <div style={{ display: 'flex', flexFlow: 'column' }}>
         <label>Activation Token</label>
-        <input type="password" value={activationToken} onChange={e => setActivationToken(e.target.value)} />
+        <input
+          type="password"
+          value={activationToken}
+          onChange={(e) => setActivationToken(e.target.value)}
+        />
       </div>
       <div style={{ display: 'flex', flexFlow: 'column' }}>
-        <button disabled={processing} onClick={activate}>Activate</button>
+        <button disabled={processing} onClick={activate}>
+          Activate
+        </button>
       </div>
     </div>
   )

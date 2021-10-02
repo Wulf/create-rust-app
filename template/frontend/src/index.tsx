@@ -8,9 +8,9 @@ import { BrowserRouter } from 'react-router-dom'
 ReactDOM.render(
   <React.StrictMode>
     {/* CRA: Wrap */}
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
     {/* CRA: Unwrap */}
   </React.StrictMode>,
   document.getElementById('root')
