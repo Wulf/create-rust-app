@@ -149,7 +149,7 @@ const DevBox = () => {
             color: 'rgba(207,144,58,1)',
             display: 'flex',
             overflow: 'hidden',
-            height: '24px',
+            height: '30px',
           }}
         >
           <div style={{ flex: 1 }}>DEVBOX</div>{' '}

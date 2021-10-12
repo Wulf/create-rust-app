@@ -14,6 +14,7 @@
 - [ ] Move `bin/*` into `.cargo/*`
 - [ ] Move `target-dir="backend/.build"` into `.cargo`
 - [ ] IMPORTANT: Write tests
+- [ ] EASY: (this should be part of a larger effort to make it seem like there aren't many different projects that you need to learn about) Change `diesel_manage_updated_at` to `manage_updated_at` (it might confuse devs who aren't familiar with diesel)
 
 # Needs thought
 
