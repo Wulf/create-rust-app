@@ -2,9 +2,10 @@ extern crate inflector;
 
 mod db;
 mod fs;
-mod logger;
+mod git;
 mod mail;
 mod model;
+mod logger;
 mod plugins;
 mod project;
 mod service;
