@@ -74,11 +74,15 @@ impl UserSession {
             .first::<UserSession>(db)
     }
 
-    pub fn read_all(db: &DB, pagination: &PaginationParams, user_id: ID) -> QueryResult<Vec<Self>> {
+    pub fn read_all(
+        db: &DB,
+        pagination: &PaginationParams,
+        item_user_id: ID,
+    ) -> QueryResult<Vec<Self>> {
         use crate::schema::user_sessions::dsl::*;
 
         user_sessions
-            .filter(user_id.eq(user_id))
+            .filter(user_id.eq(item_user_id))
             .order(created_at)
             .limit(pagination.page_size)
             .offset(
@@ -88,11 +92,11 @@ impl UserSession {
             .load::<UserSession>(db)
     }
 
-    pub fn count_all(db: &DB, user_id: ID) -> QueryResult<i64> {
+    pub fn count_all(db: &DB, item_user_id: ID) -> QueryResult<i64> {
         use crate::schema::user_sessions::dsl::*;
 
         user_sessions
-            .filter(user_id.eq(user_id))
+            .filter(user_id.eq(item_user_id))
             .count()
             .get_result(db)
     }
