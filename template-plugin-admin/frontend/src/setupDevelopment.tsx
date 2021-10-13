@@ -60,8 +60,12 @@ const DevBoxItem = (props: {
 const DevBox = () => {
   const [display, setDisplay] = useState<boolean>(true)
 
-  const healthQuery = useQuery('health', () =>
-    fetch('/api/development/health').then((r) => r.json())
+  const healthQuery = useQuery(
+    'health',
+    () => fetch('/api/development/health').then((r) => r.json()),
+    {
+      onSuccess: () => queryClient.invalidateQueries('migrations'),
+    }
   )
   const dbMigrationQuery = useQuery('migrations', () =>
     fetch('/api/development/db/needs-migration').then((r) => r.json())
@@ -97,7 +101,10 @@ const DevBox = () => {
   useEffect(() => {
     setDisplay(shouldDisplay.current)
   }, [
+    shouldDisplay,
+    healthQuery.isError,
     healthQuery.isFetching,
+    healthQuery.data,
     dbMigrationQuery.isError,
     dbMigrationQuery.data,
     // hasSystemRoleQuery.data
@@ -160,7 +167,14 @@ const DevBox = () => {
         )}
       </div>
       {(healthQuery.isError || healthQuery.isFetching) && (
-        <DevBoxItem>
+        <DevBoxItem
+          actions={[
+            {
+              label: 'Retry',
+              fn: () => queryClient.invalidateQueries('health'),
+            },
+          ]}
+        >
           <span style={{ color: 'hotpink' }}>WARN!</span>&nbsp;
           {healthQuery.isError && 'The backend is not reachable.'}
           {healthQuery.isFetching && 'Connecting to backend...'}
