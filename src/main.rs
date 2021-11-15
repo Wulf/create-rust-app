@@ -3,11 +3,12 @@ extern crate inflector;
 mod db;
 mod fs;
 mod git;
+mod logger;
 mod mail;
 mod model;
-mod logger;
 mod plugins;
 mod project;
+mod qsync;
 mod service;
 
 use anyhow::Result;
@@ -19,21 +20,29 @@ use dialoguer::{theme::ColorfulTheme, Input, MultiSelect, Select};
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "create-rust-app")]
-pub struct UnknownOpt {
+struct UnknownOpt {
     #[structopt(name = "name")]
     target: Option<String>,
 }
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "create-rust-app")]
-pub struct CreateOpt {
+struct CreateOpt {
     #[structopt(name = "name")]
     target: String,
 }
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "create-rust-app")]
-pub struct UpdateOpt {}
+struct UpdateOpt {
+    #[structopt(
+        short = "qsync",
+        long,
+        name = "query-sync",
+        help = "Generate react-query hooks for frontend."
+    )]
+    query_sync: bool,
+}
 
 /// CREATE RUST APP
 ///
@@ -130,17 +139,29 @@ fn main() -> Result<()> {
 
         logger::project_created_msg(project_dir);
     } else {
-        let items = vec!["Add resource", "Cancel"];
+        let update_opts = UpdateOpt::from_args();
+        let items = vec!["Generate react-query hooks", "Add resource", "Cancel"];
 
-        let selection = Select::with_theme(&ColorfulTheme::default())
-            .items(&items)
-            .default(0)
-            .interact_on_opt(&Term::stderr())?;
+        let selection = if update_opts.query_sync {
+            Some(0)
+        } else {
+            Select::with_theme(&ColorfulTheme::default())
+                .items(&items)
+                .default(0)
+                .interact_on_opt(&Term::stderr())?
+        };
 
         match selection {
             Some(index) => {
                 match index {
                     0 => {
+                        qsync::process(
+                            vec![PathBuf::from("backend/services")],
+                            PathBuf::from("frontend/src/api.generated.ts"),
+                            false,
+                        );
+                    }
+                    1 => {
                         // Add resource
                         let resource_name: String = Input::new()
                             .with_prompt("Resource name")
@@ -154,7 +175,7 @@ fn main() -> Result<()> {
                         project::create_resource(resource_name.as_ref())?;
                         std::process::exit(0);
                     }
-                    1 => return Ok(()),
+                    2 => return Ok(()),
                     _ => {
                         logger::error("Not implemneted");
                         std::process::exit(1);

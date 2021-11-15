@@ -1,3 +1,4 @@
+use crate::git;
 use crate::logger::{command_msg, dependency_msg, error, exit, file_msg, message};
 use anyhow::Result;
 use console::style;
@@ -5,7 +6,6 @@ use dialoguer::{theme::ColorfulTheme, Confirm, Input};
 use inflector::Inflector;
 use rust_embed::RustEmbed;
 use std::path::PathBuf;
-use crate::git;
 
 #[derive(RustEmbed)]
 #[folder = "template"]
@@ -289,26 +289,27 @@ pub fn create(project_name: &str) -> Result<()> {
     command_msg("git config user.name");
 
     let git_config_user_name = git::check_config(&project_dir, "user.name");
-    
+
     if !git_config_user_name {
         message("You do not have a git user name set.");
 
         let mut valid_user_name = false;
         let mut invalid_input = false;
-        
+
         while !valid_user_name {
-            let prompt_message = if (invalid_input) {
+            let prompt_message = if invalid_input {
                 "(try again) Choose a name to use when committing:"
             } else {
                 "Choose a name to use when committing:"
             };
-            let input : String = Input::new()
-                .with_prompt(prompt_message)
-                .interact()?;
+            let input: String = Input::new().with_prompt(prompt_message).interact()?;
 
             command_msg(&format!("git config user.name {:#?}", &input));
-            
-            if input.len() > 0 && git::set_config(&project_dir, "user.name", &input) && git::check_config(&project_dir, "user.name") {
+
+            if input.len() > 0
+                && git::set_config(&project_dir, "user.name", &input)
+                && git::check_config(&project_dir, "user.name")
+            {
                 valid_user_name = true;
             } else {
                 invalid_input = true;
@@ -317,32 +318,32 @@ pub fn create(project_name: &str) -> Result<()> {
     }
 
     let git_config_user_email = git::check_config(&project_dir, "user.email");
-    
+
     if !git_config_user_email {
         message("You do not have a git user email set.");
 
         let mut valid_user_email = false;
         let mut invalid_input = false;
-        
+
         while !valid_user_email {
-            let prompt_message = if (invalid_input) {
+            let prompt_message = if invalid_input {
                 "(try again) Choose an email to use when committing:"
             } else {
                 "Choose an email to use when committing:"
             };
-            let input : String = Input::new()
-                .with_prompt(prompt_message)
-                .interact()?;
+            let input: String = Input::new().with_prompt(prompt_message).interact()?;
 
             command_msg(&format!("git config user.email {:#?}", &input));
-            
-            if input.len() > 0 && git::set_config(&project_dir, "user.email", &input) && git::check_config(&project_dir, "user.email") {
+
+            if input.len() > 0
+                && git::set_config(&project_dir, "user.email", &input)
+                && git::check_config(&project_dir, "user.email")
+            {
                 valid_user_email = true;
             } else {
                 invalid_input = true;
             }
         }
-        
     }
 
     command_msg("git add -A");

@@ -19,5 +19,11 @@ console = "0.14.1"
 dialoguer = "0.8.0"
 indoc = "1.0.3"
 rust-embed = "5.9.0"
-structopt = "0.3.21"
+structopt = "0.3.22"
 toml = "0.5.8"
+tsync = "1.2.1"
+
+# for qsync exclusively
+regex = "1.5.4"
+syn = { version = "1.0.75", features = ["full", "extra-traits", "parsing"] }
+walkdir = "2.3.2"
