@@ -41,9 +41,11 @@ create-rust-app
   - React frontend
     - Typescript, with backend type definition generation (via `tsync`)
     - Routing (via `react-router-dom`)
+    - Typed `react-query` hooks generation (`$ cd my_project && create-rust-app`, then select "Generate react-query hooks")
     - Update to latest create-react-app (generated frontend is not ejected from `create-react-app`)
 - Resource creation (`$ cd my_project && create-rust-app`)
   - CRUD code-gen to reduce boileplate
+  - `react-query` hooks generation for frontend
 - Auth plugin
   - Add JWT token-based auth with a simple command
   - Session management: restoration of previous session, revoking of refresh tokens
