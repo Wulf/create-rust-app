@@ -30,24 +30,6 @@ body {
   color: goldenrod;
 }
 
-.App-queries {
-  display: flex;
-  flex-flow: column;
-}
-
-.App-query {
-  display: flex;
-}
-
-.App-query .execute {
-  margin: 20px;
-}
-.App-query .output {
-  font-size: calc(10px + 0.5vmin);
-  text-align: left;
-  margin: 20px;
-}
-
 .App-link {
   color: #61dafb;
 }
@@ -59,16 +41,6 @@ body {
   to {
     transform: rotate(360deg);
   }
-}
-
-.todos {
-  text-align: left;
-  font-size: 16px;
-  width: 400px;
-}
-
-.todo {
-  display: flex;
 }
 
 .todos-pagination {

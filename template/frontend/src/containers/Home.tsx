@@ -18,7 +18,7 @@ export const Home = () => {
       <div style={{ display: 'flex', justifyContent: 'center' }}>
         <a
           className="App-link"
-          href="https://github.com/Wulf/create-rust-app/blob/main/README.md"
+          href="https://create-rust-app.dev"
           target="_blank"
           rel="noopener noreferrer"
         >

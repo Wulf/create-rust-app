@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
+import { useHistory } from 'react-router'
 import { useAuth } from '../hooks/useAuth'
 
 export const ActivationPage = () => {
   const auth = useAuth()
+  const history = useHistory()
   const [activationToken, setActivationToken] = useState<string>('')
   const [processing, setProcessing] = useState<boolean>(false)
 
@@ -16,7 +18,9 @@ export const ActivationPage = () => {
         },
       }
     )
-    console.log(response)
+    if (response.ok) {
+      history.push('/login')
+    }
     setProcessing(false)
   }
 

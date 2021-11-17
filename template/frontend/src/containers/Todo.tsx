@@ -1,5 +1,29 @@
 import React, { useEffect, useState } from 'react'
-import { API } from '../api'
+
+const TodoAPI = {
+  get: async (page: number, size: number) =>
+    await (await fetch(`/api/todos?page=${page}&page_size=${size}`)).json(),
+  create: async (todo: string) =>
+    await (
+      await fetch('/api/todos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: todo }),
+      })
+    ).json(),
+  delete: async (id: number) =>
+    await await fetch(`/api/todos/${id}`, { method: 'DELETE' }),
+  update: async (id: number, todo: string) =>
+    await await fetch(`/api/todos/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: todo }),
+    }),
+}
 
 export const Todos = () => {
   const [text, setText] = useState<string>('')
@@ -8,28 +32,30 @@ export const Todos = () => {
   const pageSize = 5
   const [page, setPage] = useState<number>(0)
   const [numPages, setPages] = useState<number>(1)
-  const [healthCheckOutput, setHealthCheckOutput] = useState<string>('')
-  const healthCheck = async () => {
-    const response = await API.health.check()
-    setHealthCheckOutput(JSON.stringify(response, null, 2))
-  }
+  const [processing, setProcessing] = useState<boolean>(false)
 
   const createTodo = async (todo: string) => {
-    await API.todos.create(todo)
-    setTodos(await API.todos.get(page, pageSize))
+    setProcessing(true)
+    await TodoAPI.create(todo)
+    setTodos(await TodoAPI.get(page, pageSize))
     setText('')
+    setProcessing(false)
   }
 
   const updateTodo = async (todo: Todo) => {
-    await API.todos.update(todo.id, text)
-    setTodos(await API.todos.get(page, pageSize))
+    setProcessing(true)
+    await TodoAPI.update(todo.id, text)
+    setTodos(await TodoAPI.get(page, pageSize))
     setText('')
     editTodo(null)
+    setProcessing(false)
   }
 
   const deleteTodo = async (todo: Todo) => {
-    await API.todos.delete(todo.id)
-    setTodos(await API.todos.get(page, pageSize))
+    setProcessing(true)
+    await TodoAPI.delete(todo.id)
+    setTodos(await TodoAPI.get(page, pageSize))
+    setProcessing(false)
   }
 
   useEffect(() => {
@@ -37,71 +63,98 @@ export const Todos = () => {
   }, [selectedTodo])
 
   useEffect(() => {
-    API.todos.get(page, pageSize).then((todos) => setTodos(todos))
+    setProcessing(true)
+    TodoAPI.get(page, pageSize).then((todos) => {
+      setTodos(todos)
+      setProcessing(false)
+    })
   }, [page])
 
   useEffect(() => {
     const numPages = Math.ceil(todos.length / pageSize)
     setPages(numPages)
-    if (page < 0 || page >= numPages) setPage(0)
+    if (page < 0 || page > numPages) setPage(0)
   }, [todos, page])
 
   return (
-    <div className="App-queries">
-      <div className="App-query">
-        <button className="execute" onClick={healthCheck}>
-          API Health Check
-        </button>
-        <pre className="output">{healthCheckOutput}</pre>
-      </div>
-      <div className="todos">
-        <b>Todos</b>
-        <ul>
-          {todos.map((todo) =>
-            todo.id === selectedTodo?.id ? (
-              <li className="todo editing">
-                <div style={{ flex: 1 }}>
-                  <input
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <button onClick={() => updateTodo(todo)}>save</button>
-                  <button onClick={() => editTodo(null)}>cancel</button>
-                </div>
-              </li>
-            ) : (
-              <li className="todo">
-                <div style={{ flex: 1 }}>{todo.text}</div>
-                <div>
-                  <button onClick={() => editTodo(todo)}>edit</button>
-                  <button onClick={() => deleteTodo(todo)}>delete</button>
-                </div>
-              </li>
-            )
-          )}
-          {selectedTodo === null && (
-            <li className="todo new">
-              <div style={{ flex: 1 }}>
-                <input
-                  placeholder="New todo..."
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                />
-              </div>
-              <div>
-                <button onClick={() => createTodo(text)}>create</button>
-              </div>
-            </li>
-          )}
-        </ul>
-        <div className="todos-pagination">
+    <div style={{ display: 'flex', flexFlow: 'column', textAlign: 'left' }}>
+      <h1>Todos</h1>
+      {todos.map((todo, index) =>
+        todo.id === selectedTodo?.id ? (
+          <div className="Form">
+            <div style={{ display: 'flex' }}>
+              <input
+                style={{ flex: 1 }}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+              />
+              <button
+                disabled={processing}
+                style={{ height: '40px' }}
+                onClick={() => updateTodo(todo)}
+              >
+                Save
+              </button>
+              <button
+                disabled={processing}
+                style={{ height: '40px' }}
+                onClick={() => editTodo(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="Form">
+            <div style={{ flex: 1 }}>
+              #{todo.id} {todo.text}
+            </div>
+            <div>
+              <a href="#" className="App-link" onClick={() => editTodo(todo)}>
+                edit
+              </a>
+              &nbsp;
+              <a href="#" className="App-link" onClick={() => deleteTodo(todo)}>
+                delete
+              </a>
+            </div>
+          </div>
+        )
+      )}
+      {selectedTodo === null && (
+        <div className="Form">
+          <div style={{ display: 'flex' }}>
+            <input
+              style={{ flex: 1 }}
+              placeholder="New todo..."
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  createTodo(text)
+                }
+              }}
+            />
+            <button
+              disabled={processing}
+              style={{ height: '40px' }}
+              onClick={() => createTodo(text)}
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      )}
+      <div className="Form">
+        <div style={{ display: 'flex' }}>
           <button onClick={() => setPage(page - 1)}>{`<<`}</button>
-          <span>
-            {page + 1} / {numPages}
+          <span style={{ flex: 1, textAlign: 'center' }}>
+            Page {page + 1} of {numPages}
           </span>
-          <button onClick={() => setPage(page + 1)}>{`>>`}</button>
+          <button
+            disabled={processing}
+            onClick={() => setPage(page + 1)}
+          >{`>>`}</button>
         </div>
       </div>
     </div>

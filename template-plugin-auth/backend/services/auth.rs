@@ -444,7 +444,7 @@ async fn register(
     &EncodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref())
   ).unwrap();
   
-  mail::auth_register::send(&mailer, &user.email, &format!("http://localhost:8080/auth/activate?token={token}", token=token));
+  mail::auth_register::send(&mailer, &user.email, &format!("http://localhost:8080/activate?token={token}", token=token));
   
   Ok(HttpResponse::build(StatusCode::OK).body("{ \"message\": \"Registered! Check your email to activate your account.\" }"))
 }
