@@ -1,0 +1,23 @@
+name: Build and publish documentation
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build-and-deploy-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2.3.1
+
+      - name: Install and Build 🔧
+        run: |
+          cd docs
+          yarn install --frozen-lockfile
+          yarn build
+
+      - name: Deploy 🚀
+        uses: wulf/github-pages-deploy-action@4.1.6
+        with:
+          branch: gh-pages # The branch the action should deploy to.
+          folder: docs/build # The folder the action should deploy.
