@@ -16,6 +16,7 @@
 - [ ] IMPORTANT: Write tests
 - [ ] find cra project root based on Cargo.toml "[create-rust-app]" key
 - [ ] EASY: (this should be part of a larger effort to make it seem like there aren't many different projects that you need to learn about) Change `diesel_manage_updated_at` to `manage_updated_at` (it might confuse devs who aren't familiar with diesel)
+- [ ] EASY: Change title from "React App" to "Create Rust App" with cra logo
 
 # Needs thought
 
