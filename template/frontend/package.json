@@ -7,6 +7,7 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "dotenv": "^10.0.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-router-dom": "^5.2.0",
@@ -18,7 +19,8 @@
     "start": "yarn tsync && react-scripts start",
     "build": "react-scripts build",
     "fullstack": "yarn install && yarn concurrently --prefix-colors cyan,magenta --kill-others -n backend,frontend \"cargo --color always watch -x run -i frontend\" \"yarn start\"",
-    "test": "npx playwright test",
+    "test": "react-scripts test",
+    "test:e2e": "npx playwright test ./tests",
     "eject": "react-scripts eject",
     "tsync": "tsync -i ../backend -o ./src/types/rust.d.ts"
   },
