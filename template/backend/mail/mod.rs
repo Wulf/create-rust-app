@@ -24,7 +24,7 @@ impl Mailer {
         let smtp_server: String = env::var("SMTP_SERVER", "");
         let smtp_username: String = env::var("SMTP_USERNAME", "");
         let smtp_password: String = env::var("SMTP_PASSWORD", "");
-        let actually_send: bool = env::var("SEND_EMAIL", "false").eq("true");
+        let actually_send: bool = env::var("SEND_MAIL", "false").eq("true");
 
         return Mailer {
             from_address: from_address,
@@ -62,9 +62,9 @@ impl Mailer {
             println!("Note: SMTP_PASSWORD environment variable is not set, no mail will be sent!");
         }
 
-        if std::env::var("SEND_EMAIL").is_err() || std::env::var("SEND_MAIL").unwrap().eq("true") {
+        if std::env::var("SEND_MAIL").is_err() || !std::env::var("SEND_MAIL").unwrap().eq("true") {
             println!(
-                "Note: SEND_MAIL environment variale is not set to \"true\", no mail will be sent!"
+                "Note: SEND_MAIL environment variable is not set to \"true\", no mail will be sent!"
             );
         }
     }
