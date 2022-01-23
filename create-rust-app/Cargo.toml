@@ -1,0 +1,35 @@
+[package]
+name = "create-rust-app"
+description = "Set up a modern rust+react web app by running one command."
+version = "3.0.0"
+edition = "2018"
+authors = ["Haris <4259838+Wulf@users.noreply.github.com>"]
+readme = "README.md"
+repository = "https://github.com/Wulf/create-rust-app"
+license = "MIT OR Apache-2.0"
+keywords = ["react", "typescript", "generation", "backend", "frontend"]
+categories = ["command-line-utilities", "development-tools", "web-programming", "config", "database"]
+
+[dependencies]
+dotenv = "0.15.0"
+tracing-subscriber = "0.3.5"
+serde_json = "1.0.74"
+lettre = "0.9.6"
+lettre_email = "0.9.4"
+
+# optional dependencies
+tsync = {optional=true, version="1.2.1"}
+chrono = {optional=true,version = "0.4.19", features = ["serde"]}
+argonautica = {optional=true, version="0.2.0"}
+jsonwebtoken = {optional=true, version="7.2.0"}
+poem = {optional=true,version="1.2.33", features=["anyhow", "cookie", "static-files"]}
+serde = {optional=true,version = "1.0.133", features = ["derive"]}
+anyhow = {optional=true, version="1.0.52"}
+diesel = { optional=true, version="1.4.8", default-features = false, features = ["postgres", "uuid", "r2d2", "chrono", "32-column-tables"] }
+diesel_migrations = {optional=true, version="1.4.0"}
+
+[features]
+default = ["plugin-dev", "plugin-auth", "plugin-container"]
+plugin-dev = ["poem", "diesel", "serde", "diesel_migrations"]
+plugin-container = []
+plugin-auth = ["poem", "diesel", "serde", "anyhow", "argonautica", "jsonwebtoken", "chrono", "tsync"]

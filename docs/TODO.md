@@ -14,6 +14,8 @@
 - [ ] Move `bin/*` into `.cargo/*`
 - [ ] Move `target-dir="backend/.build"` into `.cargo`
 - [ ] IMPORTANT: Write tests
+  - [x] Frontend
+  - [ ] Backend
 - [ ] find cra project root based on Cargo.toml "[create-rust-app]" key
 - [ ] EASY: (this should be part of a larger effort to make it seem like there aren't many different projects that you need to learn about) Change `diesel_manage_updated_at` to `manage_updated_at` (it might confuse devs who aren't familiar with diesel)
 - [ ] EASY: Change title from "React App" to "Create Rust App" with cra logo
@@ -23,26 +25,7 @@
       * poem
       * axum
       * warp
-
-# Needs thought
-
-- [x] Move `migrations` folder to `backend/migrations`
-
-  NOTE: I attempted this but the diesel_cli doesn't respect what is written in `diesel.toml` (so something like `diesel database reset` doesn't work...):
-
-  ```
-  [migrations_directory]
-  file="backend/migrations"
-  dir="backend/migrations"
-  ```
-
-- [x] Admin REPL: evcxr (see https://depth-first.com/articles/2020/09/21/interactive-rust-in-a-repl-and-jupyter-notebook-with-evcxr/)
-
-  NOTE: rust is too slow to be interpretted via a REPL. Just loading the project crate takes too long. I tried setting EVCXR_HOME (or whatever it was called) to the backend/.build directory since the project is likely compiled when developing but it didn't work out :'(
-
-- [ ] Single binary build output for created projects (bundle assets in binary)
-
-  NOTE: Single binary build output isn't a good idea as it will make the template project much harder to go about and modify for some users
+- [ ] Implement a CSRF mitigation technique
 
 # Done
 
@@ -50,3 +33,22 @@
 - [x] Remove sentry crate
 - [x] Dockerfile
 - [x] Validate project name
+- [x] Move `migrations` folder to `backend/migrations`
+
+  **Result**: I attempted this but the diesel_cli doesn't respect what is written in `diesel.toml` (so something like `diesel database reset` doesn't work...):
+
+  ```
+  [migrations_directory]
+  file="backend/migrations"
+  dir="backend/migrations"
+  ```
+  
+  From what I read, Diesel 2.x will respect this property and it hasn't landed yet in 1.4.8.
+
+- [x] Admin REPL: evcxr (see https://depth-first.com/articles/2020/09/21/interactive-rust-in-a-repl-and-jupyter-notebook-with-evcxr/)
+
+  **Result**: rust is too slow to be interpretted via a REPL. Just loading the project crate takes too long. I tried setting EVCXR_HOME (or whatever it was called) to the backend/.build directory since the project is likely compiled when developing but it didn't work out :'(
+
+- [x] Single binary build output for created projects (bundle assets in binary)
+
+  **Result**: Single binary build output isn't a good idea as it will make the template project much harder to go about and modify for some users
