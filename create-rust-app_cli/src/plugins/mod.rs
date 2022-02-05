@@ -5,9 +5,11 @@ pub mod container;
 use crate::utils::logger;
 use anyhow::Result;
 use std::path::PathBuf;
+use crate::BackendFramework;
 
 pub struct InstallConfig {
     pub project_dir: PathBuf,
+    pub backend_framework: BackendFramework
 }
 
 pub trait Plugin {

@@ -3,4 +3,4 @@ members = [
   "create-rust-app",
   "create-rust-app_cli"
 ]
-exclude = ["docs"]
+exclude = ["docs", "test-project"]

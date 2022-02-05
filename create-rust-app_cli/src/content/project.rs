@@ -7,6 +7,8 @@ use dialoguer::{theme::ColorfulTheme, Confirm, Input};
 use inflector::Inflector;
 use rust_embed::RustEmbed;
 use std::path::PathBuf;
+use walkdir::WalkDir;
+use crate::BackendFramework;
 
 #[derive(RustEmbed)]
 #[folder = "template"]
@@ -34,6 +36,7 @@ fn add_bins_to_cargo_toml(project_dir: &std::path::PathBuf) -> Result<(), std::i
             found_project_name = true;
             let project_name_toml_value = toml::value::Value::String(project_name.clone());
             deps_table.insert("default-run".to_string(), project_name_toml_value);
+            deps_table.insert("publish".to_string(), toml::value::Value::Boolean(false));
         }
         None => panic!("Could not determine project name from generated Cargo.toml"),
     };
@@ -65,10 +68,15 @@ path = "backend/main.rs"
     Ok(())
 }
 
+pub struct CreationOptions {
+    pub cra_enabled_features: Vec<String>,
+    pub backend_framework: BackendFramework
+}
+
 /**
  * create-rust-app project generation
  */
-pub fn create(project_name: &str, cra_enabled_features: Vec<String>) -> Result<()> {
+pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<()> {
     let mut project_dir: PathBuf = PathBuf::from(project_name);
 
     if project_dir.exists() {
@@ -103,8 +111,9 @@ pub fn create(project_name: &str, cra_enabled_features: Vec<String>) -> Result<(
         .unwrap();
 
     logger::message(&format!(
-        "Creating project {}",
-        style(project_name).yellow()
+        "Creating project {} with backend {}",
+        style(project_name).yellow(),
+        style(&format!("{:?}", creation_options.backend_framework)).yellow()
     ));
 
     match std::fs::create_dir_all(&project_dir) {
@@ -142,11 +151,29 @@ pub fn create(project_name: &str, cra_enabled_features: Vec<String>) -> Result<(
 
     add_bins_to_cargo_toml(&project_dir)?;
 
+
+    let framework = creation_options.backend_framework;
+    let mut cra_enabled_features = creation_options.cra_enabled_features;
+    cra_enabled_features.push(match framework {
+        BackendFramework::ActixWeb => "backend_actix-web".to_string(),
+        BackendFramework::Poem => "backend_poem".to_string()
+    });
     let mut enabled_features: String = cra_enabled_features.iter().map(|f| format!("\"{}\"", f)).collect::<Vec<String>>().join(", ");
     if !cra_enabled_features.is_empty() { enabled_features = ", features=[".to_string() + &enabled_features + "]"; }
 
+    match framework {
+        BackendFramework::ActixWeb => {
+            add_dependency(&project_dir, "actix-files", r#"actix-files = "0.5.0""#)?;
+            add_dependency(&project_dir, "actix-http", r#"actix-http = "2.2.0""#)?;
+            add_dependency(&project_dir, "actix-web", r#"actix-web = "3.3.2""#)?;
+        },
+        BackendFramework::Poem => {
+            add_dependency(&project_dir, "poem", r#"poem = { version="1.2.33", features=["anyhow", "cookie", "static-files"] }"#)?;
+            add_dependency(&project_dir, "tracing_subscriber", r#"tracing-subscriber = "0.3.7""#)?;
+        },
+        _ => {}
+    }
     add_dependency(&project_dir, "create-rust-app", &format!("create-rust-app = {{version=\"3.0.0\"{enabled_features}}}", enabled_features=enabled_features))?;
-    add_dependency(&project_dir, "poem", r#"poem = { version="1.2.33", features=["anyhow", "cookie", "static-files"] }"#)?;
     add_dependency(&project_dir, "tokio", r#"tokio = { version = "1.15.0", features = ["rt-multi-thread", "macros"] }"#)?;
     add_dependency(&project_dir, "serde", r#"serde = { version = "1.0.133", features = ["derive"] }"#)?;
     add_dependency(&project_dir, "serde_json", r#"serde_json = "1.0.74""#)?;
@@ -167,6 +194,36 @@ pub fn create(project_name: &str, cra_enabled_features: Vec<String>) -> Result<(
         logger::file_msg(filename.as_ref());
         std::fs::create_dir_all(directory_path)?;
         std::fs::write(file_path, file_contents)?;
+    }
+
+    /* Choose framework-specific files */
+    for entry in WalkDir::new(&project_dir) {
+        let entry = entry.unwrap();
+
+        let file = entry.path();
+        let path = file.clone().to_str().unwrap().to_string();
+
+        if path.ends_with("+actix_web") {
+            if framework != BackendFramework::ActixWeb {
+                logger::remove_file_msg(&format!("{:#?}", &file));
+                std::fs::remove_file(file)?;
+            };
+            if framework == BackendFramework::ActixWeb {
+                let dest = file.with_extension(file.extension().unwrap().to_string_lossy().replace("+actix_web", ""));
+                logger::rename_file_msg(&format!("{:#?}", &file), &format!("{:#?}", &dest));
+                std::fs::rename(file, dest);
+            };
+        } else if path.ends_with("+poem") {
+            if framework != BackendFramework::Poem {
+                logger::remove_file_msg(&format!("{:#?}", &file));
+                std::fs::remove_file(file)?;
+            };
+            if framework == BackendFramework::Poem {
+                let dest = file.with_extension(file.extension().unwrap().to_string_lossy().replace("+poem", ""));
+                logger::rename_file_msg(&format!("{:#?}", &file), &format!("{:#?}", &dest));
+                std::fs::rename(file, dest);
+            };
+        }
     }
 
     /*
@@ -297,12 +354,13 @@ pub fn create(project_name: &str, cra_enabled_features: Vec<String>) -> Result<(
     Ok(())
 }
 
-pub fn create_resource(resource_name: &str) -> Result<()> {
+pub fn create_resource(backend: BackendFramework, resource_name: &str) -> Result<()> {
     let resource_name = resource_name.to_pascal_case();
 
     logger::message(&format!("Creating resource '{}'", resource_name));
 
     crate::content::service::create(
+        backend,
         &resource_name,
         &format!("services::{}::api()", &resource_name),
         &resource_name.to_snake_case(),

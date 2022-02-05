@@ -16,6 +16,8 @@ mod services;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
+    tracing_subscriber::fmt::init();
+
     let data = create_rust_app::setup();
 
     let mut api = Route::new()
@@ -35,9 +37,9 @@ async fn main() -> Result<(), std::io::Error> {
         .run(
             app.with(AddData::new(data.mailer))
                 .with(AddData::new(data.database))
-                .with(create_rust_app::Logger)
+                .with(create_rust_app::PoemLogger)
                 .with(CookieJarManager::new())
-                .catch_error(create_rust_app::default_404_handler),
+                .catch_error(create_rust_app::not_found),
         )
         .await
 }

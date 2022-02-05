@@ -1,0 +1,129 @@
+use crate::diesel::*;
+use crate::schema::*;
+use create_rust_app::Database;
+
+use chrono::{DateTime, Utc};
+use actix_web::{web, HttpResponse, delete, get, post, put, Error};
+use serde::{Deserialize, Serialize};
+
+#[tsync::tsync]
+#[derive(Debug, Serialize, Deserialize, Identifiable, AsChangeset, Clone, Queryable)]
+#[table_name = "todos"]
+pub struct Todo {
+    pub id: i32,
+    pub text: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[tsync::tsync]
+#[derive(Debug, Insertable, Serialize, Deserialize, AsChangeset)]
+#[table_name = "todos"]
+pub struct TodoJson {
+    pub text: String,
+}
+
+const MAX_PAGE_SIZE: u16 = 100;
+
+#[derive(Deserialize)]
+pub struct IndexRequest {
+    page: i64,
+    page_size: i64,
+}
+
+#[get("")]
+async fn index(
+    db: web::Data<Database>,
+    web::Query(info): web::Query<IndexRequest>,
+) -> Result<HttpResponse, Error> {
+    let db = db.pool.get().unwrap();
+
+    use crate::schema::todos::dsl::*;
+    let result = todos
+        .order(created_at)
+        .limit(10)
+        .offset(info.page * std::cmp::max(info.page_size, MAX_PAGE_SIZE as i64))
+        .load::<Todo>(&db);
+
+    Ok(result
+        .map(|items| HttpResponse::Ok().json(items))
+        .map_err(|_| HttpResponse::InternalServerError())?)
+}
+
+#[get("/{id}")]
+async fn read(
+    db: web::Data<Database>,
+    web::Path(item_id): web::Path<i32>,
+) -> Result<HttpResponse, Error> {
+    let db = db.pool.get().unwrap();
+
+    use crate::schema::todos::dsl::*;
+    let result = todos.filter(id.eq(item_id)).first::<Todo>(&db);
+
+    Ok(result
+        .map(|item| HttpResponse::Ok().json(item))
+        .map_err(|_| HttpResponse::NotFound())?)
+}
+
+#[post("")]
+async fn create(
+    db: web::Data<Database>,
+    web::Json(item): web::Json<TodoJson>,
+) -> Result<HttpResponse, Error> {
+    let db = db.pool.get().unwrap();
+
+    use crate::schema::todos::dsl::*;
+
+    let result: Todo = insert_into(todos)
+        .values(&item)
+        .get_result::<Todo>(&db)
+        .expect("Creation error");
+
+    Ok(HttpResponse::Created().json(result))
+}
+
+#[put("/{id}")]
+async fn update(
+    db: web::Data<Database>,
+    web::Path(item_id): web::Path<i32>,
+    web::Json(item): web::Json<TodoJson>,
+) -> Result<HttpResponse, Error> {
+    let db = db.pool.get().unwrap();
+
+    use crate::schema::todos::dsl::*;
+
+    let result = diesel::update(todos.filter(id.eq(item_id)))
+        .set(&TodoJson {
+            ..item
+        })
+        .execute(&db);
+
+    Ok(result
+        .map(|_| HttpResponse::Ok().finish())
+        .map_err(|_| HttpResponse::InternalServerError().finish())?)
+}
+
+#[delete("/{id}")]
+async fn destroy(
+    db: web::Data<Database>,
+    web::Path(item_id): web::Path<i32>,
+) -> Result<HttpResponse, Error> {
+    let db = db.pool.get().unwrap();
+
+    use crate::schema::todos::dsl::*;
+
+    let result = diesel::delete(todos.filter(id.eq(item_id))).execute(&db);
+    println!("{:?}", result);
+    Ok(result
+        .map(|_| HttpResponse::Ok().finish())
+        .map_err(|_| HttpResponse::InternalServerError().finish())?)
+}
+
+pub fn endpoints(scope: actix_web::Scope) -> actix_web::Scope {
+    return scope
+        .service(index)
+        .service(read)
+        .service(create)
+        .service(update)
+        .service(destroy);
+}

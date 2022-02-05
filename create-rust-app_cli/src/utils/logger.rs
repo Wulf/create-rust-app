@@ -16,6 +16,14 @@ pub fn modify_file_msg(file: &str) {
     message(&format!("Modifying {}", style(file).yellow()));
 }
 
+pub fn remove_file_msg(file: &str) {
+    message(&format!("Removing {}", style(file).yellow()));
+}
+
+pub fn rename_file_msg(src: &str, dest: &str) {
+    message(&format!("Renaming {} to {}", style(src).yellow(), style(dest).yellow()));
+}
+
 pub fn plugin_msg(name: &str) {
     message(&format!("Installing {} plugin", style(name).yellow()));
 }

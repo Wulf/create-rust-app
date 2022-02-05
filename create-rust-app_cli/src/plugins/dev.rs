@@ -4,6 +4,7 @@ use crate::plugins::InstallConfig;
 use crate::plugins::Plugin;
 use anyhow::Result;
 use rust_embed::RustEmbed;
+use crate::BackendFramework;
 
 pub struct Dev {}
 
@@ -18,7 +19,7 @@ impl Plugin for Dev {
 
     fn install(&self, install_config: InstallConfig) -> Result<()> {
         for filename in Asset::iter() {
-            if filename.contains(".cargo/admin") && !filename.contains(".cargo/admin/dist") {
+            if filename.starts_with("README.md") || filename.contains(".cargo/admin") && !filename.contains(".cargo/admin/dist") {
                 continue;
             }
 
@@ -52,24 +53,46 @@ impl Plugin for Dev {
     const App = () => {"#,
         )?;
 
-        fs::replace(
-            "backend/main.rs",
-            "let mut app = Route::new().nest(\"/api\", api);",
-            r#"#[cfg(debug_assertions)]
-    {
-        api = api.nest("/development", create_rust_app::dev::api());
-    }
+        match install_config.backend_framework {
+            BackendFramework::ActixWeb => {
+                fs::replace("backend/main.rs",
+                "let mut app = app.service(api_scope);",
+                r#"#[cfg(debug_assertions)]
+        {
+            // Mount development-only routes
+            api_scope = api_scope.service(create_rust_app::dev::endpoints(web::scope("/development")));
+        };
 
-    let mut app = Route::new().nest("/api", api);
+        let mut app = app.service(api_scope);
 
-    #[cfg(debug_assertions)]
-    {
-        app = app.at(
-            "*",
-            StaticFilesEndpoint::new(".cargo/admin/dist").index_file("admin.html"),
-        );
-    }"#
-        )?;
+        #[cfg(debug_assertions)] {
+            app = app
+                .service(
+                    Files::new("*", ".cargo/admin/dist").index_file("admin.html").default_handler(web::get().to(development_index))
+                );
+        }"#)?;
+            },
+            BackendFramework::Poem => {
+                fs::replace(
+                    "backend/main.rs",
+                    "let mut app = Route::new().nest(\"/api\", api);",
+                    r#"#[cfg(debug_assertions)]
+        {
+            api = api.nest("/development", create_rust_app::dev::api());
+        }
+
+        let mut app = Route::new().nest("/api", api);
+
+        #[cfg(debug_assertions)]
+        {
+            app = app.at(
+                "*",
+                StaticFilesEndpoint::new(".cargo/admin/dist").index_file("admin.html"),
+            );
+        }"#
+                )?;
+            }
+        }
 
         Ok(())
     }

@@ -2,7 +2,7 @@ use crate::diesel::*;
 use crate::schema::*;
 
 use crate::{
-    auth::{User, ID, UTC},
+    auth::{user::User, ID, UTC},
     database::Connection,
 };
 use diesel::QueryResult;

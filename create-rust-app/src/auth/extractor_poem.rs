@@ -1,4 +1,4 @@
-use poem::{http::HeaderValue, http::StatusCode, Error, FromRequest, Request, RequestBody, Result};
+use poem::{async_trait, http::HeaderValue, http::StatusCode, Error, FromRequest, Request, RequestBody, Result};
 
 use super::{permissions::Permission, AccessTokenClaims, ID};
 use jsonwebtoken::decode;
@@ -20,7 +20,7 @@ impl Auth {
     }
 }
 
-#[poem::async_trait]
+#[async_trait]
 impl<'a> FromRequest<'a> for Auth {
     async fn from_request(req: &'a Request, _: &mut RequestBody) -> Result<Self> {
         let auth_header_opt: Option<&HeaderValue> = req.headers().get("Authorization");

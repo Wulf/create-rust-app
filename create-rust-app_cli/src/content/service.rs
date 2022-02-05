@@ -3,6 +3,7 @@ use anyhow::Result;
 use indoc::indoc;
 use inflector::Inflector;
 use std::path::PathBuf;
+use crate::BackendFramework;
 
 struct Service {
     pub config: ServiceConfig,
@@ -14,15 +15,26 @@ struct ServiceConfig {
     pub file_name: String,
 }
 
-pub fn create(resource_name: &str, service_api_fn: &str, base_endpoint_path: &str) -> Result<()> {
-    let resource = generate(resource_name);
+pub fn create(backend: BackendFramework, resource_name: &str, service_api_fn: &str, base_endpoint_path: &str) -> Result<()> {
+    let resource = match backend {
+        BackendFramework::ActixWeb => generate_actix(resource_name),
+        BackendFramework::Poem => generate_poem(resource_name)
+    };
+
     crate::fs::add_rust_file(
         "backend/services",
         resource.config.file_name.as_str(),
         resource.file_contents.as_str(),
     )?;
 
-    crate::content::service::register(&resource.config.file_name, service_api_fn, base_endpoint_path)?;
+    match backend {
+        BackendFramework::ActixWeb => {
+            let name = resource.config.file_name.as_str();
+            let service_entry = &format!("services::{}::endpoints(web::scope(\"{}\"))", name, base_endpoint_path);
+            register_actix(name, service_entry)?;
+        },
+        BackendFramework::Poem => register_poem(&resource.config.file_name, service_api_fn, base_endpoint_path)?
+    };
 
     Ok(())
 }
@@ -37,9 +49,100 @@ fn config(service_name: &str) -> ServiceConfig {
     };
 }
 
-fn generate(service_name: &str) -> Service {
+fn generate_poem(service_name: &str) -> Service {
     let config = config(service_name);
-    let contents_template: &str = indoc! {"
+    let contents_template: &str = indoc! {"\
+    use create_rust_app::Database;
+    use diesel::NotFound;
+    use poem::{get, Route, handler, Result, IntoResponse, Response};
+    use poem::error::InternalServerError;
+    use poem::http::StatusCode;
+    use poem::web::{Data, Json, Path, Query};
+    use crate::models::$FILE_NAME::{$MODEL_NAME, $MODEL_NAMEChangeset};
+    use crate::models::{PaginationParams, ID};
+
+
+    #[handler]
+    async fn index(
+        db: Data<&Database>,
+        Query(info): Query<PaginationParams>,
+    ) -> Result<impl IntoResponse> {
+        let db = db.pool.get().unwrap();
+
+        Ok($MODEL_NAME::read_all(&db, &info)
+            .map(|items| Json(items).with_status(StatusCode::OK)
+            .map_err(|_| InternalServerError)?)
+    }
+
+    #[handler]
+    async fn read(
+        db: Data<&Database>,
+        Path(item_id): Path<ID>,
+    ) -> Result<impl IntoResponse> {
+        let db = db.pool.get().unwrap();
+
+        Ok($MODEL_NAME::read(&db, item_id)
+            .map(|item| Json(item).with_status(StatusCode::FOUND))
+            .map_err(|_| NotFound)?)
+    }
+
+    #[handler]
+    async fn create(
+        db: Data<&Database>,
+        Json(item): Json<$MODEL_NAMEChangeset>,
+    ) -> Result<impl IntoResponse> {
+        let db = db.pool.get().unwrap();
+
+        Ok($MODEL_NAME::create(&db, &item)
+            .map(|item| Json(item).with_status(StatusCode::CREATED))
+            .map_err(|_| InternalServerError)?)
+    }
+
+    #[handler]
+    async fn update(
+        db: Data<&Database>,
+        Path(item_id): Path<ID>,
+        Json(item): Json<$MODEL_NAMEChangeset>,
+    ) -> Result<impl IntoResponse> {
+        let db = db.pool.get().unwrap();
+
+        Ok($MODEL_NAME::update(&db, item_id, &item)
+            .map(|item| Json(item))
+            .map_err(|_| InternalServerError)?)
+    }
+
+    #[handler]
+    async fn destroy(
+        db: Data<&Database>,
+        Path(item_id): Path<ID>,
+    ) -> Result<impl IntoResponse> {
+        let db = db.pool.get().unwrap();
+
+        Ok($MODEL_NAME::delete(&db, item_id)
+            .map(|_| Response::builder().status(StatusCode::NO_CONTENT))
+            .map_err(|_| InternalServerError)?)
+    }
+
+    pub fn api() -> Route {
+        Route::new()
+            .at(\"/\", get(index).post(create))
+            .at(\"/:id\", get(read).put(update).delete(destroy))
+    }
+    "};
+
+    let contents = String::from(contents_template)
+        .replace("$MODEL_NAME", config.model_name.as_str())
+        .replace("$FILE_NAME", config.file_name.as_str());
+
+    Service {
+        config: config,
+        file_contents: contents,
+    }
+}
+
+fn generate_actix(service_name: &str) -> Service {
+    let config = config(service_name);
+    let contents_template: &str = indoc! {"\
     use crate::models::$FILE_NAME::{$MODEL_NAME, $MODEL_NAMEChangeset};
     use crate::models::{ID, PaginationParams};
     use crate::Pool;
@@ -129,13 +232,25 @@ fn generate(service_name: &str) -> Service {
     }
 }
 
-pub fn register(name: &str, service_api_fn: &str, service_base_endpoint_path: &str) -> Result<()> {
+pub fn register_poem(name: &str, service_api_fn: &str, service_base_endpoint_path: &str) -> Result<()> {
     message(&format!("Registering service {}", name));
     let main_file_path = PathBuf::from("backend/main.rs");
     if main_file_path.exists() && main_file_path.is_file() {
         let mut main_file_contents = std::fs::read_to_string(&main_file_path)?;
 
         main_file_contents = main_file_contents.replace("let mut api = Route::new()", &format!("let mut api = Route::new()\n\t\t.nest(\"{}\", {})", service_base_endpoint_path, service_api_fn));
+        std::fs::write(main_file_path, main_file_contents)?;
+    }
+
+    Ok(())
+}
+
+pub fn register_actix(name: &str, service: &str) -> Result<()> {
+    message(&format!("Registering service {}", name));
+    let main_file_path = PathBuf::from("backend/main.rs");
+    if main_file_path.exists() && main_file_path.is_file() {
+        let mut main_file_contents = std::fs::read_to_string(&main_file_path)?;
+        main_file_contents = main_file_contents.replace("web::scope(\"/api\")", &format!("web::scope(\"/api\")\n            .service({})", service));
         std::fs::write(main_file_path, main_file_contents)?;
     }
 

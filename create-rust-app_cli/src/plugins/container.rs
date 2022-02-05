@@ -34,7 +34,6 @@ impl Plugin for Container {
         fs::append(
             "README.md",
             r##"
-    
 # Containerize your application
       
 ## Building a container

@@ -5,6 +5,7 @@ use crate::utils::logger::file_msg;
 use anyhow::Result;
 use indoc::indoc;
 use rust_embed::RustEmbed;
+use crate::BackendFramework;
 
 pub struct Auth {}
 
@@ -152,11 +153,19 @@ impl Plugin for Auth {
     "#},
         )?;
 
-        crate::content::service::register(
-            "auth",
-            "create_rust_app::auth::api()",
-            "/auth",
-        )?;
+        match install_config.backend_framework {
+            BackendFramework::ActixWeb => {
+                crate::content::service::register_actix(
+                    "auth",
+                    r#"create_rust_app::auth::endpoints(web::scope("/auth"))"#
+                )?
+            },
+            BackendFramework::Poem => crate::content::service::register_poem(
+                "auth",
+                "create_rust_app::auth::api()",
+                "/auth",
+            )?,
+        };
 
         Ok(())
     }

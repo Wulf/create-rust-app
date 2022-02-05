@@ -1,20 +1,28 @@
+#[cfg(all(feature = "backend_actix-web", feature = "backend_poem"))]
+compile_error!("feature \"backend_actix-web\" and feature \"backend_poem\" cannot be enabled at the same time");
+
+#[cfg(not(any(feature = "backend_poem", feature = "backend_actix-web")))]
+compile_error!("Please enable one of the backend features (options: 'backend_actix-web', 'backend-poem')");
+
 #[macro_use]
 extern crate diesel;
 
-#[cfg(feature = "plugin-auth")]
+#[cfg(feature = "plugin_auth")]
 pub mod schema;
 
-#[cfg(feature = "plugin-auth")]
+#[cfg(feature = "plugin_auth")]
 pub mod auth;
 
-#[cfg(all(feature = "plugin-dev", debug_assertions))]
+#[cfg(all(feature = "plugin_dev", debug_assertions))]
 pub mod dev;
 
 mod database;
 pub use database::{Database, Connection};
 
+#[cfg(feature = "backend_poem")]
 mod logger;
-pub use logger::Logger;
+#[cfg(feature = "backend_poem")]
+pub use logger::Logger as PoemLogger;
 
 mod mailer;
 pub use mailer::Mailer;
@@ -33,18 +41,12 @@ pub fn setup() -> AppData {
     // Only load dotenv in development
     #[cfg(debug_assertions)]
     {
-        if std::env::var_os("RUST_LOG").is_none() {
-            std::env::set_var("RUST_LOG", "poem=debug");
-        }
-
         if dotenv::dotenv().is_err() {
             panic!("ERROR: Could not load environment variables from dotenv file");
         }
 
         // diesel_migrations::embed_migrations!();
     }
-
-    tracing_subscriber::fmt::init();
 
     Mailer::check_environment_variables();
 
@@ -54,7 +56,18 @@ pub fn setup() -> AppData {
     }
 }
 
-pub async fn default_404_handler(_: poem::error::NotFoundError) -> poem::Response {
+
+#[cfg(feature = "backend_actix-web")]
+use actix_web;
+
+#[cfg(feature = "backend_actix-web")]
+pub const not_found: fn() -> actix_http::Response = || actix_web::HttpResponse::NotFound().finish();
+
+#[cfg(feature = "backend_poem")]
+use poem;
+
+#[cfg(feature = "backend_poem")]
+pub async fn not_found(_: poem::error::NotFoundError) -> poem::Response {
     let json = serde_json::json!({
         "success": false,
         "message": "Invalid endpoint"
