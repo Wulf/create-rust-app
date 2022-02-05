@@ -1,8 +1,8 @@
 #[cfg(all(feature = "backend_actix-web", feature = "backend_poem"))]
 compile_error!("feature \"backend_actix-web\" and feature \"backend_poem\" cannot be enabled at the same time");
 
-#[cfg(not(any(feature = "backend_poem", feature = "backend_actix-web")))]
-compile_error!("Please enable one of the backend features (options: 'backend_actix-web', 'backend-poem')");
+// #[cfg(not(any(feature = "backend_poem", feature = "backend_actix-web")))]
+// compile_error!("Please enable one of the backend features (options: 'backend_actix-web', 'backend-poem')");
 
 #[macro_use]
 extern crate diesel;
