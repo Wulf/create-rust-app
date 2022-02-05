@@ -1,0 +1,54 @@
+#[macro_use]
+extern crate diesel;
+
+mod schema;
+mod services;
+mod models;
+mod extractors;
+mod mail;
+
+use actix_files::{Files, NamedFile};
+use actix_web::middleware::Logger;
+use actix_web::HttpResponse;
+use actix_web::{web, App, HttpServer};
+use diesel::r2d2::{self, ConnectionManager, PooledConnection};
+use diesel::PgConnection;
+
+#[cfg(not(debug_assertions))]
+async fn app_index() -> actix_web::Result<NamedFile, actix_web::Error> {
+    Ok(NamedFile::open("./frontend/build/index.html")?)
+}
+
+#[cfg(debug_assertions)]
+async fn development_index(req: web::HttpRequest) -> actix_web::Result<NamedFile, actix_web::Error> {
+    Ok(NamedFile::open(".cargo/admin/dist/admin.html")?)
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    let app_data = create_rust_app::setup();
+
+    HttpServer::new(move || {
+        let app = App::new();
+
+        let app = app.wrap(Logger::default());
+        let app = app.data(app_data.database.clone());
+        let app = app.data(app_data.mailer.clone());
+
+        let mut api_scope = web::scope("/api")
+            .service(services::todo::endpoints(web::scope("/todos")));
+
+        let mut app = app.service(api_scope);
+
+        #[cfg(not(debug_assertions))]
+        {
+            app = app.service(Files::new("*", "./frontend/build").index_file("index.html").default_handler(web::get().to(app_index)));
+        }
+
+        let app = app.default_service(web::route().to(create_rust_app::not_found));
+        app
+    })
+    .bind("0.0.0.0:8080")?
+    .run()
+    .await
+}

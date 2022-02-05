@@ -1,0 +1,88 @@
+use poem::{
+    error::{InternalServerError, NotFound},
+    get, handler,
+    http::StatusCode,
+    web::{Data, Json, Path, Query},
+    IntoResponse, Result, Route,
+};
+
+use create_rust_app::Database;
+
+use crate::models::{todo, todo::{TodoChangeset, PaginationParams}};
+
+#[handler]
+async fn index(
+    db: Data<&Database>,
+    Query(pagination): Query<PaginationParams>,
+) -> Result<impl IntoResponse> {
+    let db = db.pool.get().unwrap();
+
+    let result = todo::read_all(&db, &pagination)
+        .map(|items| Json(items))
+        .map_err(InternalServerError)?;
+
+    Ok(result)
+}
+
+#[handler]
+async fn read(db: Data<&Database>, Path(item_id): Path<i32>) -> Result<impl IntoResponse> {
+    let db = db.pool.get().unwrap();
+
+    let result = todo::read(&db, item_id)
+        .map(|item| Json(item))
+        .map_err(NotFound)?;
+
+    Ok(result)
+}
+
+#[handler]
+async fn create(
+    db: Data<&Database>,
+    Json(item): Json<TodoChangeset>,
+) -> Result<impl IntoResponse> {
+    let db = db.pool.get().unwrap();
+
+    let result = todo::create(&db, &item)
+        .map(|item| Json(item))
+        .map_err(InternalServerError)?;
+
+    Ok(result)
+}
+
+#[handler]
+async fn update(
+    db: Data<&Database>,
+    Path(item_id): Path<i32>,
+    Json(item): Json<TodoChangeset>,
+) -> Result<impl IntoResponse> {
+    let db = db.pool.get().unwrap();
+
+    let result = todo::update(&db, item_id, &item)
+        .map(|item| Json(item))
+        .map_err(InternalServerError)?;
+
+    Ok(result)
+}
+
+#[handler]
+async fn destroy(db: Data<&Database>, Path(item_id): Path<i32>) -> Result<impl IntoResponse> {
+    let db = db.pool.get().unwrap();
+
+    let result = todo::delete(&db, item_id)
+        .map(|amount| {
+            if amount > 0 {
+                StatusCode::OK
+            } else {
+                StatusCode::NOT_FOUND
+            }
+        })
+        .map_err(InternalServerError)?;
+
+    Ok(result)
+}
+
+pub fn api() -> Route {
+    Route::new()
+        .at("/", get(index).post(create))
+        .at("/:id", get(read).put(update).delete(destroy))
+}

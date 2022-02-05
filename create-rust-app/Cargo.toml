@@ -1,0 +1,47 @@
+[package]
+name = "create-rust-app"
+description = "Set up a modern rust+react web app by running one command."
+version = "3.0.0"
+edition = "2018"
+authors = ["Haris <4259838+Wulf@users.noreply.github.com>"]
+readme = "README.md"
+repository = "https://github.com/Wulf/create-rust-app"
+license = "MIT OR Apache-2.0"
+keywords = ["react", "typescript", "generation", "backend", "frontend"]
+categories = ["command-line-utilities", "development-tools", "web-programming", "config", "database"]
+
+[dependencies]
+dotenv = "0.15.0"
+serde_json = "1.0.74"
+lettre = "0.9.6"
+lettre_email = "0.9.4"
+
+# optional dependencies
+tsync = { optional=true, version="1.2.1" }
+chrono = { optional=true, version = "0.4.19", features = ["serde"] }
+argonautica = { optional=true, version="0.2.0" }
+jsonwebtoken = { optional=true, version="7.2.0" }
+serde = { optional=true, version = "1.0.133", features = ["derive"] }
+anyhow = { optional=true, version="1.0.52" }
+diesel = { optional=true, version="1.4.8", default-features = false, features = ["postgres", "uuid", "r2d2", "chrono", "32-column-tables"] }
+diesel_migrations = { optional=true, version="1.4.0" }
+
+# poem dependencies
+poem = { optional=true, version="1.2.33", features=["anyhow", "cookie", "static-files"] }
+
+# actix_web dependencies
+actix-files = { optional=true, version="0.5.0" }
+actix-http = { optional=true, version="2.2.0" }
+actix-web = { optional=true, version="3.3.2" }
+actix-web-httpauth = { optional=true, version="0.5.0" }
+derive_more = { optional=true, version="0.99.11" }
+futures-util = { optional=true, version="0.3.8" }
+env_logger = { optional=true, version= "0.8.1" }
+
+[features]
+default = ["plugin_dev", "plugin_auth", "plugin_container"]
+plugin_dev = ["diesel", "serde", "diesel_migrations"]
+plugin_container = []
+plugin_auth = ["diesel", "serde", "anyhow", "argonautica", "jsonwebtoken", "chrono", "tsync"]
+backend_poem = ["poem"]
+backend_actix-web = ["actix-web", "actix-http", "actix-files", "actix-web-httpauth","derive_more", "futures-util", "env_logger"]
