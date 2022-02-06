@@ -45,6 +45,8 @@ pub fn setup() -> AppData {
             panic!("ERROR: Could not load environment variables from dotenv file");
         }
 
+        #[cfg(feature = "backend_actix-web")]
+        env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
         // diesel_migrations::embed_migrations!();
     }
 

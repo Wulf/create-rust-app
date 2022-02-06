@@ -173,7 +173,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         },
         _ => {}
     }
-    add_dependency(&project_dir, "create-rust-app", &format!("create-rust-app = {{version=\"3.0.0\"{enabled_features}}}", enabled_features=enabled_features))?;
+    add_dependency(&project_dir, "create-rust-app", &format!("create-rust-app = {{version=\"3.0.1\"{enabled_features}}}", enabled_features=enabled_features))?;
     add_dependency(&project_dir, "tokio", r#"tokio = { version = "1.15.0", features = ["rt-multi-thread", "macros"] }"#)?;
     add_dependency(&project_dir, "serde", r#"serde = { version = "1.0.133", features = ["derive"] }"#)?;
     add_dependency(&project_dir, "serde_json", r#"serde_json = "1.0.74""#)?;

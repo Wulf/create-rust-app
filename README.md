@@ -24,33 +24,41 @@ cargo install create-rust-app_cli
 # Quick start
 
 ```sh
-# Creates a new rust+react project
 create-rust-app my-todo-app
-# .. select plugins, etc.
+# .. select backend framework, plugins, etc.
+```
 
+<!-- Temporarily-disabled feature
+
+```
 # Code-gen resources for your project
 cd ./my-todo-app
 create-rust-app
 # .. select resource type / properties
 ```
+-->
 
 # Features
 
-- Project creation (`$ create-rust-app <project_name>`)
+### 1. Project creation
+```
+$ create-rust-app <project_name>
+```
+
   - Run frontend & backend with a single command: `cargo fullstack`
   - Rust backend
-    - Backend framework (via poem-web)
-    - Database migrations (via diesel.rs)
-    - Sending mail (via lettre)
-    - PostgreSQL (via r2d2)
+    - One of the following frameworks: `actix-web`, `poem` or let us know which one you want to use!
+    - Database migrations (using diesel.rs)
+    - Sending mail
+    - PostgreSQL (but you can easily switch to another one!)
   - React frontend
     - Typescript, with backend type definition generation (via `tsync`)
     - Routing (via `react-router-dom`)
     - Typed `react-query` hooks generation (`$ cd my_project && create-rust-app`, then select "Generate react-query hooks")
     - Update to latest create-react-app (generated frontend is not ejected from `create-react-app`)
-- Resource creation (`$ cd my_project && create-rust-app`)
-  - CRUD code-gen to reduce boilerplate
-  - `react-query` hooks generation for frontend
+
+**Available Plugins**
+
 - Auth plugin
   - Add JWT token-based auth with a simple command
   - Session management: restoration of previous session, revoking of refresh tokens
@@ -67,9 +75,14 @@ create-rust-app
   - A "devbox" on the frontend indicates when the backend is compiling or when the database is not reachable
   - Moreover, the devbox displays when migrations are pending + includes a "run migrations" button
 
-# Walkthrough
+### 2. Code-gen to reduce boilerplate
+```
+$ cd my_project && create-rust-app
+```
+  - CRUD code-gen to reduce boilerplate
+  - `react-query` hooks generation for frontend
 
-(the full video can be found in the repo at this path: [`docs/create-rust-app-v2.mp4`](https://github.com/Wulf/create-rust-app/blob/main/docs/create-rust-app-v2.mp4))
+# Walkthrough
 
 [![Gif](docs/create-rust-app-v2.gif)](https://github.com/Wulf/create-rust-app/blob/main/docs/create-rust-app-v2.mp4)
 
