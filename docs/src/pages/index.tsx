@@ -58,7 +58,7 @@ export default function Home(): JSX.Element {
           <div className="container padding-vert--md text--center">
             <p>
               Note: this documentation site was inspired by create-react-app.dev
-              and the two are not related.{' '}
+              and the two are not related.
             </p>
           </div>
         </div>

@@ -180,10 +180,10 @@ fn main() -> Result<()> {
             return Ok(());
         }
 
-        println!("It looks like you ran `create-rust-app` without a [name] argument in a rust project directory.");
-        println!("This functionality has been temporarily disabled in v3 due to our migration to the poem framework. There are plans to support multiple backend frameworks in the future (specifically: actix_web, rocket, axum, warp, and poem).");
-        println!("\nIf you were trying to create a rust app, include the name argument like so:\n\t{}", style("create-rust-app <project_name>").cyan());
-        return Ok(());
+        // println!("It looks like you ran `create-rust-app` without a [name] argument in a rust project directory.");
+        // println!("This functionality has been temporarily disabled in v3 due to our migration to the poem framework. There are plans to support multiple backend frameworks in the future (specifically: actix_web, rocket, axum, warp, and poem).");
+        // println!("\nIf you were trying to create a rust app, include the name argument like so:\n\t{}", style("create-rust-app <project_name>").cyan());
+        // return Ok(());
 
         let update_opts = UpdateOpt::from_args();
         let items = vec!["Generate react-query hooks (beta)", "Add a model & service (beta)", "Cancel"];
