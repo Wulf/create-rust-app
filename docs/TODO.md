@@ -13,9 +13,8 @@
 - [ ] Remove all plugins, just have a single template which builds the project
 - [ ] Move `bin/*` into `.cargo/*`
 - [ ] Move `target-dir="backend/.build"` into `.cargo`
-- [ ] IMPORTANT: Write tests
-  - [x] Frontend
-  - [ ] Backend
+- [ ] IMPORTANT: Write backend tests (poem + actix_web)
+- [ ] EASY: set device to 'web' for login demo
 - [ ] find cra project root based on Cargo.toml "[create-rust-app]" key
 - [ ] EASY: (this should be part of a larger effort to make it seem like there aren't many different projects that you need to learn about) Change `diesel_manage_updated_at` to `manage_updated_at` (it might confuse devs who aren't familiar with diesel)
 - [ ] EASY: Change title from "React App" to "Create Rust App" with cra logo and update manifest for mobile installations
@@ -28,13 +27,15 @@
 - [ ] Implement a CSRF mitigation technique
 - [ ] Fix created project's README.md
 - [ ] Move package.json to root of project (instead of the `frontend/` directory)
+- [ ] EASY: fix activation page on frontend (fetch token from url params, introduce a useQueryParam() hook)
+- [ ] EASY: Don't let users create packages named 'test' (cargo init fails): ```error: the name `test` cannot be used as a package name, it conflicts with Rust's built-in test library```
+- [ ] EASY: Add cargo build step before cargo fullstack so the concurrent process isn't started until we're sure that the backend builds.
+- [ ] EASY: split frontend cra logic (like the useAuth hook) into a separate package (create-rust-app on npm)
+- [ ] EASY: remove redundant `useHistory()` in `App.tsx`
+- [ ] EASY: check CLI version and inform user to update / upgrade accordingly (use: https://crates.io/crates/update-informer) 
 
-# Done
+# To be revisited
 
-- [x] EASY: run cargo fmt on all code (including `template/*` files)
-- [x] Remove sentry crate
-- [x] Dockerfile
-- [x] Validate project name
 - [x] Move `migrations` folder to `backend/migrations`
 
   **Result**: I attempted this but the diesel_cli doesn't respect what is written in `diesel.toml` (so something like `diesel database reset` doesn't work...):
