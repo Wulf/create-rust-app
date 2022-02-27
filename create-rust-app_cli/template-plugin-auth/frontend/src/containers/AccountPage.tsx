@@ -111,17 +111,17 @@ export const AccountPage = () => {
       <br />
       {auth.isAuthenticated && (
         <div>
-          User # {auth.parsedToken?.sub}
+          User # {auth.session?.userId}
           <div className="Form" style={{ textAlign: 'left' }}>
             <h1>Permissions</h1>
             <pre>
-              {!auth.parsedToken && (
-                <div>Error: Auth token was not parsed.</div>
+              {!auth.session && (
+                <div>Error: No auth session present.</div>
               )}
-              {auth.parsedToken?.permissions.map((perm) => {
-                ;<div>{JSON.stringify(perm)}</div>
+              {auth.session?.permissions?.map((perm) => {
+                return <div>{JSON.stringify(perm)}</div>
               })}
-              {auth.parsedToken?.permissions.length === 0 && (
+              {auth.session?.permissions?.length === 0 && (
                 <div>No permissions granted.</div>
               )}
             </pre>

@@ -9,13 +9,6 @@ interface PaginationParams {
   page_size: number
 }
 
-interface AccessTokenClaims {
-  exp: number
-  sub: ID
-  token_type: string
-  permissions: Array<Permission>
-}
-
 interface UserSessionJson {
   id: ID
   device: string | undefined
@@ -26,6 +19,14 @@ interface UserSessionJson {
 interface UserSessionResponse {
   sessions: Array<UserSessionJson>
   num_pages: number
+}
+
+interface AccessTokenClaims {
+  exp: number
+  sub: ID
+  token_type: string
+  roles: Array<string>
+  permissions: Array<Permission>
 }
 
 interface Permission {

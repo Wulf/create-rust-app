@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use chrono::{DateTime, Utc};
 use poem::web::cookie::Cookie;
+use crate::auth::Role;
 use super::{mail, Permission, user::{User, UserChangeset}, user_session::{UserSession, UserSessionChangeset}, Auth, PaginationParams, ID, UTC, AccessTokenClaims, UserSessionResponse, UserSessionJson};
 
 const COOKIE_NAME: &'static str = "request_token";
@@ -244,10 +245,21 @@ async fn login(
     }
     let permissions = permissions.unwrap();
 
+    let roles = Role::for_user(&db, user.id);
+    if roles.is_err() {
+        println!("{:#?}", roles.err());
+        return Err(Error::from_string(
+            "An internal server error occurred.",
+            StatusCode::INTERNAL_SERVER_ERROR,
+        ));
+    }
+    let roles = roles.unwrap();
+
     let access_token_claims = AccessTokenClaims {
         exp: (chrono::Utc::now() + chrono::Duration::minutes(15)).timestamp() as usize,
         sub: user.id,
         token_type: "access_token".to_string(),
+        roles,
         permissions,
     };
 
@@ -427,10 +439,19 @@ async fn refresh(db: Data<&Database>, req: &Request) -> Result<impl IntoResponse
     }
     let permissions = permissions.unwrap();
 
+    let roles = Role::for_user(&db, session.user_id);
+    if roles.is_err() {
+        return Ok(Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .body("{ \"message\": \"An internal server error occurred.\" }"));
+    }
+    let roles = roles.unwrap();
+
     let access_token_claims = AccessTokenClaims {
         exp: (chrono::Utc::now() + chrono::Duration::minutes(15)).timestamp() as usize,
         sub: session.user_id,
         token_type: "access_token".to_string(),
+        roles,
         permissions,
     };
 

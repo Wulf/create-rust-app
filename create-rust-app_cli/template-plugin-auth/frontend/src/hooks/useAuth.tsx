@@ -1,19 +1,54 @@
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
 const MILLISECONDS_UNTIL_EXPIRY_CHECK = 10 * 1000 // check expiry every 10 seconds
 const REMAINING_TOKEN_EXPIRY_TIME_ALLOWED = 60 * 1000 // 1 minute before token should be refreshed
 
+class Permissions {
+  private readonly rolesSet: Set<string>
+  private readonly rolesArray: string[]
+
+  private readonly permissionsSet: Set<string>
+  private readonly permissionsArray: string[]
+
+  constructor(roles: string[], perms: Permission[]) {
+    this.rolesArray = roles
+    this.permissionsArray = perms.map(p => p.permission)
+
+    this.rolesSet = new Set(this.rolesArray)
+    this.permissionsSet = new Set(this.permissionsArray)
+  }
+
+  public get roles(): string[] {
+    return this.rolesArray
+  }
+
+  public get permissions(): string[] {
+    return this.permissionsArray
+  }
+
+  public hasRole = (role: string): boolean => {
+    return this.rolesSet.has(role)
+  }
+
+  public hasPermission = (permission: string): boolean => {
+    return this.permissionsSet.has(permission)
+  }
+}
+
+interface Session {
+  expiresOnUTC: number
+  userId: ID
+  roles: string[]
+  permissions: string[]
+  hasRole(role: string): boolean
+  hasPermission(permission: string): boolean
+}
+
 interface AuthContext {
   accessToken: string | undefined
-  parsedToken: AccessTokenClaims | undefined
+  session: Session | undefined
   setAccessToken: (accessToken: string | undefined) => void
-  setParsedToken: (parsedToken: AccessTokenClaims | undefined) => void
+  setSession: (session: Session | undefined) => void
 
   isCheckingAuth: boolean
   setCheckingAuth: (checking: boolean) => void
@@ -27,24 +62,22 @@ const Context = createContext<AuthContext>(undefined as any)
 
 export const AuthProvider = (props: AuthWrapperProps) => {
   const [accessToken, setAccessToken] = useState<string | undefined>()
-  const [parsedToken, setParsedToken] = useState<
-    AccessTokenClaims | undefined
-  >()
+  const [session, setSession] = useState<Session | undefined>()
   const [isCheckingAuth, setCheckingAuth] = useState<boolean>(false)
 
   return (
-    <Context.Provider
-      value={{
-        accessToken,
-        parsedToken,
-        setAccessToken,
-        setParsedToken,
-        isCheckingAuth,
-        setCheckingAuth,
-      }}
-    >
-      {props.children}
-    </Context.Provider>
+      <Context.Provider
+          value={{
+            accessToken,
+            session,
+            setAccessToken,
+            setSession,
+            isCheckingAuth,
+            setCheckingAuth,
+          }}
+      >
+        {props.children}
+      </Context.Provider>
   )
 }
 
@@ -62,13 +95,21 @@ export const useAuth = () => {
 
     if (response.ok) {
       const responseJson = await response.json()
-
+      const parsedToken = parseJwt(responseJson.access_token) as AccessTokenClaims
+      const permissions = new Permissions(parsedToken.roles, parsedToken.permissions)
       context.setAccessToken(responseJson.access_token)
-      context.setParsedToken(parseJwt(responseJson.access_token))
+      context.setSession({
+        userId: parsedToken.sub,
+        expiresOnUTC: parsedToken.exp,
+        roles: permissions.roles,
+        permissions: permissions.permissions,
+        hasPermission: permissions.hasPermission,
+        hasRole: permissions.hasRole,
+      })
       return true
     } else {
       context.setAccessToken(undefined)
-      context.setParsedToken(undefined)
+      context.setSession(undefined)
       return false
     }
   }
@@ -80,7 +121,7 @@ export const useAuth = () => {
 
     if (response.ok) {
       context.setAccessToken(undefined)
-      context.setParsedToken(undefined)
+      context.setSession(undefined)
       return true
     } else {
       return false
@@ -89,7 +130,7 @@ export const useAuth = () => {
 
   return {
     accessToken: context.accessToken,
-    parsedToken: context.parsedToken,
+    session: context.session,
     isCheckingAuth: context.isCheckingAuth,
     isAuthenticated: !!context.accessToken,
     login,
@@ -104,13 +145,11 @@ export const useAuthCheck = () => {
     context.setCheckingAuth(true)
 
     const isExpiringSoon = () => {
-      if (context.parsedToken?.exp) {
-        const expireTimeMS = context.parsedToken.exp * 1000
+      if (context.session?.expiresOnUTC) {
+        const expireTimeMS = context.session.expiresOnUTC * 1000
         const currentTimeMS = Date.now()
 
-        return (
-          expireTimeMS - currentTimeMS <= REMAINING_TOKEN_EXPIRY_TIME_ALLOWED
-        )
+        return expireTimeMS - currentTimeMS <= REMAINING_TOKEN_EXPIRY_TIME_ALLOWED
       }
 
       return true
@@ -124,19 +163,28 @@ export const useAuthCheck = () => {
 
       if (response.ok) {
         const responseJson = await response.json()
+        const parsedToken = parseJwt(responseJson.access_token) as AccessTokenClaims
+        const permissions = new Permissions(parsedToken.roles, parsedToken.permissions)
 
         context.setAccessToken(responseJson.access_token)
-        context.setParsedToken(parseJwt(responseJson.access_token))
+        context.setSession({
+          userId: parsedToken.sub,
+          expiresOnUTC: parsedToken.exp,
+          roles: permissions.roles,
+          permissions: permissions.permissions,
+          hasRole: permissions.hasRole,
+          hasPermission: permissions.hasPermission,
+        })
       } else {
         context.setAccessToken(undefined)
-        context.setParsedToken(undefined)
+        context.setSession(undefined)
       }
     } else {
       // console.log(`${context.accessToken ? 'access token' : ''} ${isExpiringSoon() ? ' is not expiring' : ''}`)
     }
 
     context.setCheckingAuth(false)
-  }, [context.accessToken, context.parsedToken])
+  }, [context.accessToken, context.session])
 
   useEffect(() => {
     refreshIfNecessary()
@@ -156,15 +204,15 @@ export const useAuthCheck = () => {
 
 // https://stackoverflow.com/a/38552302
 const parseJwt = (token: string) => {
-  var base64Url = token.split('.')[1]
-  var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-  var jsonPayload = decodeURIComponent(
-    atob(base64)
-      .split('')
-      .map(function (c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-      })
-      .join('')
+  const base64Url = token.split('.')[1]
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+  const jsonPayload = decodeURIComponent(
+      atob(base64)
+          .split('')
+          .map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+          })
+          .join('')
   )
 
   return JSON.parse(jsonPayload)

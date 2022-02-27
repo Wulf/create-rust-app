@@ -7,6 +7,7 @@ interface AccessTokenClaims {
     exp: number
     sub: number
     token_type: string
+    roles: Array<string>
     permissions: Array<Permission>
 }
 

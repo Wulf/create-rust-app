@@ -325,10 +325,15 @@ async fn refresh(
     if permissions.is_err() { return Ok(HttpResponse::InternalServerError().body("{ \"message\": \"An internal server error occurred.\" }")); }
     let permissions = permissions.unwrap();
 
+    let roles = Role::for_user(&db, session.user_id);
+    if roles.is_err() { return Ok(HttpResponse::InternalServerError().body("{ \"message\": \"An internal server error occurred.\" }")); }
+    let roles = roles.unwrap();
+
     let access_token_claims = AccessTokenClaims {
         exp: (chrono::Utc::now() + chrono::Duration::minutes(15)).timestamp() as usize,
         sub: session.user_id,
         token_type: "access_token".to_string(),
+        roles,
         permissions,
     };
 

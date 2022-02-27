@@ -29,8 +29,9 @@ mod permissions;
 mod user;
 mod user_session;
 
-pub use permissions::Permission;
-
+pub use user::{User, UserChangeset};
+pub use user_session::{UserSession, UserSessionChangeset};
+pub use permissions::{Role, Permission, UserPermission, UserPermissionChangeset, RolePermission, RolePermissionChangeset};
 
 #[tsync::tsync]
 type ID = i32;
@@ -71,5 +72,6 @@ pub struct AccessTokenClaims {
     pub exp: usize,
     pub sub: ID,
     pub token_type: String,
+    pub roles: Vec<String>,
     pub permissions: Vec<Permission>
 }
