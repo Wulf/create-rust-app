@@ -105,7 +105,7 @@ async fn is_connected(db: Data<&Database>) -> Result<impl IntoResponse> {
 
 #[handler]
 async fn has_system_role(auth: Auth) -> Result<impl IntoResponse> {
-    Ok(Json(auth.has_permission("system")))
+    Ok(Json(auth.has_permission("system".to_string())))
 }
 
 #[handler]

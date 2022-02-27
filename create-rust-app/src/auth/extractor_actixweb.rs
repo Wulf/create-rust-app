@@ -43,7 +43,7 @@ impl ResponseError for AuthError {
         // println!("error_response");
         HttpResponse::build(StatusCode::UNAUTHORIZED).body(json!({
           "message": self.reason.as_str()
-        }))
+        }).to_string())
     }
 
     fn status_code(&self) -> StatusCode {
@@ -52,7 +52,6 @@ impl ResponseError for AuthError {
 }
 
 impl FromRequest for Auth {
-    type Config = Config;
     type Future = Ready<Result<Self, Self::Error>>;
     type Error = AuthError;
 

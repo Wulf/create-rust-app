@@ -1,7 +1,6 @@
 extern crate argonautica;
 
 use super::extractor_actixweb::Auth;
-use actix_http::http::StatusCode;
 use super::{user::{User, UserChangeset}, user_session::{UserSession, UserSessionChangeset}, permissions::Permission, AccessTokenClaims, UserSessionJson, UserSessionResponse, PaginationParams, ID, UTC};
 use crate::Database;
 use crate::Mailer;
@@ -11,16 +10,18 @@ use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey}
 use serde_json::json;
 
 use actix_web::{delete, get, post, Error as AWError};
-use actix_web::{web, HttpResponse, HttpMessage};
-use actix_http::cookie::{Cookie, SameSite};
+use actix_web::{web::{Query, Json, Path, Data}, HttpRequest, HttpResponse};
+use actix_http::StatusCode;
+use actix_web::cookie::{Cookie, SameSite};
+use crate::auth::Role;
 
 const COOKIE_NAME: &'static str = "request_token";
 
 #[get("/sessions")]
 async fn sessions(
-    db: web::Data<Database>,
+    db: Data<Database>,
     auth: Auth,
-    web::Query(info): web::Query<PaginationParams>,
+    Query(info): Query<PaginationParams>,
 ) -> Result<HttpResponse, AWError> {
     let db = db.pool.get().unwrap();
 
@@ -62,18 +63,18 @@ async fn sessions(
 
 #[delete("/sessions/{id}")]
 async fn destroy_session(
-    db: web::Data<Database>,
-    web::Path(item_id): web::Path<ID>,
+    db: Data<Database>,
+    item_id: Path<ID>,
     auth: Auth,
 ) -> Result<HttpResponse, AWError> {
     let db = db.pool.get().unwrap();
 
-    let user_session = UserSession::read(&db, item_id);
+    let user_session = UserSession::read(&db, item_id.into_inner());
 
     if user_session.is_err() {
         return Ok(HttpResponse::build(StatusCode::INTERNAL_SERVER_ERROR).body(json!({
       "message": "Internal error."
-    })));
+    }).to_string()));
     }
 
     let user_session = user_session.unwrap();
@@ -81,23 +82,23 @@ async fn destroy_session(
     if user_session.user_id != auth.user_id {
         return Ok(HttpResponse::build(StatusCode::NOT_FOUND).body(json!({
       "message": "Session not found."
-    })));
+    }).to_string()));
     }
 
     if UserSession::delete(&db, user_session.id).is_err() {
         return Ok(HttpResponse::build(StatusCode::INTERNAL_SERVER_ERROR).body(json!({
       "message": "Could not delete session."
-    })));
+    }).to_string()));
     }
 
     Ok(HttpResponse::build(StatusCode::OK).body(json!({
     "message": "Deleted."
-  })))
+  }).to_string()))
 }
 
 #[delete("/sessions")]
 async fn destroy_sessions(
-    db: web::Data<Database>,
+    db: Data<Database>,
     auth: Auth,
 ) -> Result<HttpResponse, AWError> {
     let db = db.pool.get().unwrap();
@@ -105,12 +106,12 @@ async fn destroy_sessions(
     if UserSession::delete_all_for_user(&db, auth.user_id).is_err() {
         return Ok(HttpResponse::build(StatusCode::INTERNAL_SERVER_ERROR).body(json!({
       "message": "Could not delete sessions."
-    })));
+    }).to_string()));
     }
 
     Ok(HttpResponse::build(StatusCode::OK).body(json!({
     "message": "Deleted."
-  })))
+  }).to_string()))
 }
 
 #[derive(Deserialize, Serialize)]
@@ -130,8 +131,8 @@ struct RefreshTokenClaims {
 
 #[post("/login")]
 async fn login(
-    db: web::Data<Database>,
-    web::Json(item): web::Json<LoginInput>,
+    db: Data<Database>,
+    Json(item): Json<LoginInput>,
 ) -> Result<HttpResponse, AWError> {
     let db = db.pool.get().unwrap();
 
@@ -175,13 +176,22 @@ async fn login(
     let permissions = Permission::for_user(&db, user.id);
     if permissions.is_err() {
         println!("{:#?}", permissions.err());
-        return Ok(HttpResponse::InternalServerError().body("{ \"message\": \"An internal server error occurred.\" }")); }
+        return Ok(HttpResponse::InternalServerError().body("{ \"message\": \"An internal server error occurred.\" }"));
+    }
     let permissions = permissions.unwrap();
+
+    let roles = Role::for_user(&db, user.id);
+    if roles.is_err() {
+        println!("{:#?}", roles.err());
+        return Ok(HttpResponse::InternalServerError().body("{ \"message\": \"An internal server error occurred.\" }"));
+    }
+    let roles = roles.unwrap();
 
     let access_token_claims = AccessTokenClaims {
         exp: (chrono::Utc::now() + chrono::Duration::minutes(15)).timestamp() as usize,
         sub: user.id,
         token_type: "access_token".to_string(),
+        roles,
         permissions,
     };
 
@@ -221,14 +231,14 @@ async fn login(
             .finish())
         .body(json!({
       "access_token": access_token
-    }))
+    }).to_string())
     )
 }
 
 #[post("/logout")]
 async fn logout(
-    db: web::Data<Database>,
-    req: web::HttpRequest,
+    db: Data<Database>,
+    req: HttpRequest,
 ) -> Result<HttpResponse, AWError> {
     let db = db.pool.get().unwrap();
 
@@ -237,7 +247,7 @@ async fn logout(
     if refresh_token_cookie.is_none() {
         return Ok(HttpResponse::build(StatusCode::UNAUTHORIZED).body(json!({
       "message": "Invalid session"
-    })));
+    }).to_string()));
     }
 
     let refresh_token_cookie_unwrapped = refresh_token_cookie.clone().unwrap();
@@ -270,8 +280,8 @@ async fn logout(
 
 #[post("/refresh")]
 async fn refresh(
-    db: web::Data<Database>,
-    req: web::HttpRequest,
+    db: Data<Database>,
+    req: HttpRequest,
 ) -> Result<HttpResponse, AWError> {
     let db = db.pool.get().unwrap();
 
@@ -280,7 +290,7 @@ async fn refresh(
     if cookie.is_none() {
         return Ok(HttpResponse::build(StatusCode::UNAUTHORIZED).body(json!({
       "message": "Invalid session"
-    })));
+    }).to_string()));
     }
 
     let cookie: Cookie = cookie.unwrap();
@@ -359,7 +369,7 @@ async fn refresh(
             .finish())
         .body(json!({
       "access_token": access_token
-    }))
+    }).to_string())
     )
 }
 
@@ -378,9 +388,9 @@ struct RegistrationClaims {
 
 #[post("/register")]
 async fn register(
-    db: web::Data<Database>,
-    web::Json(item): web::Json<RegisterInput>,
-    mailer: web::Data<Mailer>,
+    db: Data<Database>,
+    Json(item): Json<RegisterInput>,
+    mailer: Data<Mailer>,
 ) -> Result<HttpResponse, AWError> {
     let db = db.pool.get().unwrap();
 
@@ -435,9 +445,9 @@ struct ActivationInput {
 
 #[get("/activate")]
 async fn activate(
-    db: web::Data<Database>,
-    web::Query(item): web::Query<ActivationInput>,
-    mailer: web::Data<Mailer>,
+    db: Data<Database>,
+    Query(item): Query<ActivationInput>,
+    mailer: Data<Mailer>,
 ) -> Result<HttpResponse, AWError> {
     let db = db.pool.get().unwrap();
 
@@ -498,9 +508,9 @@ struct ResetTokenClaims {
 
 #[post("/forgot")]
 async fn forgot_password(
-    db: web::Data<Database>,
-    web::Json(item): web::Json<ForgotInput>,
-    mailer: web::Data<Mailer>,
+    db: Data<Database>,
+    Json(item): Json<ForgotInput>,
+    mailer: Data<Mailer>,
 ) -> Result<HttpResponse, AWError> {
     let db = db.pool.get().unwrap();
 
@@ -543,21 +553,21 @@ struct ChangeInput {
 
 #[post("/change")]
 async fn change_password(
-    db: web::Data<Database>,
-    web::Json(item): web::Json<ChangeInput>,
+    db: Data<Database>,
+    Json(item): Json<ChangeInput>,
     auth: Auth,
-    mailer: web::Data<Mailer>,
+    mailer: Data<Mailer>,
 ) -> Result<HttpResponse, AWError> {
     if item.old_password.len() == 0 || item.new_password.len() == 0 {
         return Ok(HttpResponse::build(StatusCode::BAD_REQUEST).body(json!({
       "message": "Missing password"
-    })));
+    }).to_string()));
     }
 
     if item.old_password.eq(&item.new_password) {
         return Ok(HttpResponse::build(StatusCode::BAD_REQUEST).body(json!({
       "message": "The new password must be different"
-    })));
+    }).to_string()));
     }
 
     let db = db.pool.get().unwrap();
@@ -567,7 +577,7 @@ async fn change_password(
     if user.is_err() {
         return Ok(HttpResponse::build(StatusCode::INTERNAL_SERVER_ERROR).body(json!({
       "message": "Could not find user"
-    })));
+    }).to_string()));
     }
 
     let user = user.unwrap();
@@ -590,7 +600,7 @@ async fn change_password(
     if !is_old_password_valid {
         return Ok(HttpResponse::build(StatusCode::BAD_REQUEST).body(json!({
       "message": "Invalid credentials"
-    })));
+    }).to_string()));
     }
 
     let mut hasher = argonautica::Hasher::default();
@@ -612,14 +622,14 @@ async fn change_password(
     if updated_user.is_err() {
         return Ok(HttpResponse::build(StatusCode::INTERNAL_SERVER_ERROR).body(json!({
       "message": "Could not update password"
-    })));
+    }).to_string()));
     }
 
     mail::auth_password_changed::send(&mailer, &user.email);
 
     Ok(HttpResponse::build(StatusCode::OK).body(json!({
     "message": "Password changed"
-  })))
+  }).to_string()))
 }
 
 #[derive(Serialize, Deserialize)]
@@ -630,16 +640,16 @@ struct ResetInput {
 
 #[post("/reset")]
 async fn reset_password(
-    db: web::Data<Database>,
-    web::Json(item): web::Json<ResetInput>,
-    mailer: web::Data<Mailer>,
+    db: Data<Database>,
+    Json(item): Json<ResetInput>,
+    mailer: Data<Mailer>,
 ) -> Result<HttpResponse, AWError> {
     let db = db.pool.get().unwrap();
 
     if item.new_password.len() == 0 {
         return Ok(HttpResponse::build(StatusCode::BAD_REQUEST).body(json!({
       "message": "Missing password"
-    })));
+    }).to_string()));
     }
 
     let token = decode::<ResetTokenClaims>(
@@ -693,8 +703,8 @@ async fn reset_password(
     mail::auth_password_reset::send(&mailer, &user.email);
 
     Ok(HttpResponse::build(StatusCode::OK).body(json!({
-    "message": "Password reset"
-  })))
+        "message": "Password reset"
+    }).to_string()))
 }
 
 pub fn endpoints(scope: actix_web::Scope) -> actix_web::Scope {

@@ -163,20 +163,20 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
 
     match framework {
         BackendFramework::ActixWeb => {
-            add_dependency(&project_dir, "actix-files", r#"actix-files = "0.5.0""#)?;
-            add_dependency(&project_dir, "actix-http", r#"actix-http = "2.2.0""#)?;
-            add_dependency(&project_dir, "actix-web", r#"actix-web = "3.3.2""#)?;
+            add_dependency(&project_dir, "actix-files", r#"actix-files = "0.6.0""#)?;
+            add_dependency(&project_dir, "actix-http", r#"actix-http = "3.0.0""#)?;
+            add_dependency(&project_dir, "actix-web", r#"actix-web = "4.0.1""#)?;
         },
         BackendFramework::Poem => {
             add_dependency(&project_dir, "poem", r#"poem = { version="1.2.33", features=["anyhow", "cookie", "static-files"] }"#)?;
+            add_dependency(&project_dir, "tokio", r#"tokio = { version = "1.15.0", features = ["rt-multi-thread", "macros"] }"#)?;
             add_dependency(&project_dir, "tracing_subscriber", r#"tracing-subscriber = "0.3.7""#)?;
         },
         _ => {}
     }
-    add_dependency(&project_dir, "create-rust-app", &format!("create-rust-app = {{version=\"3.0.1\"{enabled_features}}}", enabled_features=enabled_features))?;
-    add_dependency(&project_dir, "tokio", r#"tokio = { version = "1.15.0", features = ["rt-multi-thread", "macros"] }"#)?;
+    add_dependency(&project_dir, "create-rust-app", &format!("create-rust-app = {{version=\"4.0.0\"{enabled_features}}}", enabled_features=enabled_features))?;
     add_dependency(&project_dir, "serde", r#"serde = { version = "1.0.133", features = ["derive"] }"#)?;
-    add_dependency(&project_dir, "serde_json", r#"serde_json = "1.0.74""#)?;
+    add_dependency(&project_dir, "serde_json", r#"serde_json = "1.0.79""#)?;
     add_dependency(&project_dir, "chrono", r#"chrono = { version = "0.4.19", features = ["serde"] }"#)?;
     add_dependency(&project_dir, "tsync", r#"tsync = "1.2.1""#)?;
     add_dependency(&project_dir, "diesel", r#"diesel = { version="1.4.8", default-features = false, features = ["postgres", "r2d2", "chrono"] }"#)?;

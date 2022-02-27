@@ -8,9 +8,10 @@ mod extractors;
 mod mail;
 
 use actix_files::{Files, NamedFile};
-use actix_web::middleware::Logger;
+use actix_web::middleware::{Compress, Logger, NormalizePath};
 use actix_web::HttpResponse;
 use actix_web::{web, App, HttpServer};
+use actix_web::web::Data;
 use diesel::r2d2::{self, ConnectionManager, PooledConnection};
 use diesel::PgConnection;
 
@@ -20,7 +21,7 @@ async fn app_index() -> actix_web::Result<NamedFile, actix_web::Error> {
 }
 
 #[cfg(debug_assertions)]
-async fn development_index(req: web::HttpRequest) -> actix_web::Result<NamedFile, actix_web::Error> {
+async fn development_index(req: actix_web::HttpRequest) -> actix_web::Result<NamedFile, actix_web::Error> {
     Ok(NamedFile::open(".cargo/admin/dist/admin.html")?)
 }
 
@@ -29,11 +30,13 @@ async fn main() -> std::io::Result<()> {
     let app_data = create_rust_app::setup();
 
     HttpServer::new(move || {
-        let app = App::new();
+        let app = App::new()
+            .wrap(Compress::default())
+            .wrap(NormalizePath::trim());
 
         let app = app.wrap(Logger::default());
-        let app = app.data(app_data.database.clone());
-        let app = app.data(app_data.mailer.clone());
+        let app = app.app_data(Data::new(app_data.database.clone()));
+        let app = app.app_data(Data::new(app_data.mailer.clone()));
 
         let mut api_scope = web::scope("/api")
             .service(services::todo::endpoints(web::scope("/todos")));

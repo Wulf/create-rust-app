@@ -30,12 +30,12 @@ diesel_migrations = { optional=true, version="1.4.0" }
 poem = { optional=true, version="1.2.33", features=["anyhow", "cookie", "static-files"] }
 
 # actix_web dependencies
-actix-files = { optional=true, version="0.5.0" }
-actix-http = { optional=true, version="2.2.0" }
-actix-web = { optional=true, version="3.3.2" }
-actix-web-httpauth = { optional=true, version="0.5.0" }
-derive_more = { optional=true, version="0.99.11" }
-futures-util = { optional=true, version="0.3.8" }
+actix-files = { optional=true, version="0.6.0" }
+actix-http = { optional=true, version="3.0.0" }
+actix-web = { optional=true, version="4.0.1" }
+actix-web-httpauth = { optional=true, version="0.6.0-beta.8" }
+derive_more = { optional=true, version="0.99.17" }
+futures = { optional=true, version="0.3.21" }
 env_logger = { optional=true, version= "0.9.0" }
 
 [features]
@@ -44,4 +44,4 @@ plugin_dev = ["diesel", "serde", "diesel_migrations"]
 plugin_container = []
 plugin_auth = ["diesel", "serde", "anyhow", "argonautica", "jsonwebtoken", "chrono", "tsync"]
 backend_poem = ["poem"]
-backend_actix-web = ["actix-web", "actix-http", "actix-files", "actix-web-httpauth","derive_more", "futures-util", "env_logger"]
+backend_actix-web = ["actix-web", "actix-http", "actix-files", "actix-web-httpauth","derive_more", "futures", "env_logger"]

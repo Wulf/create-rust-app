@@ -63,7 +63,9 @@ pub fn setup() -> AppData {
 use actix_web;
 
 #[cfg(feature = "backend_actix-web")]
-pub const not_found: fn() -> actix_http::Response = || actix_web::HttpResponse::NotFound().finish();
+pub async fn not_found() -> actix_web::HttpResponse {
+    actix_web::HttpResponse::NotFound().finish()
+}
 
 #[cfg(feature = "backend_poem")]
 use poem;

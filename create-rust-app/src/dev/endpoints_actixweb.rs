@@ -1,7 +1,4 @@
-use actix_web::{
-    web::{self, Data, Json},
-    HttpResponse,
-};
+use actix_web::{get, post, web::{self, Data, Json}, Scope, HttpResponse, Responder, Result};
 
 use diesel::{sql_types::Text, sql_query, QueryableByName, RunQueryDsl};
 use diesel_migrations::{any_pending_migrations, run_pending_migrations};
@@ -28,96 +25,98 @@ struct MySqlQuery {
     query: String,
 }
 
-pub fn endpoints(scope: actix_web::Scope) -> actix_web::Scope {
-    return scope
-        .route(
-            "/db/query",
-            web::post().to(|db: Data<Database>, body: Json<MySqlQuery>| {
-                let q = format!("SELECT json_agg(q) as json FROM ({}) q;", body.query);
-                let db = db.pool.get().unwrap();
+pub fn endpoints(scope: Scope) -> Scope {
+    scope
+        .service(query_db)
+        .service(check_system_role)
+        .service(add_system_role)
+        .service(is_connected)
+        .service(needs_migration)
+        .service(migrate_db)
+        .service(health)
+}
 
-                let rows = sql_query(q.as_str()).get_result::<MyQueryResult>(&db);
-                if rows.is_err() {
-                    return HttpResponse::InternalServerError().finish();
-                }
+#[post("/db/query")]
+async fn query_db(db: Data<Database>, body: Json<MySqlQuery>) -> HttpResponse {
+    let q = format!("SELECT json_agg(q) as json FROM ({}) q;", body.query);
+    let db = db.pool.get().unwrap();
 
-                let result = rows.unwrap().json;
+    let rows = sql_query(q.as_str()).get_result::<MyQueryResult>(&db);
+    if rows.is_err() {
+        return HttpResponse::InternalServerError().finish();
+    }
 
-                HttpResponse::Ok().body(result)
-            }),
-        )
-        .route(
-            "/auth/has-system-role",
-            web::get().to(|auth: Auth| HttpResponse::Ok().json(auth.has_permission("system"))),
-        )
-        .route(
-            "/auth/add-system-role",
-            web::get().to(|db: Data<Database>, auth: Auth| {
-                let db = db.pool.clone().get().unwrap();
+    let result = rows.unwrap().json;
 
-                HttpResponse::Ok()
-                    .json(Permission::assign_role(&db, auth.user_id, "system").unwrap())
-            }),
-        )
-        .route(
-            "/db/is-connected",
-            web::get().to(|db: Data<Database>| {
-                let db = db.pool.clone().get().unwrap();
+    HttpResponse::Ok().body(result)
+}
 
-                let is_connected = diesel::sql_query("SELECT 1;").execute(&db);
+#[get("/auth/has-system-role")]
+async fn check_system_role(auth: Auth) -> HttpResponse {
+    HttpResponse::Ok().json(auth.has_permission("system".to_string()))
+}
 
-                println!("{:#?}", is_connected);
+#[get("/auth/add-system-role")]
+async fn add_system_role(db: Data<Database>, auth: Auth) -> HttpResponse {
+    let db = db.pool.clone().get().unwrap();
 
-                if is_connected.is_err() {
-                    return HttpResponse::Ok().json(false);
-                }
+    HttpResponse::Ok()
+        .json(Permission::assign_role(&db, auth.user_id, "system").unwrap())
+}
 
-                HttpResponse::Ok().json(true)
-            }),
-        )
-        .route(
-            "/db/needs-migration",
-            web::get().to(|db: Data<Database>| {
-                let db = db.pool.clone().get().unwrap();
+#[get("/db/is-connected")]
+async fn is_connected(db: Data<Database>) -> HttpResponse {
+    let db = db.pool.clone().get().unwrap();
 
-                // This will run the necessary migrations.
-                let has_migrations_pending = any_pending_migrations(&db).unwrap();
+    let is_connected = diesel::sql_query("SELECT 1;").execute(&db);
 
-                if has_migrations_pending {
-                    return HttpResponse::Ok().json(true);
-                }
+    println!("{:#?}", is_connected);
 
-                HttpResponse::Ok().json(false)
-            }),
-        )
-        .route(
-            "/db/migrate",
-            web::get().to(|db: Data<Database>| {
-                let db = db.pool.clone().get().unwrap();
+    if is_connected.is_err() {
+        return HttpResponse::Ok().json(false);
+    }
 
-                // This will run the necessary migrations.
-                let has_migrations_pending = any_pending_migrations(&db).unwrap();
+    HttpResponse::Ok().json(true)
+}
 
-                if !has_migrations_pending {
-                    return HttpResponse::Ok().json(false);
-                }
+#[get("/db/needs-migration")]
+async fn needs_migration(db: Data<Database>) -> HttpResponse {
+    let db = db.pool.clone().get().unwrap();
 
-                let op = run_pending_migrations(&db);
+    // This will run the necessary migrations.
+    let has_migrations_pending = any_pending_migrations(&db).unwrap();
 
-                if op.is_err() {
-                    println!("{:#?}", op.err());
-                    return HttpResponse::InternalServerError().json(false);
-                }
+    if has_migrations_pending {
+        return HttpResponse::Ok().json(true);
+    }
 
-                HttpResponse::Ok().json(true)
-            }),
-        )
-        .route(
-            "/health",
-            web::get().to(|| {
-                HttpResponse::Ok().json(HealthCheckResponse {
-                    message: "healthy".to_string(),
-                })
-            }),
-        );
+    HttpResponse::Ok().json(false)
+}
+
+#[get("/db/migrate")]
+async fn migrate_db(db: Data<Database>) -> HttpResponse {
+    let db = db.pool.clone().get().unwrap();
+
+    // This will run the necessary migrations.
+    let has_migrations_pending = any_pending_migrations(&db).unwrap();
+
+    if !has_migrations_pending {
+        return HttpResponse::Ok().json(false);
+    }
+
+    let op = run_pending_migrations(&db);
+
+    if op.is_err() {
+        println!("{:#?}", op.err());
+        return HttpResponse::InternalServerError().json(false);
+    }
+
+    HttpResponse::Ok().json(true)
+}
+
+#[get("/health")]
+async fn health() -> HttpResponse {
+    HttpResponse::Ok().json(HealthCheckResponse {
+        message: "healthy".to_string(),
+    })
 }
