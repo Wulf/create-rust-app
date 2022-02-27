@@ -260,7 +260,9 @@ async fn logout(
     let mut builder = HttpResponse::Ok();
 
     if let Some(ref cookie) = refresh_token_cookie {
-        builder.del_cookie(cookie);
+        let mut removal_cookie = cookie.clone();
+        removal_cookie.make_removal();
+        builder.cookie(removal_cookie);
     }
 
     Ok(builder.finish())

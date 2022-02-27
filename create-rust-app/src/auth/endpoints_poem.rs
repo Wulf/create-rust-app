@@ -348,7 +348,9 @@ async fn logout(db: Data<&Database>, req: &Request) -> Result<impl IntoResponse>
     let mut builder = Response::builder().status(StatusCode::OK);
 
     if let Some(ref cookie) = refresh_token_cookie {
-        jar.remove(cookie.name());
+        let mut removal_cookie = cookie.clone();
+        removal_cookie.make_removal();
+        jar.add(removal_cookie);
     }
 
     Ok(builder.finish())
