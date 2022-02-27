@@ -1,3 +1,7 @@
+type ID = number
+
+type UTC = Date
+
 interface PaginationParams {
     page: number
     page_size: number
