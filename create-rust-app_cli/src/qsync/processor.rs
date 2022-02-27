@@ -267,14 +267,21 @@ fn extract_endpoint_information(
         }
     }
 
+    let endpoint_base = input_path
+        .file_stem()
+        .unwrap_or_default()
+        .to_str()
+        .unwrap_or_default()
+        .trim_end_matches("/");
+
+    // the part extracted from the attribute, for example: `#[post("/{id}"]`
+    let handler_path = path.trim_matches('"').trim_start_matches('/').trim_end_matches("/");
+    let handler_path = if !handler_path.is_empty() { "/".to_string() + handler_path } else { "".to_string() };
+
     hook.endpoint_url = format!(
-        "/api/{}/{}",
-        input_path
-            .file_stem()
-            .unwrap_or_default()
-            .to_str()
-            .unwrap_or_default(),
-        path.trim_matches('"').trim_start_matches('/')
+        "/api/{}{}",
+        endpoint_base,
+        handler_path
     );
 
     hook.endpoint_verb = verb;
