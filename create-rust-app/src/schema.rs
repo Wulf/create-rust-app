@@ -1,3 +1,6 @@
+// TODO: split this into a schema file for each plugin individually
+// in this case, this should be schema_auth.rs
+
 #[cfg(feature = "plugin_auth")]
 table! {
   role_permissions (role) {
@@ -56,6 +59,7 @@ joinable!(user_roles -> users (user_id));
 #[cfg(feature = "plugin_auth")]
 joinable!(user_sessions -> users (user_id));
 
+#[cfg(feature = "plugin_auth")]
 allow_tables_to_appear_in_same_query!(
     role_permissions,
     user_permissions,
