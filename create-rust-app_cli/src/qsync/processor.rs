@@ -569,7 +569,7 @@ pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) 
                             // && !path
                             //     .file_name()
                             //     .unwrap_or_default()
-                            //     .eq_ignore_ascii_case("mod.rs")
+                            //     .eq_ignore_ascii_case("storage")
                             {
                                 process_service_file(path, &mut state);
                             } else if is_debug {

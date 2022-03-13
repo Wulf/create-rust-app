@@ -29,6 +29,20 @@ chrono = { optional=true, version = "0.4.19", features = ["serde"] }
 # plugin_dev
 diesel_migrations = { optional=true, version="1.4.0" }
 
+# plugin_storage
+aws-config = { optional=true, version="0.8.0" }
+aws-types = { optional=true, version="0.8.0" }
+aws-endpoint = { optional=true, version="0.8.0" }
+aws-sdk-s3 = { optional=true, version="0.8.0" }
+tokio = { optional=true, version = "1", features = ["full"] }
+futures-util = { optional=true, version="0.3.21" }
+http = { optional=true, version="0.2.6" }
+diesel_derives = { optional=true, version="1.4.1" }
+uuid = { optional=true, version="0.8.2", features=["v4", "serde"] }
+md5 = { optional=true, version="0.7.0" }
+mime_guess = { optional=true, version="2.0.4" }
+base64 = { optional=true, version="0.13.0" }
+
 ##
 ## BACKENDS
 ##
@@ -37,6 +51,7 @@ diesel_migrations = { optional=true, version="1.4.0" }
 poem = { optional=true, version="1.2.33", features=["anyhow", "cookie", "static-files"] }
 
 # actix_web dependencies
+actix-multipart = { optional=true, version="0.4.0" }
 actix-files = { optional=true, version="0.6.0" }
 actix-http = { optional=true, version="3.0.0" }
 actix-web = { optional=true, version="4.0.1" }
@@ -58,5 +73,6 @@ default = ["plugin_dev", "plugin_auth", "plugin_container"]
 plugin_dev = ["diesel", "serde", "diesel_migrations"]
 plugin_container = []
 plugin_auth = ["diesel", "serde", "anyhow", "argonautica", "jsonwebtoken", "chrono", "tsync"]
+plugin_storage = [ "aws-config", "aws-types", "aws-endpoint", "aws-sdk-s3", "tokio", "futures-util", "http", "diesel", "diesel_derives", "serde", "uuid", "md5", "mime_guess", "base64" ]
 backend_poem = ["poem"]
-backend_actix-web = ["actix-web", "actix-http", "actix-files", "actix-web-httpauth","derive_more", "futures", "env_logger"]
+backend_actix-web = ["actix-web", "actix-http", "actix-files", "actix-multipart", "actix-web-httpauth","derive_more", "futures", "env_logger"]

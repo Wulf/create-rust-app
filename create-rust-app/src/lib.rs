@@ -21,6 +21,11 @@ mod logger;
 #[cfg(feature = "backend_poem")]
 pub use logger::Logger as PoemLogger;
 
+#[cfg(feature = "plugin_storage")]
+mod storage;
+#[cfg(feature = "plugin_storage")]
+pub use storage::{Storage, Attachment, AttachmentData, AttachmentBlob};
+
 mod mailer;
 pub use mailer::Mailer;
 
@@ -32,6 +37,8 @@ pub use mailer::Mailer;
 pub struct AppData {
     pub mailer: Mailer,
     pub database: Database,
+    #[cfg(feature= "plugin_storage")]
+    pub storage: storage::Storage
 }
 
 pub fn setup() -> AppData {
@@ -61,6 +68,8 @@ pub fn setup() -> AppData {
     AppData {
         mailer: Mailer::new(),
         database: Database::new(),
+        #[cfg(feature= "plugin_storage")]
+        storage: storage::Storage::new()
     }
 }
 
