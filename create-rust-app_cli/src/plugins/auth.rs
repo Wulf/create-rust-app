@@ -138,10 +138,10 @@ impl Plugin for Auth {
       );
       
       CREATE TABLE role_permissions (
-        role TEXT NOT NULL PRIMARY KEY,
+        role TEXT NOT NULL,
         permission TEXT NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE (role, permission)
+        PRIMARY KEY (role, permission)
       );      
     "#},
             indoc! {r#"
