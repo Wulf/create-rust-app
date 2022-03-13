@@ -16,15 +16,22 @@ serde_json = "1.0.74"
 lettre = "0.9.6"
 lettre_email = "0.9.4"
 
-# optional dependencies
-tsync = { optional=true, version="1.2.1" }
-chrono = { optional=true, version = "0.4.19", features = ["serde"] }
+##
+## PLUGINS
+##
+
+# plugin_auth
 argonautica = { optional=true, version="0.2.0" }
 jsonwebtoken = { optional=true, version="7.2.0" }
-serde = { optional=true, version = "1.0.133", features = ["derive"] }
-anyhow = { optional=true, version="1.0.52" }
-diesel = { optional=true, version="1.4.8", default-features = false, features = ["postgres", "uuid", "r2d2", "chrono", "32-column-tables"] }
+tsync = { optional=true, version="1.2.1" }
+chrono = { optional=true, version = "0.4.19", features = ["serde"] }
+
+# plugin_dev
 diesel_migrations = { optional=true, version="1.4.0" }
+
+##
+## BACKENDS
+##
 
 # poem dependencies
 poem = { optional=true, version="1.2.33", features=["anyhow", "cookie", "static-files"] }
@@ -37,6 +44,14 @@ actix-web-httpauth = { optional=true, version="0.6.0-beta.8" }
 derive_more = { optional=true, version="0.99.17" }
 futures = { optional=true, version="0.3.21" }
 env_logger = { optional=true, version= "0.9.0" }
+
+##
+## MISC - here, we list deps which are required by multiple features
+##
+
+serde = { optional=true, version = "1.0.133", features = ["derive"] } # plugin_dev, plugin_auth
+anyhow = { optional=true, version="1.0.52" } # backend_poem, plugin_auth
+diesel = { optional=true, version="1.4.8", default-features = false, features = ["postgres", "uuid", "r2d2", "chrono", "32-column-tables"] } # plugin_dev, plugin_auth
 
 [features]
 default = ["plugin_dev", "plugin_auth", "plugin_container"]
