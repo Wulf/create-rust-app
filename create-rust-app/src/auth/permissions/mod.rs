@@ -56,7 +56,7 @@ pub struct Permission {
 
 impl Hash for Permission {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.from_role.as_str().hash(state);
+        self.permission.as_str().hash(state);
     }
 }
 
