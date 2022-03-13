@@ -55,6 +55,7 @@ fn generate(resource_name: &str) -> Model {
         pub struct $MODEL_NAME {
           /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
              Add columns here in the same order as the schema
+             (because #[derive(Queryable)] expects this)
              -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
           // pub id: ID,
           // pub created_at: UTC,
@@ -66,7 +67,6 @@ fn generate(resource_name: &str) -> Model {
         #[table_name = \"$TABLE_NAME\"]
         pub struct $MODEL_NAMEChangeset {
           /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-             Add columns here in the same order as the schema
              Don't include non-mutable columns
              (ex: id, created_at/updated_at)
              -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
