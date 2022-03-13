@@ -26,6 +26,7 @@ pub use endpoints_poem::api;
 
 mod mail;
 mod permissions;
+mod schema;
 mod user;
 mod user_session;
 

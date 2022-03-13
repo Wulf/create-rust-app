@@ -8,9 +8,6 @@ compile_error!("feature \"backend_actix-web\" and feature \"backend_poem\" canno
 extern crate diesel;
 
 #[cfg(feature = "plugin_auth")]
-pub mod schema;
-
-#[cfg(feature = "plugin_auth")]
 pub mod auth;
 
 #[cfg(all(feature = "plugin_dev", debug_assertions))]
