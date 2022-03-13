@@ -47,6 +47,15 @@ pub fn setup() -> AppData {
         // diesel_migrations::embed_migrations!();
     }
 
+    #[cfg(feature="plugin_auth")]
+    if std::env::var("SECRET_KEY").is_err() {
+        panic!("No SECRET_KEY environment variable set!");
+    }
+
+    if std::env::var("DATABASE_URL").is_err() {
+        panic!("No DATABASE_URL environment variable set!");
+    }
+
     Mailer::check_environment_variables();
 
     AppData {

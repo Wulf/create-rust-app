@@ -36,14 +36,6 @@ impl Mailer {
     }
 
     pub fn check_environment_variables() {
-        if std::env::var("SECRET_KEY").is_err() {
-            panic!("No SECRET_KEY environment variable set!");
-        }
-
-        if std::env::var("DATABASE_URL").is_err() {
-            panic!("No DATABASE_URL environment variable set!");
-        }
-
         if std::env::var("SMTP_FROM_ADDRESS").is_err() {
             println!(
                 "Note: SMTP_FROM_ADDRESS environment variable is not set, no mail will be sent!"
