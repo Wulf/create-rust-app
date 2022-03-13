@@ -1,5 +1,5 @@
 use crate::diesel::*;
-use crate::schema::*;
+use super::schema::*;
 
 use super::{PaginationParams, ID, UTC};
 use crate::database::Connection;
@@ -49,25 +49,25 @@ pub struct UserChangeset {
 
 impl User {
     pub fn create(db: &Connection, item: &UserChangeset) -> QueryResult<Self> {
-        use crate::schema::users::dsl::*;
+        use super::schema::users::dsl::*;
 
         insert_into(users).values(item).get_result::<User>(db)
     }
 
     pub fn read(db: &Connection, item_id: ID) -> QueryResult<Self> {
-        use crate::schema::users::dsl::*;
+        use super::schema::users::dsl::*;
 
         users.filter(id.eq(item_id)).first::<User>(db)
     }
 
     pub fn find_by_email(db: &Connection, item_email: String) -> QueryResult<Self> {
-        use crate::schema::users::dsl::*;
+        use super::schema::users::dsl::*;
 
         users.filter(email.eq(item_email)).first::<User>(db)
     }
 
     pub fn read_all(db: &Connection, pagination: &PaginationParams) -> QueryResult<Vec<Self>> {
-        use crate::schema::users::dsl::*;
+        use super::schema::users::dsl::*;
 
         users
             .order(created_at)
@@ -80,7 +80,7 @@ impl User {
     }
 
     pub fn update(db: &Connection, item_id: ID, item: &UserChangeset) -> QueryResult<Self> {
-        use crate::schema::users::dsl::*;
+        use super::schema::users::dsl::*;
 
         diesel::update(users.filter(id.eq(item_id)))
             .set(item)
@@ -88,7 +88,7 @@ impl User {
     }
 
     pub fn delete(db: &Connection, item_id: ID) -> QueryResult<usize> {
-        use crate::schema::users::dsl::*;
+        use super::schema::users::dsl::*;
 
         diesel::delete(users.filter(id.eq(item_id))).execute(db)
     }

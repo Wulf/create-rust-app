@@ -1,5 +1,5 @@
 use crate::diesel::*;
-use crate::schema::*;
+use crate::auth::schema::*;
 
 use crate::{
     auth::{user::User, ID, UTC},
@@ -37,7 +37,7 @@ pub struct UserRoleChangeset {
 
 impl UserRole {
     pub fn create(db: &Connection, item: &UserRoleChangeset) -> QueryResult<Self> {
-        use crate::schema::user_roles::dsl::*;
+        use crate::auth::schema::user_roles::dsl::*;
 
         insert_into(user_roles)
             .values(item)
@@ -45,7 +45,7 @@ impl UserRole {
     }
 
     pub fn read(db: &Connection, item_user_id: ID, item_role: String) -> QueryResult<Self> {
-        use crate::schema::user_roles::dsl::*;
+        use crate::auth::schema::user_roles::dsl::*;
 
         user_roles
             .filter(user_id.eq(item_user_id).and(role.eq(item_role)))
@@ -53,7 +53,7 @@ impl UserRole {
     }
 
     pub fn read_all(db: &Connection, item_user_id: ID) -> QueryResult<Vec<Self>> {
-        use crate::schema::user_roles::dsl::*;
+        use crate::auth::schema::user_roles::dsl::*;
 
         user_roles
             .filter(user_id.eq(item_user_id))
@@ -62,7 +62,7 @@ impl UserRole {
     }
 
     pub fn delete(db: &Connection, item_user_id: ID, item_role: String) -> QueryResult<usize> {
-        use crate::schema::user_roles::dsl::*;
+        use crate::auth::schema::user_roles::dsl::*;
 
         diesel::delete(user_roles.filter(user_id.eq(item_user_id).and(role.eq(item_role))))
             .execute(db)

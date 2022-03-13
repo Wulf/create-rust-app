@@ -1,5 +1,5 @@
 use crate::diesel::*;
-use crate::schema::*;
+use super::schema::*;
 
 use super::user::User;
 use super::{PaginationParams, ID, UTC};
@@ -51,7 +51,7 @@ pub struct UserSessionChangeset {
 
 impl UserSession {
     pub fn create(db: &Connection, item: &UserSessionChangeset) -> QueryResult<Self> {
-        use crate::schema::user_sessions::dsl::*;
+        use super::schema::user_sessions::dsl::*;
 
         insert_into(user_sessions)
             .values(item)
@@ -59,7 +59,7 @@ impl UserSession {
     }
 
     pub fn read(db: &Connection, item_id: ID) -> QueryResult<Self> {
-        use crate::schema::user_sessions::dsl::*;
+        use super::schema::user_sessions::dsl::*;
 
         user_sessions
             .filter(id.eq(item_id))
@@ -67,7 +67,7 @@ impl UserSession {
     }
 
     pub fn find_by_refresh_token(db: &Connection, item_refresh_token: &str) -> QueryResult<Self> {
-        use crate::schema::user_sessions::dsl::*;
+        use super::schema::user_sessions::dsl::*;
 
         user_sessions
             .filter(refresh_token.eq(item_refresh_token))
@@ -79,7 +79,7 @@ impl UserSession {
         pagination: &PaginationParams,
         item_user_id: ID,
     ) -> QueryResult<Vec<Self>> {
-        use crate::schema::user_sessions::dsl::*;
+        use super::schema::user_sessions::dsl::*;
 
         user_sessions
             .filter(user_id.eq(item_user_id))
@@ -93,7 +93,7 @@ impl UserSession {
     }
 
     pub fn count_all(db: &Connection, item_user_id: ID) -> QueryResult<i64> {
-        use crate::schema::user_sessions::dsl::*;
+        use super::schema::user_sessions::dsl::*;
 
         user_sessions
             .filter(user_id.eq(item_user_id))
@@ -102,7 +102,7 @@ impl UserSession {
     }
 
     pub fn update(db: &Connection, item_id: ID, item: &UserSessionChangeset) -> QueryResult<Self> {
-        use crate::schema::user_sessions::dsl::*;
+        use super::schema::user_sessions::dsl::*;
 
         diesel::update(user_sessions.filter(id.eq(item_id)))
             .set(item)
@@ -110,13 +110,13 @@ impl UserSession {
     }
 
     pub fn delete(db: &Connection, item_id: ID) -> QueryResult<usize> {
-        use crate::schema::user_sessions::dsl::*;
+        use super::schema::user_sessions::dsl::*;
 
         diesel::delete(user_sessions.filter(id.eq(item_id))).execute(db)
     }
 
     pub fn delete_all_for_user(db: &Connection, item_user_id: ID) -> QueryResult<usize> {
-        use crate::schema::user_sessions::dsl::*;
+        use super::schema::user_sessions::dsl::*;
 
         diesel::delete(user_sessions.filter(user_id.eq(item_user_id))).execute(db)
     }

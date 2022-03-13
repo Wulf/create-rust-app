@@ -1,5 +1,5 @@
 use crate::diesel::*;
-use crate::schema::*;
+use crate::auth::schema::*;
 
 use crate::auth::UTC;
 use crate::database::Connection;
@@ -32,7 +32,7 @@ pub struct RolePermissionChangeset {
 
 impl RolePermission {
     pub fn create(db: &Connection, item: &RolePermissionChangeset) -> QueryResult<Self> {
-        use crate::schema::role_permissions::dsl::*;
+        use crate::auth::schema::role_permissions::dsl::*;
 
         insert_into(role_permissions)
             .values(item)
@@ -40,7 +40,7 @@ impl RolePermission {
     }
 
     pub fn read(db: &Connection, item_role: String, item_permission: String) -> QueryResult<Self> {
-        use crate::schema::role_permissions::dsl::*;
+        use crate::auth::schema::role_permissions::dsl::*;
 
         role_permissions
             .filter(role.eq(item_role).and(permission.eq(item_permission)))
@@ -48,7 +48,7 @@ impl RolePermission {
     }
 
     pub fn read_all(db: &Connection, item_role: String) -> QueryResult<Vec<Self>> {
-        use crate::schema::role_permissions::dsl::*;
+        use crate::auth::schema::role_permissions::dsl::*;
 
         role_permissions
             .filter(role.eq(item_role))
@@ -61,7 +61,7 @@ impl RolePermission {
         item_role: String,
         item_permission: String,
     ) -> QueryResult<usize> {
-        use crate::schema::role_permissions::dsl::*;
+        use crate::auth::schema::role_permissions::dsl::*;
 
         diesel::delete(
             role_permissions.filter(role.eq(item_role).and(permission.eq(item_permission))),
