@@ -110,7 +110,7 @@ impl Plugin for Auth {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
       
-      SELECT diesel_manage_updated_at('users');
+      SELECT manage_updated_at('users');
       
       CREATE TABLE user_sessions (
         id SERIAL PRIMARY KEY,
@@ -121,7 +121,7 @@ impl Plugin for Auth {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
       
-      SELECT diesel_manage_updated_at('user_sessions');
+      SELECT manage_updated_at('user_sessions');
 
       CREATE TABLE user_permissions (
         user_id SERIAL NOT NULL REFERENCES users(id),

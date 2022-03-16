@@ -5,4 +5,4 @@ CREATE TABLE todos (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-SELECT diesel_manage_updated_at('todos');
+SELECT manage_updated_at('todos');
