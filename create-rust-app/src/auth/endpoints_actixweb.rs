@@ -173,14 +173,14 @@ async fn login(
         return Ok(HttpResponse::build(StatusCode::UNAUTHORIZED).body("{ \"message\": \"Invalid credentials.\" }"));
     }
 
-    let permissions = Permission::for_user(&db, user.id);
+    let permissions = Permission::fetch_all(&db, user.id);
     if permissions.is_err() {
         println!("{:#?}", permissions.err());
         return Ok(HttpResponse::InternalServerError().body("{ \"message\": \"An internal server error occurred.\" }"));
     }
     let permissions = permissions.unwrap();
 
-    let roles = Role::for_user(&db, user.id);
+    let roles = Role::fetch_all(&db, user.id);
     if roles.is_err() {
         println!("{:#?}", roles.err());
         return Ok(HttpResponse::InternalServerError().body("{ \"message\": \"An internal server error occurred.\" }"));
@@ -321,11 +321,11 @@ async fn refresh(
 
     let session = session.unwrap();
 
-    let permissions = Permission::for_user(&db, session.user_id);
+    let permissions = Permission::fetch_all(&db, session.user_id);
     if permissions.is_err() { return Ok(HttpResponse::InternalServerError().body("{ \"message\": \"An internal server error occurred.\" }")); }
     let permissions = permissions.unwrap();
 
-    let roles = Role::for_user(&db, session.user_id);
+    let roles = Role::fetch_all(&db, session.user_id);
     if roles.is_err() { return Ok(HttpResponse::InternalServerError().body("{ \"message\": \"An internal server error occurred.\" }")); }
     let roles = roles.unwrap();
 

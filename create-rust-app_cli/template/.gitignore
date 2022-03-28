@@ -1,5 +1,6 @@
-/backend/.build
+/.cargo/.build
 .env*
 !.env.example
 build-log*.txt
 .DS_Store
+/.idea/

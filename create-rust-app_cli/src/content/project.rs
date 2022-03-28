@@ -45,11 +45,16 @@ fn add_bins_to_cargo_toml(project_dir: &std::path::PathBuf) -> Result<(), std::i
 
     let updated_toml = toml::to_string(&parsed_toml).unwrap();
 
+
     let append_to_toml = format!(
         r#"
 [[bin]]
 name = "fullstack"
-path = "bin/fullstack.rs"
+path = ".cargo/bin/fullstack.rs"
+
+[[bin]]
+name = "tsync"
+path = ".cargo/bin/tsync.rs"
 
 [[bin]]
 name = "{project_name}"
@@ -71,6 +76,40 @@ path = "backend/main.rs"
 pub struct CreationOptions {
     pub cra_enabled_features: Vec<String>,
     pub backend_framework: BackendFramework
+}
+
+pub fn remove_non_framework_files(project_dir: &PathBuf, framework: BackendFramework) -> Result<()> {
+    /* Choose framework-specific files */
+    for entry in WalkDir::new(project_dir) {
+        let entry = entry.unwrap();
+
+        let file = entry.path();
+        let path = file.clone().to_str().unwrap().to_string();
+
+        if path.ends_with("+actix_web") {
+            if framework != BackendFramework::ActixWeb {
+                logger::remove_file_msg(&format!("{:#?}", &file));
+                std::fs::remove_file(file)?;
+            };
+            if framework == BackendFramework::ActixWeb {
+                let dest = file.with_extension(file.extension().unwrap().to_string_lossy().replace("+actix_web", ""));
+                logger::rename_file_msg(&format!("{:#?}", &file), &format!("{:#?}", &dest));
+                std::fs::rename(file, dest);
+            };
+        } else if path.ends_with("+poem") {
+            if framework != BackendFramework::Poem {
+                logger::remove_file_msg(&format!("{:#?}", &file));
+                std::fs::remove_file(file)?;
+            };
+            if framework == BackendFramework::Poem {
+                let dest = file.with_extension(file.extension().unwrap().to_string_lossy().replace("+poem", ""));
+                logger::rename_file_msg(&format!("{:#?}", &file), &format!("{:#?}", &dest));
+                std::fs::rename(file, dest);
+            };
+        }
+    }
+
+    Ok(())
 }
 
 /**
@@ -153,11 +192,8 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
 
 
     let framework = creation_options.backend_framework;
-    let mut cra_enabled_features = creation_options.cra_enabled_features;
-    cra_enabled_features.push(match framework {
-        BackendFramework::ActixWeb => "backend_actix-web".to_string(),
-        BackendFramework::Poem => "backend_poem".to_string()
-    });
+    let cra_enabled_features = creation_options.cra_enabled_features;
+
     let mut enabled_features: String = cra_enabled_features.iter().map(|f| format!("\"{}\"", f)).collect::<Vec<String>>().join(", ");
     if !cra_enabled_features.is_empty() { enabled_features = ", features=[".to_string() + &enabled_features + "]"; }
 
@@ -193,40 +229,12 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         let mut directory_path = std::path::PathBuf::from(&file_path);
         directory_path.pop();
 
-        logger::file_msg(filename.as_ref());
+        logger::add_file_msg(filename.as_ref());
         std::fs::create_dir_all(directory_path)?;
         std::fs::write(file_path, file_contents)?;
     }
 
-    /* Choose framework-specific files */
-    for entry in WalkDir::new(&project_dir) {
-        let entry = entry.unwrap();
-
-        let file = entry.path();
-        let path = file.clone().to_str().unwrap().to_string();
-
-        if path.ends_with("+actix_web") {
-            if framework != BackendFramework::ActixWeb {
-                logger::remove_file_msg(&format!("{:#?}", &file));
-                std::fs::remove_file(file)?;
-            };
-            if framework == BackendFramework::ActixWeb {
-                let dest = file.with_extension(file.extension().unwrap().to_string_lossy().replace("+actix_web", ""));
-                logger::rename_file_msg(&format!("{:#?}", &file), &format!("{:#?}", &dest));
-                std::fs::rename(file, dest);
-            };
-        } else if path.ends_with("+poem") {
-            if framework != BackendFramework::Poem {
-                logger::remove_file_msg(&format!("{:#?}", &file));
-                std::fs::remove_file(file)?;
-            };
-            if framework == BackendFramework::Poem {
-                let dest = file.with_extension(file.extension().unwrap().to_string_lossy().replace("+poem", ""));
-                logger::rename_file_msg(&format!("{:#?}", &file), &format!("{:#?}", &dest));
-                std::fs::rename(file, dest);
-            };
-        }
-    }
+    remove_non_framework_files(&project_dir, framework)?;
 
     /*
         Finalize; create the initial commit.

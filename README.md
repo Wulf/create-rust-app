@@ -28,15 +28,12 @@ create-rust-app my-todo-app
 # .. select backend framework, plugins, etc.
 ```
 
-<!-- Temporarily-disabled feature
-
-```
+```sh
 # Code-gen resources for your project
 cd ./my-todo-app
 create-rust-app
 # .. select resource type / properties
 ```
--->
 
 # Features
 
@@ -98,7 +95,10 @@ $ create-rust-app <project_name>
 $ cd my_project && create-rust-app
 ```
   - CRUD code-gen to reduce boilerplate
+    - Scaffolds the db model, endpoints service file, and hooks it up in your `/api`! 
   - `react-query` hooks generation for frontend
+    - Generates a hook for each handler function defined in the `services/` folder 
+    - Edit generated hooks afterwards -- they won't be regenerated unless you delete (or rename) the hook! 
 
 # Walkthrough
 
@@ -106,4 +106,4 @@ $ cd my_project && create-rust-app
 
 # Contributing
 
-If you're experiencing slow compilation time, make sure there isn't any bloat in the template files (look for node_modules or typescript / parcel caches and delete them).
+If you're experiencing slow compilation time, make sure there isn't any bloat in the template files (look for `node_modules` or typescript / parcel caches and delete them).

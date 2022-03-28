@@ -1,17 +1,16 @@
-use crate::diesel::*;
-use crate::auth::schema::*;
-
-use crate::{
-    auth::{user::User, ID, UTC},
-    database::Connection,
-};
+use diesel::dsl::any;
 use diesel::QueryResult;
 use serde::{Deserialize, Serialize};
 
+use crate::{
+    auth::{ID, user::User, UTC},
+    database::Connection,
+};
+use crate::auth::schema::*;
+use crate::diesel::*;
+
 #[tsync::tsync]
-#[derive(
-    Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Associations, AsChangeset,
-)]
+#[derive(Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Associations, AsChangeset)]
 #[table_name = "user_permissions"]
 #[belongs_to(User)]
 pub struct UserPermission {
@@ -44,6 +43,14 @@ impl UserPermission {
             .get_result::<UserPermission>(db)
     }
 
+    pub fn create_many(db: &Connection, items: Vec<UserPermissionChangeset>) -> QueryResult<Self> {
+        use crate::auth::schema::user_permissions::dsl::*;
+
+        insert_into(user_permissions)
+            .values(items)
+            .get_result::<UserPermission>(db)
+    }
+
     pub fn read(db: &Connection, item_user_id: ID, item_permission: String) -> QueryResult<Self> {
         use crate::auth::schema::user_permissions::dsl::*;
 
@@ -71,6 +78,33 @@ impl UserPermission {
         diesel::delete(
             user_permissions.filter(user_id.eq(item_user_id).and(permission.eq(item_permission))),
         )
-        .execute(db)
+            .execute(db)
+    }
+
+    pub fn delete_many(
+        db: &Connection,
+        item_user_id: ID,
+        item_permissions: Vec<String>,
+    ) -> QueryResult<usize> {
+        use crate::auth::schema::user_permissions::dsl::*;
+
+        diesel::delete(
+            user_permissions
+                .filter(user_id.eq(item_user_id))
+                .filter(permission.eq(any(item_permissions)))
+        )
+            .execute(db)
+    }
+
+    pub fn delete_all(
+        db: &Connection,
+        item_user_id: ID,
+    ) -> QueryResult<usize> {
+        use crate::auth::schema::user_permissions::dsl::*;
+
+        diesel::delete(
+            user_permissions.filter(user_id.eq(item_user_id)),
+        )
+            .execute(db)
     }
 }

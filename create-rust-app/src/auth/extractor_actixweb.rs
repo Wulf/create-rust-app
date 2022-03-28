@@ -29,7 +29,7 @@ impl Auth {
         perms.iter().all(|p| self.has_permission(p.to_string()))
     }
 
-    pub fn has_any_permissions(&self, perms: Vec<String>) -> bool {
+    pub fn has_any_permission(&self, perms: Vec<String>) -> bool {
         perms.iter().any(|p| self.has_permission(p.to_string()))
     }
 

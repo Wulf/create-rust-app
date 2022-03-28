@@ -232,6 +232,8 @@ fn generate_actix(service_name: &str) -> Service {
     }
 }
 
+/// use fs::replace instead and also fs::append for the services/mod.rs entry
+#[deprecated]
 pub fn register_poem(name: &str, service_api_fn: &str, service_base_endpoint_path: &str) -> Result<()> {
     message(&format!("Registering service {}", name));
     let main_file_path = PathBuf::from("backend/main.rs");
@@ -245,6 +247,8 @@ pub fn register_poem(name: &str, service_api_fn: &str, service_base_endpoint_pat
     Ok(())
 }
 
+/// use fs::replace instead and also fs::append for the services/mod.rs entry
+#[deprecated]
 pub fn register_actix(name: &str, service: &str) -> Result<()> {
     message(&format!("Registering service {}", name));
     let main_file_path = PathBuf::from("backend/main.rs");

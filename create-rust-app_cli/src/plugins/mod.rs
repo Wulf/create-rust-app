@@ -40,7 +40,10 @@ pub trait Plugin {
         Ok(())
     }
 
-    fn after_install(&self) -> Result<()> {
+    fn after_install(&self, install_config: InstallConfig) -> Result<()> {
+        // cleanup
+        project::remove_non_framework_files(&install_config.project_dir, install_config.backend_framework)?;
+
         logger::command_msg("git add -A");
 
         let git_add = std::process::Command::new("git")
@@ -80,8 +83,8 @@ pub fn install(plugin: impl Plugin, install_config: InstallConfig) -> Result<()>
     logger::plugin_msg(plugin.name());
 
     plugin.before_install()?;
-    plugin.install(install_config)?;
-    plugin.after_install()?;
+    plugin.install(install_config.clone())?;
+    plugin.after_install(install_config.clone())?;
 
     Ok(())
 }

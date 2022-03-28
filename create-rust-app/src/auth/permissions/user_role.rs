@@ -1,3 +1,4 @@
+use diesel::dsl::any;
 use crate::diesel::*;
 use crate::auth::schema::*;
 
@@ -44,6 +45,14 @@ impl UserRole {
             .get_result::<UserRole>(db)
     }
 
+    pub fn create_many(db: &Connection, items: Vec<UserRoleChangeset>) -> QueryResult<Vec<Self>> {
+        use crate::auth::schema::user_roles::dsl::*;
+
+        insert_into(user_roles)
+            .values(items)
+            .get_results::<UserRole>(db)
+    }
+
     pub fn read(db: &Connection, item_user_id: ID, item_role: String) -> QueryResult<Self> {
         use crate::auth::schema::user_roles::dsl::*;
 
@@ -65,6 +74,13 @@ impl UserRole {
         use crate::auth::schema::user_roles::dsl::*;
 
         diesel::delete(user_roles.filter(user_id.eq(item_user_id).and(role.eq(item_role))))
+            .execute(db)
+    }
+
+    pub fn delete_many(db: &Connection, item_user_id: ID, item_roles: Vec<String>) -> QueryResult<usize> {
+        use crate::auth::schema::user_roles::dsl::*;
+
+        diesel::delete(user_roles.filter(user_id.eq(item_user_id).and(role.eq(any(item_roles)))))
             .execute(db)
     }
 }

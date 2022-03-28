@@ -9,7 +9,7 @@ use anyhow::Result;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-use console::{style, Term};
+use console::Term;
 use dialoguer::{Input, MultiSelect, Select, theme::ColorfulTheme};
 use content::project;
 use utils::{fs, logger};
@@ -138,19 +138,12 @@ fn main() -> Result<()> {
 
         let mut project_dir = PathBuf::from(".");
         project_dir.push(project_name);
+        // !
+        std::env::set_current_dir(project_dir.clone()).expect(&format!("Unable to change into {:#?}", project_dir.clone()));
 
-        std::env::set_current_dir(project_dir.clone())
-            .expect(&format!("Unable to change into {:#?}", project_dir.clone()));
-
-        if add_plugin_auth {
-            plugins::install(
-                plugins::auth::Auth {},
-                plugins::InstallConfig {
-                    project_dir: PathBuf::from("."),
-                    backend_framework
-                },
-            )?;
-        }
+        //
+        // Note: we're in the project dir from here on out
+        //
 
         let install_config = plugins::InstallConfig {
             project_dir: PathBuf::from("."),

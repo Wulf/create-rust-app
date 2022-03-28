@@ -8,6 +8,7 @@ use crate::{
     auth::{Auth, Permission},
     Database,
 };
+use crate::auth::Role;
 
 #[derive(Debug, Deserialize, QueryableByName)]
 struct MyQueryResult {
@@ -61,7 +62,7 @@ async fn add_system_role(db: Data<Database>, auth: Auth) -> HttpResponse {
     let db = db.pool.clone().get().unwrap();
 
     HttpResponse::Ok()
-        .json(Permission::assign_role(&db, auth.user_id, "system").unwrap())
+        .json(Role::assign(&db, auth.user_id, "system").unwrap())
 }
 
 #[get("/db/is-connected")]
