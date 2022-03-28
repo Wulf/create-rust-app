@@ -74,6 +74,24 @@ $ create-rust-app <project_name>
   - View your database via the admin portal (editing functionality coming soon™)
   - A "devbox" on the frontend indicates when the backend is compiling or when the database is not reachable
   - Moreover, the devbox displays when migrations are pending + includes a "run migrations" button
+- Storage plugin
+  - Adds `Storage` extractor which allows you to upload/download files from an S3-compatible object store 
+  - Seamlessly add single or multiple attachments to your models using `Attachment::*`!
+  - Here are some examples:
+    - Adding an avatar to a user in your users table: 
+    ```rs
+    let s3_key = Attachment::attach("avatar", "users", user_id, AttachmentData {
+        file_name: "image.png",
+        data: bytes
+    })?;
+    ```
+    - Getting the url for the attachment
+    ```rs
+    let storage: Storage // retreive this via the appropriate extractor in your frameowrk of choice
+    let url = storage.download_uri(s3_key)?;
+    ```
+    (note: see `Attachment::*` and `Storage::*` for more functionality!)
+    
 
 ### 2. Code-gen to reduce boilerplate
 ```

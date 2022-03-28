@@ -14,7 +14,7 @@ pub mod auth;
 pub mod dev;
 
 mod database;
-pub use database::{Database, Connection};
+pub use database::{Database, Pool, Connection};
 
 #[cfg(feature = "backend_poem")]
 mod logger;

@@ -1,12 +1,14 @@
 pub mod dev;
 pub mod auth;
 pub mod container;
+pub mod storage;
 
 use crate::utils::logger;
 use anyhow::Result;
 use std::path::PathBuf;
-use crate::BackendFramework;
+use crate::{BackendFramework, project};
 
+#[derive(Clone)]
 pub struct InstallConfig {
     pub project_dir: PathBuf,
     pub backend_framework: BackendFramework

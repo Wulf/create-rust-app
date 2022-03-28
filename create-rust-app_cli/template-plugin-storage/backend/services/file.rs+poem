@@ -1,0 +1,91 @@
+use std::sync::Arc;
+
+use create_rust_app::{Attachment, AttachmentBlob, AttachmentData, Database, Storage};
+use poem::{get, handler, http::StatusCode, IntoResponse, Response, Result, Route, web::{Data, Json, Multipart, Path, Query}};
+use serde::Serialize;
+
+// use futures_util::StreamExt as _;
+
+#[derive(Serialize)]
+#[tsync::tsync]
+struct FileInfo {
+    pub id: i32,
+    pub key: String,
+    pub name: String,
+    pub url: Option<String>,
+}
+
+#[handler]
+async fn all(db: Data<&Database>, storage: Data<&Storage>) -> Result<impl IntoResponse> {
+    let db = db.pool.get().unwrap();
+    let files = Attachment::find_all_for_record(&db, "file".to_string(), "NULL".to_string(), 0).unwrap_or_default();
+    let blob_ids = files.iter().map(|f| f.blob_id).collect::<Vec<_>>();
+    let blobs = AttachmentBlob::find_all_by_id(&db, blob_ids).unwrap_or_default();
+
+    let mut files = blobs.iter().enumerate().map(|b| FileInfo {
+        id: files[b.0].id,
+        key: b.1.clone().key,
+        name: b.1.clone().file_name.unwrap_or("".to_string()),
+        url: None,
+    }).collect::<Vec<FileInfo>>();
+
+    for info in files.iter_mut() {
+        let uri = storage.download_uri(info.key.clone(), None).await;
+        if uri.is_err() {
+            return Ok(Response::builder().status(StatusCode::INTERNAL_SERVER_ERROR).finish());
+        }
+        let uri = uri.unwrap();
+        info.url = Some(uri);
+    }
+
+    Ok(Json(files).into_response())
+}
+
+#[handler]
+async fn delete(db: Data<&Database>, storage: Data<&Storage>, Path(file_id): Path<i32>) -> Result<impl IntoResponse> {
+    let pool = Arc::new(db.clone().pool);
+
+    let detach_op = Attachment::detach(pool, &storage, file_id).await;
+
+    if detach_op.is_err() {
+        println!("error: {}", detach_op.err().unwrap());
+        return Ok(StatusCode::INTERNAL_SERVER_ERROR.into_response());
+    }
+
+    Ok(().into_response())
+}
+
+#[handler]
+async fn create(db: Data<&Database>, store: Data<&Storage>, mut payload: Multipart) -> Result<impl IntoResponse> {
+    while let Some(item) = payload.next_field().await? {
+        let file_name = item.file_name().map(|f| f.to_string());
+        let field_name = item.name().unwrap_or("");
+
+        match field_name {
+            "file" => {
+                let mut data = item.bytes().await?;
+
+                let pool = Arc::new(db.clone().pool);
+
+                let attached_req = Attachment::attach(pool, &store, "file".to_string(), "NULL".to_string(), 0, AttachmentData {
+                    data,
+                    file_name,
+                }, true, false).await;
+
+                if attached_req.is_err() {
+                    return Ok(StatusCode::INTERNAL_SERVER_ERROR.into_response());
+                }
+            }
+            _ => {}
+        }
+    }
+
+    Ok(().into_response())
+}
+
+pub fn api() -> Route {
+    Route::new()
+        .at("/", get(all).post(create))
+        .at("/:id", poem::delete(delete))
+}
+

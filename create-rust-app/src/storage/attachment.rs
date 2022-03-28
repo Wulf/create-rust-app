@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use diesel::dsl::any;
 use diesel::QueryResult;
 use diesel::result::{DatabaseErrorKind, Error};
@@ -7,7 +8,7 @@ use mime_guess;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::Connection;
+use crate::{Connection, Pool};
 use crate::diesel::*;
 use crate::storage::{AttachmentBlob, ID, schema, UTC};
 use crate::storage::attachment_blob::AttachmentBlobChangeset;
@@ -42,6 +43,8 @@ pub struct AttachmentData {
 }
 
 impl Attachment {
+    /// in actix_web we don't need to support send+sync handlers, so we can use the &Connection directly.
+    #[cfg(feature = "backend_actix-web")]
     pub async fn attach(db: &Connection, storage: &Storage, name: String, record_type: String, record_id: ID, data: AttachmentData, allow_multiple: bool, overwrite_existing: bool) -> Result<String, String> {
         let checksum = format!("{:x}", md5::compute(&data.data));
         let file_name = data.file_name.clone();
@@ -101,6 +104,71 @@ impl Attachment {
         upload_result
     }
 
+    /// in poem, we need to pass in the pool itself because the Connection is not Send+Sync which poem handlers require
+    #[cfg(feature = "backend_poem")]
+    pub async fn attach(pool: Arc<Pool>, storage: &Storage, name: String, record_type: String, record_id: ID, data: AttachmentData, allow_multiple: bool, overwrite_existing: bool) -> Result<String, String> {
+        let db = pool.clone().get().unwrap();
+
+        let checksum = format!("{:x}", md5::compute(&data.data));
+        let file_name = data.file_name.clone();
+        let content_type = if file_name.is_some() { mime_guess::from_path(file_name.unwrap()).first_raw() } else { None }.map(|t| t.to_string());
+        let key = Uuid::new_v4().to_string();
+
+        if !allow_multiple {
+            let existing = Attachment::find_for_record(&db, name.clone(), record_type.clone(), record_id);
+
+            if existing.is_ok() {
+                // one already exists, we need to delete it
+                if overwrite_existing {
+                    Attachment::detach(pool.clone(), &storage, existing.unwrap().id).await.map_err(|err| {
+                        format!("Could not detach the existing attachment for '{name}' attachment on '{record_type}'", name=name.clone(), record_type=record_type.clone())
+                    })?;
+                } else {
+                    // throw the error
+                    return Err(format!("Only 1 attachment is allowed for '{name}' type attachments on '{record_type}'", name=name.clone(), record_type=record_type.clone()))
+                }
+            }
+        }
+
+        let attached = diesel::connection::Connection::transaction::<Self, Error, _>(&db, || {
+            let blob = AttachmentBlob::create(&db, &AttachmentBlobChangeset {
+                byte_size: data.data.len() as i64,
+                service_name: "s3".to_string(),
+                key: key.clone(),
+                checksum: checksum.clone(),
+                content_type: content_type.clone(),
+                file_name: data.file_name.clone()
+            })?;
+
+            let attached = Attachment::create(&db, &AttachmentChangeset {
+                blob_id: blob.id,
+                record_id,
+                record_type,
+                name,
+            })?;
+
+            Ok(attached)
+        }).map_err(|err| {
+            err.to_string()
+        })?;
+
+        let upload_result = storage.upload(key.clone(), data.data, content_type.clone().unwrap_or("".to_string()), checksum.clone())
+            .await
+            .map(|_| key);
+
+        if upload_result.is_err() {
+            // attempt to delete the attachment
+            // if it fails, it fails
+            Attachment::detach(pool.clone(), storage, attached.id)
+                .await
+                .map_err(|err| err.to_string())?;
+        }
+
+        upload_result
+    }
+
+    /// in actix_web we don't need to support send+sync handlers, so we can use the &Connection directly.
+    #[cfg(feature = "backend_actix-web")]
     pub async fn detach(db: &Connection, storage: &Storage, item_id: ID) -> Result<(), String> {
         let attached = Attachment::find_by_id(db, item_id).map_err(|_| "Could not load attachment")?;
         let blob = AttachmentBlob::find_by_id(db, attached.blob_id).map_err(|_| "Could not load attachment blob")?;
@@ -119,6 +187,37 @@ impl Attachment {
             // delete the attachment first because it references the blobs
             Attachment::delete(db, attached.id)?;
             AttachmentBlob::delete(db, blob.id)?;
+
+            Ok(())
+        }).map_err(|err| {
+            err.to_string()
+        })?;
+
+        Ok(())
+    }
+
+    /// in poem, we need to pass in the pool itself because the Connection is not Send+Sync which poem handlers require
+    #[cfg(feature = "backend_poem")]
+    pub async fn detach(pool: Arc<Pool>, storage: &Storage, item_id: ID) -> Result<(), String> {
+        let db = pool.get().unwrap();
+
+        let attached = Attachment::find_by_id(&db, item_id).map_err(|_| "Could not load attachment")?;
+        let blob = AttachmentBlob::find_by_id(&db, attached.blob_id).map_err(|_| "Could not load attachment blob")?;
+
+        let delete_result = storage.delete(blob.key.clone())
+            .await;
+
+        if delete_result.is_err() {
+            // we continue even if there's an error deleting the actual object
+            // todo: make this more robust by checking why it failed to delete the object
+            //       => is it because it didn't exist?
+            println!("{}", delete_result.err().unwrap());
+        }
+
+        diesel::connection::Connection::transaction::<(), Error, _>(&db, || {
+            // delete the attachment first because it references the blobs
+            Attachment::delete(&db, attached.id)?;
+            AttachmentBlob::delete(&db, blob.id)?;
 
             Ok(())
         }).map_err(|err| {
