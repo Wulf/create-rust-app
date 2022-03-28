@@ -1,7 +1,7 @@
 use crate::plugins::InstallConfig;
 use crate::plugins::Plugin;
 use crate::utils::fs;
-use crate::utils::logger::file_msg;
+use crate::utils::logger::add_file_msg;
 use anyhow::Result;
 use indoc::indoc;
 use rust_embed::RustEmbed;
@@ -26,7 +26,7 @@ impl Plugin for Storage {
             let mut directory_path = std::path::PathBuf::from(&file_path);
             directory_path.pop();
 
-            file_msg(filename.as_ref());
+            add_file_msg(filename.as_ref());
             std::fs::create_dir_all(directory_path)?;
             std::fs::write(file_path, file_contents)?;
         }
@@ -35,137 +35,92 @@ impl Plugin for Storage {
         // PATCH FRONTEND
         // ===============================
 
-        // TODO: Fix these appends/prepends by prepending the filepath with project_dir
-        // currently, this works because we assume the current working directory is the project's root
-        fs::prepend(
-            "frontend/src/App.tsx",
-            r#"import { useAuth, useAuthCheck } from './hooks/useAuth'
-  import { AccountPage } from './containers/AccountPage'
-  import { LoginPage } from './containers/LoginPage'
-  import { ActivationPage } from './containers/ActivationPage'
-  import { RegistrationPage } from './containers/RegistrationPage'
-  import { RecoveryPage } from './containers/RecoveryPage'
-  import { ResetPage } from './containers/ResetPage'
-    "#,
+        fs::append(
+           ".env.example",
+            r#"
+S3_HOST=http://localhost:9000
+S3_REGION=minio
+S3_BUCKET=bucket
+S3_ACCESS_KEY_ID=access_key
+S3_SECRET_ACCESS_KEY=secret_key
+"#
         )?;
-        fs::prepend(
-            "frontend/src/index.tsx",
-            "import { AuthProvider } from './hooks/useAuth'",
+
+        fs::replace("frontend/src/App.tsx",
+        r##"<Route path="/todos"><Todos /></Route>"##,
+        r##"<Route path="/todos"><Todos /></Route>
+        <Route path="/files"><Files /></Route>"##)?;
+
+        fs::replace("frontend/src/App.tsx",
+        r#"<a className="NavButton" onClick={() => history.push('/todos')}>Todos</a>"#,
+            r#"<a className="NavButton" onClick={() => history.push('/todos')}>Todos</a>
+        <a className="NavButton" onClick={() => history.push('/files')}>Files</a>"#
         )?;
-        fs::replace(
-            "frontend/src/App.tsx",
-            "const App = () => {",
-            r#"const App = () => {
-  useAuthCheck()
-  const auth = useAuth()
-    "#,
-        )?;
-        fs::replace(
-            "frontend/src/App.tsx",
-            "{/* CRA: routes */}",
-            r#"{/* CRA: routes */}
-        <Route path="/login"><LoginPage /></Route>
-        <Route path="/recovery"><RecoveryPage /></Route>
-        <Route path="/reset"><ResetPage /></Route>
-        <Route path="/activate"><ActivationPage /></Route>
-        <Route path="/register"><RegistrationPage /></Route>
-        <Route path="/account"><AccountPage /></Route>
-    "#,
-        )?;
-        fs::replace(
-            "frontend/src/App.tsx",
-            "{/* CRA: left-aligned nav buttons */}",
-            r#"{/* CRA: left-aligned nav buttons */}
-          <a className="NavButton" onClick={() => history.push('/account')}>Account</a>
-    "#,
-        )?;
-        fs::replace(
-            "frontend/src/App.tsx",
-            "{/* CRA: right-aligned nav buttons */}",
-            r#"{/* CRA: right-aligned nav buttons */}
-          { auth.isAuthenticated && <a className="NavButton" onClick={() => auth.logout()}>Logout</a> }
-          { !auth.isAuthenticated && <a className="NavButton" onClick={() => history.push('/login')}>Login/Register</a> }
-    "#,
-        )?;
-        fs::replace(
-            "frontend/src/index.tsx",
-            "{/* CRA: Wrap */}",
-            "{/* CRA: Wrap */}\n<AuthProvider>",
-        )?;
-        fs::replace(
-            "frontend/src/index.tsx",
-            "{/* CRA: Unwrap */}",
-            "{/* CRA: Unwrap */}\n</AuthProvider>",
-        )?;
+
+        fs::replace("frontend/src/App.tsx",
+        r##"import { Todos } from './containers/Todo'"##,
+        r##"import { Todos } from './containers/Todo'
+import { Files } from './containers/Files'"##)?;
 
         crate::content::migration::create(
-            "plugin_auth",
+            "plugin_storage",
             indoc! {r#"
-      CREATE TABLE users (
-        id SERIAL PRIMARY KEY,
-        email TEXT NOT NULL,
-        hash_password TEXT NOT NULL,
-        activated BOOL NOT NULL DEFAULT FALSE,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-      );
+CREATE TABLE attachment_blobs(
+  id SERIAL PRIMARY KEY,
 
-      SELECT diesel_manage_updated_at('users');
+  key TEXT NOT NULL,
+  file_name TEXT NOT NULL,
+  content_type TEXT,
+  byte_size BIGINT NOT NULL,
+  checksum TEXT NOT NULL,
+  service_name TEXT NOT NULL,
 
-      CREATE TABLE user_sessions (
-        id SERIAL PRIMARY KEY,
-        user_id SERIAL NOT NULL REFERENCES users(id),
-        refresh_token TEXT NOT NULL,
-        device TEXT,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-      );
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
-      SELECT diesel_manage_updated_at('user_sessions');
+CREATE TABLE attachments(
+  id SERIAL PRIMARY KEY,
 
-      CREATE TABLE user_permissions (
-        user_id SERIAL NOT NULL REFERENCES users(id),
-        permission TEXT NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (user_id, permission)
-      );
+  name TEXT NOT NULL,
+  record_type TEXT NOT NULL,
+  record_id SERIAL NOT NULL,
+  blob_id SERIAL REFERENCES attachment_blobs(id) NOT NULL,
 
-      CREATE TABLE user_roles (
-        user_id SERIAL NOT NULL REFERENCES users(id),
-        role TEXT NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (user_id, role)
-      );
-
-      CREATE TABLE role_permissions (
-        role TEXT NOT NULL,
-        permission TEXT NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (role, permission)
-      );
-    "#},
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+"#},
             indoc! {r#"
-      DROP TABLE users CASCADE ALL;
-      DROP TABLE user_sessions CASCADE ALL;
-      DROP TABLE user_permissions CASCADE ALL;
-      DROP TABLE role_permissions CASCADE ALL;
-      DROP TABLE user_roles CASCADE ALL;
-    "#},
+DROP TABLE attachments CASCADE ALL;
+DROP TABLE attachment_blobs CASCADE ALL;
+"#},
         )?;
 
         match install_config.backend_framework {
             BackendFramework::ActixWeb => {
                 crate::content::service::register_actix(
-                    "auth",
-                    r#"create_rust_app::auth::endpoints(web::scope("/auth"))"#
-                )?
+                    "file",
+                    r#"services::file::endpoints(web::scope("/files"))"#
+                )?;
+                fs::replace("backend/main.rs",
+                "let app = app.app_data(Data::new(app_data.mailer.clone()));",
+                r#"let app = app.app_data(Data::new(app_data.mailer.clone()));
+        let app = app.app_data(Data::new(app_data.storage.clone()));"#)?;
             },
-            BackendFramework::Poem => crate::content::service::register_poem(
-                "auth",
-                "create_rust_app::auth::api()",
-                "/auth",
-            )?,
+            BackendFramework::Poem => {
+                crate::content::service::register_poem(
+                    "file",
+                    "services::file::api()",
+                    "/files",
+                )?;
+                fs::replace("backend/main.rs",
+                ".with(AddData::new(data.database))",
+                    ".with(AddData::new(data.database))
+                .with(AddData::new(data.storage))"
+                )?;
+            },
         };
+
+        fs::append("backend/services/mod.rs", "pub mod file;")?;
 
         Ok(())
     }

@@ -6,7 +6,7 @@ use diesel::{
     PgConnection,
 };
 
-type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
+pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
 pub type Connection = PooledConnection<ConnectionManager<PgConnection>>;
 
 #[derive(Clone)]

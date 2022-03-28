@@ -109,20 +109,27 @@ fn main() -> Result<()> {
             "Authentication Plugin: local email-based authentication",
             "Container Plugin: dockerize your app",
             "Development Plugin: adds dev warnings and an admin portal",
+            "Storage Plugin: adds S3 file storage capabilities"
         ];
         let chosen: Vec<usize> = MultiSelect::with_theme(&ColorfulTheme::default())
             .items(&items)
-            .defaults(&[true, true, true])
+            .defaults(&[true, true, true, true])
             .interact()?;
 
         let add_plugin_auth = chosen.iter().position(|x| *x == 0).is_some();
         let add_plugin_container = chosen.iter().position(|x| *x == 1).is_some();
         let add_plugin_dev = chosen.iter().position(|x| *x == 2).is_some();
+        let add_plugin_storage = chosen.iter().position(|x| *x == 3).is_some();
 
         let mut features: Vec<String> = vec!();
         if add_plugin_dev { features.push("plugin_dev".to_string()); }
         if add_plugin_auth { features.push("plugin_auth".to_string()); }
         if add_plugin_container { features.push("plugin_container".to_string()); }
+        if add_plugin_storage { features.push("plugin_storage".to_string()); }
+        features.push(match backend_framework {
+            BackendFramework::ActixWeb => "backend_actix-web".to_string(),
+            BackendFramework::Poem => "backend_poem".to_string()
+        });
 
         project::create(project_name.as_ref(), CreationOptions {
             cra_enabled_features: features,
@@ -145,25 +152,24 @@ fn main() -> Result<()> {
             )?;
         }
 
-        if add_plugin_container {
-            plugins::install(
-                plugins::container::Container {},
-                plugins::InstallConfig {
-                    project_dir: PathBuf::from("."),
-                    backend_framework
-                },
-            )?;
-        }
+        let install_config = plugins::InstallConfig {
+            project_dir: PathBuf::from("."),
+            backend_framework
+        };
 
-        if add_plugin_dev {
-            plugins::install(
-                plugins::dev::Dev {},
-                plugins::InstallConfig {
-                    project_dir: PathBuf::from("."),
-                    backend_framework
-                },
-            )?;
-        }
+        if add_plugin_auth { plugins::install(plugins::auth::Auth {}, install_config.clone())?; }
+        if add_plugin_container { plugins::install(plugins::container::Container {}, install_config.clone())?; }
+        if add_plugin_dev { plugins::install(plugins::dev::Dev {}, install_config.clone())?; }
+        if add_plugin_storage { plugins::install(plugins::storage::Storage {}, install_config.clone())?; }
+
+        // cd into project dir and make a copy of the env file
+        let example_env_file = PathBuf::from("./.env.example");
+        let env_file = PathBuf::from("./.env");
+
+        let contents = std::fs::read_to_string(example_env_file)
+            .expect("Error: Tried to read .env.example contents but an error occurred");
+        std::fs::write(env_file, contents)?;
+        logger::add_file_msg(".env");
 
         logger::project_created_msg(project_dir);
     } else {
