@@ -212,7 +212,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         }
     }
     add_dependency(&project_dir, "futures-util", r#"futures-util = "0.3.21""#)?;
-    add_dependency(&project_dir, "create-rust-app", &format!("create-rust-app = {{version=\"4.0.0\"{enabled_features}}}", enabled_features=enabled_features))?;
+    add_dependency(&project_dir, "create-rust-app", &format!("create-rust-app = {{version=\"5.0.0\"{enabled_features}}}", enabled_features=enabled_features))?;
     add_dependency(&project_dir, "serde", r#"serde = { version = "1.0.133", features = ["derive"] }"#)?;
     add_dependency(&project_dir, "serde_json", r#"serde_json = "1.0.79""#)?;
     add_dependency(&project_dir, "chrono", r#"chrono = { version = "0.4.19", features = ["serde"] }"#)?;
