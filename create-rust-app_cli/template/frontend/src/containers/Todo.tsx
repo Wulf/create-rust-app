@@ -14,9 +14,9 @@ const TodoAPI = {
       })
     ).json(),
   delete: async (id: number) =>
-    await await fetch(`/api/todos/${id}`, { method: 'DELETE' }),
+    await fetch(`/api/todos/${id}`, { method: 'DELETE' }),
   update: async (id: number, todo: string) =>
-    await await fetch(`/api/todos/${id}`, {
+    await fetch(`/api/todos/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

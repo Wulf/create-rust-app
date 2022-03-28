@@ -235,7 +235,7 @@ async fn login(
         ));
     }
 
-    let permissions = Permission::for_user(&db, user.id);
+    let permissions = Permission::fetch_all(&db, user.id);
     if permissions.is_err() {
         println!("{:#?}", permissions.err());
         return Err(Error::from_string(
@@ -245,7 +245,7 @@ async fn login(
     }
     let permissions = permissions.unwrap();
 
-    let roles = Role::for_user(&db, user.id);
+    let roles = Role::fetch_all(&db, user.id);
     if roles.is_err() {
         println!("{:#?}", roles.err());
         return Err(Error::from_string(
@@ -431,7 +431,7 @@ async fn refresh(db: Data<&Database>, req: &Request) -> Result<impl IntoResponse
 
     let session = session.unwrap();
 
-    let permissions = Permission::for_user(&db, session.user_id);
+    let permissions = Permission::fetch_all(&db, session.user_id);
     if permissions.is_err() {
         return Ok(Response::builder()
             .status(StatusCode::INTERNAL_SERVER_ERROR)
@@ -439,7 +439,7 @@ async fn refresh(db: Data<&Database>, req: &Request) -> Result<impl IntoResponse
     }
     let permissions = permissions.unwrap();
 
-    let roles = Role::for_user(&db, session.user_id);
+    let roles = Role::fetch_all(&db, session.user_id);
     if roles.is_err() {
         return Ok(Response::builder()
             .status(StatusCode::INTERNAL_SERVER_ERROR)

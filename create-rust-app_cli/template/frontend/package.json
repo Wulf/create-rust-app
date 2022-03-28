@@ -18,7 +18,7 @@
   "scripts": {
     "start": "yarn tsync && react-scripts start",
     "build": "react-scripts build",
-    "fullstack": "yarn install && yarn concurrently --prefix-colors cyan,magenta --kill-others -n backend,frontend \"cargo --color=always watch -x run -i frontend\" \"yarn start\"",
+    "fullstack": "yarn install && yarn concurrently --prefix-colors cyan,magenta --kill-others -n backend,frontend \"cargo --color=always watch -x run -w backend\" \"yarn start\"",
     "test": "react-scripts test",
     "test:e2e": "npx playwright test ./tests",
     "eject": "react-scripts eject",

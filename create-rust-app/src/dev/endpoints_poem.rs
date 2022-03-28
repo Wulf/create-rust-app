@@ -8,6 +8,7 @@ use crate::{
     auth::{Auth, Permission},
     Database,
 };
+use crate::auth::Role;
 
 #[derive(Serialize, Deserialize)]
 struct HealthCheckResponse {
@@ -113,7 +114,7 @@ async fn add_system_role(auth: Auth, db: Data<&Database>) -> Result<impl IntoRes
     let db = db.pool.clone().get().unwrap();
 
     Ok(Json(
-        Permission::assign_role(&db, auth.user_id, "system").unwrap(),
+        Role::assign(&db, auth.user_id, "system").unwrap(),
     ))
 }
 

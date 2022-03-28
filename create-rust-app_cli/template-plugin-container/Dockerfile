@@ -7,6 +7,11 @@ RUN npm i -g yarn
 # For the argonautica crate, we need to install LLVM/Clang v3.9 or higher
 RUN apt-get install -y clang llvm-dev libclang-dev
 
+# Since the official rust image doesn't have nightly variants, we're going to install it ourselves
+# This will make the image bigger than it needs to be -- you can try using another image if this is important to you
+RUN rustup update nightly;
+RUN rustup default nightly;
+
 WORKDIR /app
 COPY . .
 

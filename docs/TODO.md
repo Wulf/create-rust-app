@@ -23,7 +23,9 @@
 - [ ] Implement a CSRF mitigation technique
 - [ ] Fix created project's README.md
 - [ ] EASY: fix activation page on frontend (fetch token from url params, introduce a useQueryParam() hook)
-- [ ] EASY: Don't let users create packages named 'test' (cargo init fails): ```error: the name `test` cannot be used as a package name, it conflicts with Rust's built-in test library```
+- [ ] EASY: Don't let users create packages named 'test' or names that start with a digit (cargo init fails): 
+  - ```error: the name `test` cannot be used as a package name, it conflicts with Rust's built-in test library```,
+  - ```error: the name `123` cannot be used as a package name, the name cannot start with a digit```
 - [ ] EASY: Add cargo build step before cargo fullstack so the concurrent process isn't started until we're sure that the backend builds.
 - [ ] EASY: split frontend cra logic (like the useAuth hook) into a separate package (create-rust-app on npm)
 - [ ] EASY: remove redundant `useHistory()` in `App.tsx`

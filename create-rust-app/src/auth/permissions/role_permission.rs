@@ -1,3 +1,4 @@
+use diesel::dsl::any;
 use crate::diesel::*;
 use crate::auth::schema::*;
 
@@ -39,6 +40,14 @@ impl RolePermission {
             .get_result::<RolePermission>(db)
     }
 
+    pub fn create_many(db: &Connection, items: Vec<RolePermissionChangeset>) -> QueryResult<Vec<Self>> {
+        use crate::auth::schema::role_permissions::dsl::*;
+
+        insert_into(role_permissions)
+            .values(items)
+            .get_results::<RolePermission>(db)
+    }
+
     pub fn read(db: &Connection, item_role: String, item_permission: String) -> QueryResult<Self> {
         use crate::auth::schema::role_permissions::dsl::*;
 
@@ -66,6 +75,29 @@ impl RolePermission {
         diesel::delete(
             role_permissions.filter(role.eq(item_role).and(permission.eq(item_permission))),
         )
-        .execute(db)
+            .execute(db)
+    }
+
+    pub fn delete_many(
+        db: &Connection,
+        item_role: String,
+        item_permissions: Vec<String>,
+    ) -> QueryResult<usize> {
+        use crate::auth::schema::role_permissions::dsl::*;
+
+        diesel::delete(
+            role_permissions
+                .filter(role.eq(item_role))
+                .filter(permission.eq(any(item_permissions))),
+        )
+            .execute(db)
+    }
+
+    pub fn delete_all(db: &Connection, item_role: &str) -> QueryResult<usize> {
+        use crate::auth::schema::role_permissions::dsl::*;
+
+        diesel::delete(
+            role_permissions.filter(role.eq(item_role)),
+        ).execute(db)
     }
 }

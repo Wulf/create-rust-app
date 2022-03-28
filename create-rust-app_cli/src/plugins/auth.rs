@@ -1,7 +1,7 @@
 use crate::plugins::InstallConfig;
 use crate::plugins::Plugin;
 use crate::utils::fs;
-use crate::utils::logger::file_msg;
+use crate::utils::logger::add_file_msg;
 use anyhow::Result;
 use indoc::indoc;
 use rust_embed::RustEmbed;
@@ -26,7 +26,7 @@ impl Plugin for Auth {
             let mut directory_path = std::path::PathBuf::from(&file_path);
             directory_path.pop();
 
-            file_msg(filename.as_ref());
+            add_file_msg(filename.as_ref());
             std::fs::create_dir_all(directory_path)?;
             std::fs::write(file_path, file_contents)?;
         }

@@ -8,7 +8,7 @@ pub fn command_msg(command: &str) {
     message(&format!("Running `{}`", style(command).yellow()));
 }
 
-pub fn file_msg(file: &str) {
+pub fn add_file_msg(file: &str) {
     message(&format!("Adding {}", style(file).yellow()));
 }
 
@@ -37,7 +37,7 @@ pub fn exit(msg: &str, err: std::io::Error) -> ! {
     std::process::exit(1);
 }
 
-pub fn dependency_msg(name: &str) {
+pub fn add_dependency_msg(name: &str) {
     message(&format!("Adding dependency {}", style(name).yellow()));
 }
 
@@ -115,7 +115,7 @@ pub fn project_created_msg(project_dir: std::path::PathBuf) {
         style(format!("cd {:#?}", project_dir).to_string()).cyan()
     ));
     message(&format!("  2. Open `.env` and set the DATABASE_URL"));
-    message(&format!("     $ {}", style("cp .env.example .env && vim .env").cyan()));
+    message(&format!("     $ {}", style("vim .env").cyan()));
     message(&format!("  3. Setup your database:"));
     message(&format!("     $ {}", style("diesel database reset").cyan()));
     message(&format!(

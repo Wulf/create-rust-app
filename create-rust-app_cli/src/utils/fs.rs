@@ -1,4 +1,4 @@
-use crate::utils::logger::{file_msg, modify_file_msg};
+use crate::utils::logger::{add_file_msg, modify_file_msg};
 use anyhow::{anyhow, Result};
 use dialoguer::{theme::ColorfulTheme, Confirm};
 use std::path::PathBuf;
@@ -114,6 +114,19 @@ pub fn prepend(file_path: &str, content: &str) -> Result<()> {
     Ok(())
 }
 
+/*
+/// Try to create files via the template-* folders for plugins
+pub fn create(file_path: &str, content: &str) -> Result<()> {
+    if PathBuf::from(file_path).exists() {
+        panic!("File already exists!");
+    }
+
+    std::fs::write(file_path, content)?;
+
+    Ok(())
+}
+*/
+
 pub fn append(file_path: &str, content: &str) -> Result<()> {
     modify_file_msg(&format!("{:#?}", &file_path));
 
@@ -147,7 +160,7 @@ pub fn add_rust_file(file_directory: &str, file_name: &str, file_contents: &str)
 
     ensure_directory(&file_directory, true)?;
 
-    file_msg(&format!("{:#?}", &file_path));
+    add_file_msg(&format!("{:#?}", &file_path));
 
     let mut mod_file_contents: String;
 

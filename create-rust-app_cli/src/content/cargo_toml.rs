@@ -1,4 +1,3 @@
-use toml::Value::Table;
 use crate::logger;
 
 pub fn add_dependency(
@@ -6,6 +5,8 @@ pub fn add_dependency(
     log_name: &str,
     dependency_entry: &str,
 ) -> Result<(), std::io::Error> {
+    logger::add_dependency_msg(log_name);
+
     let mut path = std::path::PathBuf::from(project_dir);
     path.push("Cargo.toml");
 
@@ -14,7 +15,7 @@ pub fn add_dependency(
     let parsed_toml = toml.parse::<toml::Value>();
 
     if parsed_toml.is_err() {
-        println!("{:#?}", toml);
+        println!("ATTEMPTED TO PARSE THE FOLLOWING TOML:\n{toml}");
         panic!("Fatal/Invalid state: couldn't add dependency due to Cargo.toml parsing error.");
     }
 
@@ -31,8 +32,6 @@ pub fn add_dependency(
 
     let updated_toml = toml::to_string(&parsed_toml).unwrap();
     let updated_toml = updated_toml.replace("replace_me = \"123\"", dependency_entry);
-
-    logger::dependency_msg(log_name);
 
     std::fs::write(&path, updated_toml)?;
 
