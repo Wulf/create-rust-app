@@ -17,11 +17,6 @@ async fn app_index() -> actix_web::Result<NamedFile, actix_web::Error> {
     Ok(NamedFile::open("./frontend/build/index.html")?)
 }
 
-#[cfg(debug_assertions)]
-async fn development_index(req: actix_web::HttpRequest) -> actix_web::Result<NamedFile, actix_web::Error> {
-    Ok(NamedFile::open(".cargo/admin/dist/admin.html")?)
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let app_data = create_rust_app::setup();

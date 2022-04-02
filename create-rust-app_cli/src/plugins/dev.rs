@@ -56,6 +56,15 @@ impl Plugin for Dev {
         match install_config.backend_framework {
             BackendFramework::ActixWeb => {
                 fs::replace("backend/main.rs",
+                "#[actix_web::main]",
+                r#"#[cfg(debug_assertions)]
+        async fn development_index(req: actix_web::HttpRequest) -> actix_web::Result<NamedFile, actix_web::Error> {
+            Ok(NamedFile::open(".cargo/admin/dist/admin.html")?)
+        }
+
+        #[actix_web::main]"#)?;
+
+                fs::replace("backend/main.rs",
                 "let mut app = app.service(api_scope);",
                 r#"#[cfg(debug_assertions)]
         {
