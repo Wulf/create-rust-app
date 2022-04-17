@@ -56,7 +56,7 @@ $ create-rust-app <project_name>
 
 **Available Plugins**
 
-- Auth plugin
+- **Authentication (+ Authorization) plugin**
   - Add JWT token-based auth with a simple command
   - Session management: restoration of previous session, revoking of refresh tokens
   - Credentials management/recovery
@@ -65,13 +65,20 @@ $ create-rust-app <project_name>
   - Adds auth service, and user / session models
   - Block your endpoints via `Auth` guard
   - Follows OWASP security best practices
-- Container plugin
+  - RBAC permissions out of the box (assign roles and permissions to users)
+    
+
+- **Container plugin**
   - Dockerfile to containerize your rust app into a single image
-- Admin Portal plugin
+    
+
+- **Admin Portal plugin**
   - View your database via the admin portal (editing functionality coming soon™)
   - A "devbox" on the frontend indicates when the backend is compiling or when the database is not reachable
   - Moreover, the devbox displays when migrations are pending + includes a "run migrations" button
-- Storage plugin
+    
+
+- **Storage plugin**
   - Adds `Storage` extractor which allows you to upload/download files from an S3-compatible object store 
   - Seamlessly add single or multiple attachments to your models using `Attachment::*`!
   - Here are some examples:
@@ -89,6 +96,12 @@ $ create-rust-app <project_name>
     ```
     (note: see `Attachment::*` and `Storage::*` for more functionality!)
     
+
+- **GraphQL plugin**
+  - Adds all the boilerplate necessary to expose GraphQL
+  - Requires the auth plugin: authentication and authorization setup out-of-the-box
+  - Find a graphql playground at `localhost:8080/graphql`
+
 
 ### 2. Code-gen to reduce boilerplate
 ```
