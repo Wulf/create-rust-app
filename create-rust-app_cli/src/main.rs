@@ -54,6 +54,8 @@ fn main() -> Result<()> {
 
     let mut current_dir: PathBuf = fs::get_current_working_directory()?;
 
+    project::check_cli_version()?;
+
     if unknown_opts.target.is_some() {
         current_dir = PathBuf::from(unknown_opts.target.unwrap());
 

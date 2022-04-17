@@ -8,6 +8,7 @@ use inflector::Inflector;
 use rust_embed::RustEmbed;
 use std::path::PathBuf;
 use walkdir::WalkDir;
+use update_informer::{registry, Check};
 use crate::BackendFramework;
 
 #[derive(RustEmbed)]
@@ -378,4 +379,16 @@ pub fn create_resource(backend: BackendFramework, resource_name: &str) -> Result
     crate::content::model::create(resource_name.as_str())?;
 
     Ok(())
+}
+
+pub fn check_cli_version() -> Result<()>{
+  let name = env!("CARGO_PKG_NAME");
+  let version = env!("CARGO_PKG_VERSION");
+  let informer = update_informer::new(registry::Crates, name, version);
+  logger::message(&format!("Welcome to use {} v{}", name, version));
+  if let Some(version) = informer.check_version().ok().flatten()  {
+    logger::message(&format!("New version {} is available!", version));
+    logger::message(&format!("If you want to update, try: {}", style("cargo install --force create-rust-app_cli").yellow()));
+  }
+  Ok(())
 }
