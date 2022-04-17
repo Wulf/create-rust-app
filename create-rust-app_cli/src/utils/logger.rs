@@ -12,6 +12,10 @@ pub fn add_file_msg(file: &str) {
     message(&format!("Adding {}", style(file).yellow()));
 }
 
+pub fn register_service_msg(service_name: &str) {
+    message(&format!("Registering service {}", style(service_name).yellow()));
+}
+
 pub fn modify_file_msg(file: &str) {
     message(&format!("Modifying {}", style(file).yellow()));
 }

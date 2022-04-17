@@ -2,6 +2,7 @@ pub mod dev;
 pub mod auth;
 pub mod container;
 pub mod storage;
+pub mod graphql;
 
 use crate::utils::logger;
 use anyhow::Result;
@@ -11,7 +12,12 @@ use crate::{BackendFramework, project};
 #[derive(Clone)]
 pub struct InstallConfig {
     pub project_dir: PathBuf,
-    pub backend_framework: BackendFramework
+    pub backend_framework: BackendFramework,
+    pub plugin_dev: bool,
+    pub plugin_auth: bool,
+    pub plugin_container: bool,
+    pub plugin_storage: bool,
+    pub plugin_graphql: bool
 }
 
 pub trait Plugin {

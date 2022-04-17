@@ -20,11 +20,14 @@ use super::{mail, Permission, user::{User, UserChangeset}, user_session::{UserSe
 
 const COOKIE_NAME: &'static str = "request_token";
 
+type Seconds = i64;
+
 #[derive(Deserialize, Serialize)]
 struct LoginInput {
     email: String,
     password: String,
     device: Option<String>,
+    ttl: Option<Seconds>
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -192,11 +195,13 @@ async fn login(
     // verify device
     let mut device = None;
     if item.device.is_some() {
-        device = match item.device.unwrap().as_str() {
-            "web" => Some("web".to_string()),
-            "mobile" => Some("mobile".to_string()),
-            _ => None,
-        };
+        let device_string = item.device.unwrap();
+        if device_string.len() > 256 {
+            return Err(Error::from_string(
+                "'device' cannot be longer than 256 characters.",
+                StatusCode::BAD_REQUEST,
+            ));
+        }
     }
 
     let user = User::find_by_email(&db, item.email);
@@ -255,8 +260,17 @@ async fn login(
     }
     let roles = roles.unwrap();
 
+    let access_token_duration = chrono::Duration::seconds(
+        if item.ttl.is_some() {
+            std::cmp::max(item.ttl.unwrap(), 1)
+        } else {
+            /* 15 minutes */
+            15 * 60
+        }
+    );
+
     let access_token_claims = AccessTokenClaims {
-        exp: (chrono::Utc::now() + chrono::Duration::minutes(15)).timestamp() as usize,
+        exp: (chrono::Utc::now() + access_token_duration).timestamp() as usize,
         sub: user.id,
         token_type: "access_token".to_string(),
         roles,
@@ -885,12 +899,18 @@ async fn reset_password(
     ))
 }
 
+#[handler]
+async fn check(auth: Auth) -> Result<impl IntoResponse> {
+    Ok(Response::builder().status(StatusCode::OK).finish())
+}
+
 pub fn api() -> Route {
     Route::new()
         .at("/sessions", get(sessions).delete(destroy_sessions))
         .at("/sessions/:id", delete(destroy_session))
         .at("/login", post(login))
         .at("/logout", post(logout))
+        .at("/check", post(check))
         .at("/refresh", post(refresh))
         .at("/register", post(register))
         .at("/activate", get(activate))
