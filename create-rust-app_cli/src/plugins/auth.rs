@@ -109,9 +109,9 @@ impl Plugin for Auth {
         created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
-      
+
       SELECT manage_updated_at('users');
-      
+
       CREATE TABLE user_sessions (
         id SERIAL PRIMARY KEY,
         user_id SERIAL NOT NULL REFERENCES users(id),
@@ -120,7 +120,7 @@ impl Plugin for Auth {
         created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
-      
+
       SELECT manage_updated_at('user_sessions');
 
       CREATE TABLE user_permissions (
@@ -129,20 +129,20 @@ impl Plugin for Auth {
         created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (user_id, permission)
       );
-      
+
       CREATE TABLE user_roles (
         user_id SERIAL NOT NULL REFERENCES users(id),
         role TEXT NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (user_id, role)
       );
-      
+
       CREATE TABLE role_permissions (
         role TEXT NOT NULL,
         permission TEXT NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (role, permission)
-      );      
+      );
     "#},
             indoc! {r#"
       DROP TABLE users CASCADE ALL;

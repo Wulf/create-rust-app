@@ -1,9 +1,9 @@
-use crate::utils::logger::message;
 use anyhow::Result;
 use indoc::indoc;
 use inflector::Inflector;
 use std::path::PathBuf;
 use crate::BackendFramework;
+use crate::logger::register_service_msg;
 
 struct Service {
     pub config: ServiceConfig,
@@ -44,8 +44,8 @@ fn config(service_name: &str) -> ServiceConfig {
     let file_name = model_name.to_snake_case();
 
     return ServiceConfig {
-        model_name: model_name,
-        file_name: file_name,
+        model_name,
+        file_name,
     };
 }
 
@@ -135,7 +135,7 @@ fn generate_poem(service_name: &str) -> Service {
         .replace("$FILE_NAME", config.file_name.as_str());
 
     Service {
-        config: config,
+        config,
         file_contents: contents,
     }
 }
@@ -227,15 +227,15 @@ fn generate_actix(service_name: &str) -> Service {
         .replace("$FILE_NAME", config.file_name.as_str());
 
     Service {
-        config: config,
+        config,
         file_contents: contents,
     }
 }
 
 /// use fs::replace instead and also fs::append for the services/mod.rs entry
-#[deprecated]
+// #[deprecated]
 pub fn register_poem(name: &str, service_api_fn: &str, service_base_endpoint_path: &str) -> Result<()> {
-    message(&format!("Registering service {}", name));
+    register_service_msg(name);
     let main_file_path = PathBuf::from("backend/main.rs");
     if main_file_path.exists() && main_file_path.is_file() {
         let mut main_file_contents = std::fs::read_to_string(&main_file_path)?;
@@ -248,9 +248,9 @@ pub fn register_poem(name: &str, service_api_fn: &str, service_base_endpoint_pat
 }
 
 /// use fs::replace instead and also fs::append for the services/mod.rs entry
-#[deprecated]
+// #[deprecated]
 pub fn register_actix(name: &str, service: &str) -> Result<()> {
-    message(&format!("Registering service {}", name));
+    register_service_msg(name);
     let main_file_path = PathBuf::from("backend/main.rs");
     if main_file_path.exists() && main_file_path.is_file() {
         let mut main_file_contents = std::fs::read_to_string(&main_file_path)?;

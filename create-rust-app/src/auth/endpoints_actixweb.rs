@@ -1,5 +1,6 @@
 extern crate argonautica;
 
+use actix_http::error::ParseError::Status;
 use super::extractor_actixweb::Auth;
 use super::{user::{User, UserChangeset}, user_session::{UserSession, UserSessionChangeset}, permissions::Permission, AccessTokenClaims, UserSessionJson, UserSessionResponse, PaginationParams, ID, UTC};
 use crate::Database;
@@ -114,11 +115,14 @@ async fn destroy_sessions(
   }).to_string()))
 }
 
+type Seconds = i64;
+
 #[derive(Deserialize, Serialize)]
 struct LoginInput {
     email: String,
     password: String,
     device: Option<String>,
+    ttl: Option<Seconds>
 }
 
 
@@ -139,11 +143,10 @@ async fn login(
     // verify device
     let mut device = None;
     if item.device.is_some() {
-        device = match item.device.unwrap().as_str() {
-            "web" => Some("web".to_string()),
-            "mobile" => Some("mobile".to_string()),
-            _ => None
-        };
+        let device_string = item.device.unwrap();
+        if device_string.len() > 256 {
+            return Ok(HttpResponse::build(StatusCode::BAD_REQUEST).body("{ \"message\": \"'device' cannot be longer than 256 characters.\" }"));
+        }
     }
 
     let user = User::find_by_email(&db, item.email);
@@ -187,8 +190,17 @@ async fn login(
     }
     let roles = roles.unwrap();
 
+    let access_token_duration = chrono::Duration::seconds(
+        if item.ttl.is_some() {
+            std::cmp::max(item.ttl.unwrap(), 1)
+        } else {
+            /* 15 minutes */
+            15 * 60
+        }
+    );
+
     let access_token_claims = AccessTokenClaims {
-        exp: (chrono::Utc::now() + chrono::Duration::minutes(15)).timestamp() as usize,
+        exp: (chrono::Utc::now() + access_token_duration).timestamp() as usize,
         sub: user.id,
         token_type: "access_token".to_string(),
         roles,
@@ -643,6 +655,11 @@ struct ResetInput {
     new_password: String,
 }
 
+#[post("/check")]
+async fn check(auth: Auth) -> HttpResponse {
+    HttpResponse::Ok().finish()
+}
+
 #[post("/reset")]
 async fn reset_password(
     db: Data<Database>,
@@ -719,6 +736,7 @@ pub fn endpoints(scope: actix_web::Scope) -> actix_web::Scope {
         .service(destroy_sessions)
         .service(login)
         .service(logout)
+        .service(check)
         .service(refresh)
         .service(register)
         .service(activate)

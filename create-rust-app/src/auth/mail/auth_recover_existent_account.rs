@@ -1,5 +1,6 @@
 use crate::Mailer;
 
+#[allow(dead_code)]
 pub fn send(mailer: &Mailer, to_email: &str, link: &str) {
     let subject = "Reset Password Instructions)";
     let text = format!(

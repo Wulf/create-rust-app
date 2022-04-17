@@ -1,5 +1,6 @@
 use crate::Mailer;
 
+#[allow(dead_code)]
 pub fn send(mailer: &Mailer, to_email: &str) {
     let subject = "Account activated)";
     let text = format!(

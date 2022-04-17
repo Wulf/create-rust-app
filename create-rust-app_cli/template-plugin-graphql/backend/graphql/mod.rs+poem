@@ -1,0 +1,77 @@
+mod query;
+mod mutation;
+mod subscription;
+
+use std::collections::HashSet;
+pub use query::{QueryRoot};
+pub use mutation::MutationRoot;
+pub use subscription::SubscriptionRoot;
+
+use async_graphql::{Data, Schema};
+use async_graphql::http::{ALL_WEBSOCKET_PROTOCOLS, GraphQLPlaygroundConfig, playground_source};
+use create_rust_app::auth::{Auth, Permission};
+use jsonwebtoken::{DecodingKey, decode, Validation};
+use std::iter::FromIterator;
+use async_graphql_poem::{GraphQLProtocol, GraphQLRequest, GraphQLResponse, GraphQLSubscription, GraphQLWebSocket};
+use poem::{handler, Result, IntoResponse};
+use poem::web::Html;
+use poem::web::websocket::WebSocket;
+
+pub type GraphQLSchema = Schema<query::QueryRoot, mutation::MutationRoot, subscription::SubscriptionRoot>;
+
+#[handler]
+pub async fn index(schema: poem::web::Data<&GraphQLSchema>, auth: Auth, req: GraphQLRequest) -> GraphQLResponse {
+    schema.execute(req.0.data(auth)).await.into()
+}
+
+#[handler]
+pub async fn playground() -> impl IntoResponse {
+    let content = std::fs::read_to_string("./.cargo/graphql-playground.html").unwrap();
+
+    Html(content)
+}
+
+#[handler]
+pub async fn index_ws(
+    schema: poem::web::Data<&GraphQLSchema>,
+    protocol: GraphQLProtocol,
+    websocket: WebSocket,
+) -> impl IntoResponse {
+
+    let schema = schema.0.clone();
+    websocket
+        .protocols(ALL_WEBSOCKET_PROTOCOLS)
+        .on_upgrade(move |stream| {
+            GraphQLWebSocket::new(stream, schema, protocol)
+                .on_connection_init(on_connection_init)
+                .serve()
+        })
+}
+
+#[derive(serde::Deserialize)]
+struct WSConnectPayload {
+    token: String,
+}
+
+pub async fn on_connection_init(value: serde_json::Value) -> async_graphql::Result<Data> {
+    if let Ok(payload) = serde_json::from_value::<WSConnectPayload>(value) {
+        let access_token = decode::<create_rust_app::auth::AccessTokenClaims>(
+            payload.token.as_str(),
+            &DecodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
+            &Validation::default(),
+        ).unwrap();
+
+        let mut data = Data::default();
+        let permissions: HashSet<Permission> = HashSet::from_iter(access_token.claims.permissions.iter().cloned());
+        let roles: HashSet<String> = HashSet::from_iter(access_token.claims.roles.iter().cloned());
+
+        data.insert(Auth {
+            user_id: access_token.claims.sub,
+            permissions,
+            roles,
+        });
+        Ok(data)
+    } else {
+        Err("Token is required".into())
+    }
+}

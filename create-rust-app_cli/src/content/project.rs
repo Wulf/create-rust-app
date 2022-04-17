@@ -27,8 +27,8 @@ fn add_bins_to_cargo_toml(project_dir: &std::path::PathBuf) -> Result<(), std::i
     let deps_table: &mut toml::value::Table =
         root.get_mut("package").unwrap().as_table_mut().unwrap();
 
-    let mut project_name = "app".to_string();
-    let mut found_project_name: bool = false;
+    let project_name: String;
+    let found_project_name: bool;
 
     match deps_table.get("name") {
         Some(name) => {
@@ -94,7 +94,7 @@ pub fn remove_non_framework_files(project_dir: &PathBuf, framework: BackendFrame
             if framework == BackendFramework::ActixWeb {
                 let dest = file.with_extension(file.extension().unwrap().to_string_lossy().replace("+actix_web", ""));
                 logger::rename_file_msg(&format!("{:#?}", &file), &format!("{:#?}", &dest));
-                std::fs::rename(file, dest);
+                std::fs::rename(file, dest)?;
             };
         } else if path.ends_with("+poem") {
             if framework != BackendFramework::Poem {
@@ -104,7 +104,7 @@ pub fn remove_non_framework_files(project_dir: &PathBuf, framework: BackendFrame
             if framework == BackendFramework::Poem {
                 let dest = file.with_extension(file.extension().unwrap().to_string_lossy().replace("+poem", ""));
                 logger::rename_file_msg(&format!("{:#?}", &file), &format!("{:#?}", &dest));
-                std::fs::rename(file, dest);
+                std::fs::rename(file, dest)?;
             };
         }
     }
@@ -212,7 +212,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         }
     }
     add_dependency(&project_dir, "futures-util", r#"futures-util = "0.3.21""#)?;
-    add_dependency(&project_dir, "create-rust-app", &format!("create-rust-app = {{version=\"5.0.0\"{enabled_features}}}", enabled_features=enabled_features))?;
+    add_dependency(&project_dir, "create-rust-app", &format!("create-rust-app = {{version=\"5.1.0\"{enabled_features}}}", enabled_features=enabled_features))?;
     add_dependency(&project_dir, "serde", r#"serde = { version = "1.0.133", features = ["derive"] }"#)?;
     add_dependency(&project_dir, "serde_json", r#"serde_json = "1.0.79""#)?;
     add_dependency(&project_dir, "chrono", r#"chrono = { version = "0.4.19", features = ["serde"] }"#)?;

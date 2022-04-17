@@ -13,6 +13,7 @@ pub use processor::process;
 
 const DESCRIPTION: &'static str = env!("CARGO_PKG_DESCRIPTION");
 
+#[allow(dead_code)]
 #[derive(Debug, StructOpt, Clone)]
 #[structopt(about = DESCRIPTION, after_help = "This command helps generate type information for other languages. Currently, only typescript is supported.")]
 struct Args {
@@ -44,6 +45,7 @@ struct Args {
     output: PathBuf,
 }
 
+#[allow(dead_code)]
 fn main() {
     let args: Args = Args::from_args();
 

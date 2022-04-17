@@ -109,23 +109,26 @@ fn main() -> Result<()> {
             "Authentication Plugin: local email-based authentication",
             "Container Plugin: dockerize your app",
             "Development Plugin: adds dev warnings and an admin portal",
-            "Storage Plugin: adds S3 file storage capabilities"
+            "Storage Plugin: adds S3 file storage capabilities",
+            "GraphQL Plugin: bootstraps a GraphQL setup including a playground"
         ];
         let chosen: Vec<usize> = MultiSelect::with_theme(&ColorfulTheme::default())
             .items(&items)
-            .defaults(&[true, true, true, true])
+            .defaults(&[true, true, true, true, true])
             .interact()?;
 
         let add_plugin_auth = chosen.iter().position(|x| *x == 0).is_some();
         let add_plugin_container = chosen.iter().position(|x| *x == 1).is_some();
         let add_plugin_dev = chosen.iter().position(|x| *x == 2).is_some();
         let add_plugin_storage = chosen.iter().position(|x| *x == 3).is_some();
+        let add_plugin_graphql = chosen.iter().position(|x| *x == 4).is_some();
 
         let mut features: Vec<String> = vec!();
         if add_plugin_dev { features.push("plugin_dev".to_string()); }
         if add_plugin_auth { features.push("plugin_auth".to_string()); }
         if add_plugin_container { features.push("plugin_container".to_string()); }
         if add_plugin_storage { features.push("plugin_storage".to_string()); }
+        if add_plugin_graphql { features.push("plugin_graphql".to_string()); }
         features.push(match backend_framework {
             BackendFramework::ActixWeb => "backend_actix-web".to_string(),
             BackendFramework::Poem => "backend_poem".to_string()
@@ -147,13 +150,19 @@ fn main() -> Result<()> {
 
         let install_config = plugins::InstallConfig {
             project_dir: PathBuf::from("."),
-            backend_framework
+            backend_framework,
+            plugin_dev: add_plugin_dev,
+            plugin_auth: add_plugin_auth,
+            plugin_container: add_plugin_container,
+            plugin_storage: add_plugin_storage,
+            plugin_graphql: add_plugin_graphql
         };
 
         if add_plugin_auth { plugins::install(plugins::auth::Auth {}, install_config.clone())?; }
         if add_plugin_container { plugins::install(plugins::container::Container {}, install_config.clone())?; }
         if add_plugin_dev { plugins::install(plugins::dev::Dev {}, install_config.clone())?; }
         if add_plugin_storage { plugins::install(plugins::storage::Storage {}, install_config.clone())?; }
+        if add_plugin_graphql { plugins::install(plugins::graphql::GraphQL {}, install_config.clone())?; }
 
         // cd into project dir and make a copy of the env file
         let example_env_file = PathBuf::from("./.env.example");
