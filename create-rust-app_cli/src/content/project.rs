@@ -385,10 +385,11 @@ pub fn check_cli_version() -> Result<()>{
   let name = env!("CARGO_PKG_NAME");
   let version = env!("CARGO_PKG_VERSION");
   let informer = update_informer::new(registry::Crates, name, version);
-  logger::message(&format!("Welcome to use {} v{}", name, version));
-  if let Some(version) = informer.check_version().ok().flatten()  {
-    logger::message(&format!("New version {} is available!", version));
+  if let Some(new_version) = informer.check_version().ok().flatten()  {
+    logger::message(&style(&format!("You are running `{name}` v{version}, which is behind the latest release ({new_version}).")).yellow().to_string());
     logger::message(&format!("If you want to update, try: {}", style("cargo install --force create-rust-app_cli").yellow()));
+  } else {
+    logger::message(&format!("You are running the latest version of {name} ({version})!"));
   }
   Ok(())
 }
