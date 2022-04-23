@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
 import { useHistory } from 'react-router'
 import { useAuth } from '../hooks/useAuth'
+import { useQueryParam } from '../hooks/useQueryParam'
 
 export const ActivationPage = () => {
   const auth = useAuth()
   const history = useHistory()
-  const [activationToken, setActivationToken] = useState<string>('')
+  const token = useQueryParam('token') || '';
+  const [activationToken, setActivationToken] = useState<string>(token)
   const [processing, setProcessing] = useState<boolean>(false)
 
   const activate = async () => {
