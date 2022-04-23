@@ -575,7 +575,7 @@ async fn register(
         &mailer,
         &user.email,
         &format!(
-            "http://localhost:8080/activate?token={token}",
+            "http://localhost:3000/activate?token={token}",
             token = token
         ),
     );
@@ -687,7 +687,7 @@ async fn forgot_password(
             .unwrap();
 
         let link = &format!(
-            "http://localhost:8080/reset?token={reset_token}",
+            "http://localhost:3000/reset?token={reset_token}",
             reset_token = reset_token
         );
         mail::auth_recover_existent_account::send(&mailer, &user.email, link);
