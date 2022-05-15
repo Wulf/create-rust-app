@@ -40,15 +40,15 @@ impl Plugin for Dev {
         // TODO: don't use concurrently as the anchor for new frontend dependencies
         fs::replace(
             "frontend/package.json",
-            r#""concurrently": "^6.2.1""#,
-            r#""concurrently": "^6.2.1",
+            r#""concurrently": "^7.1.0""#,
+            r#""concurrently": "^7.1.0",
     "react-query": "^3.21.0""#,
         )?;
 
         fs::replace(
             "frontend/src/App.tsx",
             "const App = () => {",
-            r#"if (process.env.NODE_ENV === 'development') require('./setupDevelopment')
+            r#"if (process.env.NODE_ENV === 'development') import('./setupDevelopment')
     
     const App = () => {"#,
         )?;
@@ -56,30 +56,13 @@ impl Plugin for Dev {
         match install_config.backend_framework {
             BackendFramework::ActixWeb => {
                 fs::replace("backend/main.rs",
-                "#[actix_web::main]",
-                r#"#[cfg(debug_assertions)]
-        async fn development_index(req: actix_web::HttpRequest) -> actix_web::Result<NamedFile, actix_web::Error> {
-            Ok(NamedFile::open(".cargo/admin/dist/admin.html")?)
-        }
-
-        #[actix_web::main]"#)?;
-
-                fs::replace("backend/main.rs",
-                "let mut app = app.service(api_scope);",
-                r#"#[cfg(debug_assertions)]
-        {
-            // Mount development-only routes
+                            r#"/* Development-only routes */"#,
+                            r#"/* Development-only routes */
+            // Mount development-only API routes
             api_scope = api_scope.service(create_rust_app::dev::endpoints(web::scope("/development")));
-        };
+            // Mount the admin dashboard on /admin
+            app = app.service(web::scope("/admin").service(Files::new("/", ".cargo/admin/dist/").index_file("admin.html")));"#)?;
 
-        let mut app = app.service(api_scope);
-
-        #[cfg(debug_assertions)] {
-            app = app
-                .service(
-                    Files::new("*", ".cargo/admin/dist").index_file("admin.html").default_handler(web::get().to(development_index))
-                );
-        }"#)?;
             },
             BackendFramework::Poem => {
                 fs::replace(

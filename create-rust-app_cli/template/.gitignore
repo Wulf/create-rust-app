@@ -1,3 +1,4 @@
+/frontend/dist
 /.cargo/.build
 .env*
 !.env.example

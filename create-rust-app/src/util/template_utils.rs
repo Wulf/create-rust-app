@@ -1,0 +1,117 @@
+use std::collections::HashMap;
+use lazy_static::lazy_static;
+use tera::Tera;
+
+lazy_static! {
+    pub static ref TEMPLATES: Tera = {
+        let mut tera = match Tera::new("backend/views/**/*.html") {
+            Ok(t) => t,
+            Err(e) => {
+                println!("Parsing error(s): {}", e);
+                ::std::process::exit(1);
+            }
+        };
+        tera.register_function("bundle", InjectBundle);
+        tera.autoescape_on(vec![/*".html", ".sql"*/]);
+        tera
+    };
+
+    pub static ref VITE_MANIFEST: ViteManifest = {
+        load_manifest_entries()
+    };
+}
+
+/// This implements the {{ bundle(name="index.tsx") }} function for our templates
+struct InjectBundle;
+impl tera::Function for InjectBundle {
+    fn call(&self, args: &HashMap<String, serde_json::Value>) -> tera::Result<serde_json::Value> {
+        match args.get("name") {
+            Some(val) => return match tera::from_value::<String>(val.clone()) {
+                Ok(bundle_name) => {
+                    let inject: String;
+
+                    #[cfg(not(debug_assertions))] {
+                        let manifest_entry = VITE_MANIFEST.get(&format!("src/bundles/{bundle_name}"))
+                            .expect(&format!("could not get bundle `{bundle_name}`"));
+                        let entry_file = format!(r#"<script type="module" src="/{file}"></script>"#, file=manifest_entry.file);
+                        let css_files = manifest_entry.css.as_ref().unwrap_or(&vec![]).into_iter().map(|css_file| {
+                            format!(r#"<link rel="stylesheet" href="/{file}" />"#, file = css_file)
+                        }).collect::<Vec<String>>().join("\n");
+                        let dyn_entry_files = manifest_entry.dynamicImports.as_ref().unwrap_or(&vec![]).into_iter().map(|dyn_script_file| {
+                            // TODO: make this deferred or async -- look this up!~
+                            format!(r#"<script type="module" src="/{file}"></script>"#, file=dyn_script_file)
+                        }).collect::<Vec<String>>().join("\n");
+
+                        inject = format!(r##"
+                        <!-- production mode -->
+                        {entry_file}
+                        {css_files}
+                        {dyn_entry_files}
+                        "##);
+                    }
+
+                    #[cfg(debug_assertions)] {
+                        inject = format!(r#"<script type="module" src="http://localhost:3000/src/bundles/{bundle_name}"></script>"#);
+                    }
+
+                    Ok(tera::to_value(inject).unwrap())
+                },
+                Err(_) => panic!("No bundle named '{:#?}'", val),
+            },
+            None => Err("oops".into()),
+        }
+    }
+
+    fn is_safe(&self) -> bool {
+        true
+    }
+}
+
+#[derive(serde::Deserialize)]
+pub struct ViteManifestEntry {
+    // Script content to load for this entry
+    file: String,
+
+    // Script content to lazy-load for this entry
+    dynamicImports: Option<Vec<String>>, // using `import(..)`
+
+    // Style content to load for this entry
+    css: Option<Vec<String>>, // using import '*.css'
+
+    // If true, eager-load this content
+    isEntry: Option<bool>,
+
+    // If true, lazy-load this content
+    isDynamicEntry: Option<bool>
+
+    // src: String, /* => not necessary :) */
+    // assets: Option<Vec<String>>, /* => these will be served by the server! */
+}
+type ViteManifest = HashMap<String, ViteManifestEntry>;
+
+
+fn load_manifest_entries() -> ViteManifest {
+    let mut manifest: ViteManifest = HashMap::new();
+
+    use serde_json::Value;
+    let manifest_json = serde_json::from_str(std::fs::read_to_string(std::path::PathBuf::from("./frontend/dist/manifest.json")).unwrap().as_str()).unwrap();
+
+    match manifest_json {
+        Value::Object(obj) => {
+            obj.keys().for_each(|manifest_key| {
+                let details = obj.get(manifest_key).unwrap();
+
+                let manifest_entry = serde_json::from_value::<ViteManifestEntry>(details.clone())
+                    .expect("invalid vite manifest (or perhaps the create-rust-app parser broke!)");
+
+                manifest.insert(manifest_key.to_string(), manifest_entry);
+            });
+            // done parsing manifest
+        },
+        _ => {
+            panic!("invalid vite manifest (or perhaps the create-rust-app parser broke!)");
+        }
+    }
+
+    manifest
+}

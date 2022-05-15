@@ -4,24 +4,23 @@
   "private": true,
   "proxy": "http://localhost:8080/",
   "dependencies": {
-    "@testing-library/jest-dom": "^5.11.4",
-    "@testing-library/react": "^11.1.0",
-    "@testing-library/user-event": "^12.1.10",
-    "dotenv": "^10.0.0",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-router-dom": "^5.2.0",
-    "react-scripts": "4.0.3",
-    "typescript": "^4.2.4",
-    "web-vitals": "^1.0.1"
+    "@testing-library/jest-dom": "^5.16.4",
+    "@testing-library/react": "^13.1.1",
+    "@testing-library/user-event": "^14.1.1",
+    "dotenv": "^16.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.3.0",
+    "typescript": "^4.6.3",
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "yarn tsync && react-scripts start",
-    "build": "react-scripts build",
+    "start": "yarn tsync && vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "fullstack": "yarn install && yarn concurrently --prefix-colors cyan,magenta --kill-others -n backend,frontend \"cargo --color=always watch -x run -w backend\" \"yarn start\"",
     "test": "react-scripts test",
     "test:e2e": "npx playwright test ./tests",
-    "eject": "react-scripts eject",
     "tsync": "tsync -i ../backend -o ./src/types/rust.d.ts"
   },
   "eslintConfig": {
@@ -43,12 +42,15 @@
     ]
   },
   "devDependencies": {
-    "@types/react-router-dom": "^5.1.7",
+    "@playwright/test": "^1.21.1",
     "@types/jest": "^26.0.23",
     "@types/node": "^15.3.0",
-    "@types/react": "^17.0.5",
-    "@types/react-dom": "^17.0.5",
-    "@playwright/test": "^1.17.1",
-    "concurrently": "^6.2.1"
+    "@types/react": "^18.0.6",
+    "@types/react-dom": "^18.0.2",
+    "@types/react-router-dom": "^5.3.3",
+    "@vitejs/plugin-react": "^1.3.1",
+    "concurrently": "^7.1.0",
+    "glob": "^8.0.1",
+    "vite": "^2.9.5"
   }
 }

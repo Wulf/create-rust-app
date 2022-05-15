@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-import { useHistory } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 export const RegistrationPage = () => {
   const auth = useAuth()
-  const history = useHistory()
+  const navigate = useNavigate()
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [processing, setProcessing] = useState<boolean>(false)
@@ -22,7 +22,7 @@ export const RegistrationPage = () => {
     ).json()
     console.log(response)
     setProcessing(false)
-    history.push('/activate')
+    navigate('/activate')
   }
 
   return (
@@ -49,14 +49,14 @@ export const RegistrationPage = () => {
       <a
         style={{ marginTop: '30px' }}
         href="#"
-        onClick={() => history.push('/login')}
+        onClick={() => navigate('/login')}
       >
         Already have an account? Click here to login.
       </a>
       <a
         style={{ marginTop: '30px' }}
         href="#"
-        onClick={() => history.push('/activate')}
+        onClick={() => navigate('/activate')}
       >
         Need to activate your account? Click here.
       </a>

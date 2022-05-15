@@ -1,49 +1,40 @@
 #[macro_use]
 extern crate diesel;
 
+use actix_files::{Files};
+use actix_web::{App, HttpServer, web};
+use actix_web::middleware::{Compress, Logger, NormalizePath};
+use actix_web::web::Data;
+
 mod schema;
 mod services;
 mod models;
 mod extractors;
 mod mail;
 
-use actix_files::{Files, NamedFile};
-use actix_web::middleware::{Compress, Logger, NormalizePath};
-use actix_web::{web, App, HttpServer};
-use actix_web::web::Data;
-
-#[cfg(not(debug_assertions))]
-async fn app_index() -> actix_web::Result<NamedFile, actix_web::Error> {
-    Ok(NamedFile::open("./frontend/build/index.html")?)
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let app_data = create_rust_app::setup();
 
     HttpServer::new(move || {
-        let app = App::new()
+        let mut app = App::new()
             .wrap(Compress::default())
-            .wrap(NormalizePath::trim());
+            .wrap(NormalizePath::trim())
+            .wrap(Logger::default());
 
-        let app = app.wrap(Logger::default());
-        let app = app.app_data(Data::new(app_data.database.clone()));
-        let app = app.app_data(Data::new(app_data.mailer.clone()));
+        app = app.app_data(Data::new(app_data.database.clone()));
+        app = app.app_data(Data::new(app_data.mailer.clone()));
 
-        let mut api_scope = web::scope("/api")
-            .service(services::todo::endpoints(web::scope("/todos")));
+        let mut api_scope = web::scope("/api");
+        api_scope = api_scope.service(services::todo::endpoints(web::scope("/todos")));
 
-        let mut app = app.service(api_scope);
-
-        #[cfg(not(debug_assertions))]
+        #[cfg(debug_assertions)]
         {
-            app = app.service(Files::new("*", "./frontend/build").index_file("index.html").default_handler(web::get().to(app_index)));
+            /* Development-only routes */
         }
 
-        let app = app.default_service(web::route().to(create_rust_app::not_found));
+        app = app.service(api_scope);
+        app = app.default_service(web::get().to(create_rust_app::render_views));
         app
-    })
-    .bind("0.0.0.0:8080")?
-    .run()
-    .await
+    }).bind("0.0.0.0:8080")?.run().await
 }

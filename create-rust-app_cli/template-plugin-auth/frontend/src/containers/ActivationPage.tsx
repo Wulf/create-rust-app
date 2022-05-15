@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
-import { useHistory } from 'react-router'
+import { useNavigate } from 'react-router'
 import { useAuth } from '../hooks/useAuth'
 import { useQueryParam } from '../hooks/useQueryParam'
 
 export const ActivationPage = () => {
   const auth = useAuth()
-  const history = useHistory()
+  const navigate = useNavigate()
   const token = useQueryParam('token') || '';
   const [activationToken, setActivationToken] = useState<string>(token)
   const [processing, setProcessing] = useState<boolean>(false)
@@ -21,7 +21,7 @@ export const ActivationPage = () => {
       }
     )
     if (response.ok) {
-      history.push('/login')
+      navigate('/login')
     }
     setProcessing(false)
   }

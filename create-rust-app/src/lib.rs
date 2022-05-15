@@ -4,6 +4,9 @@ compile_error!("feature \"backend_actix-web\" and feature \"backend_poem\" canno
 // #[cfg(not(any(feature = "backend_poem", feature = "backend_actix-web")))]
 // compile_error!("Please enable one of the backend features (options: 'backend_actix-web', 'backend-poem')");
 
+mod util;
+pub use util::*;
+
 #[macro_use]
 extern crate diesel;
 
@@ -71,15 +74,6 @@ pub fn setup() -> AppData {
         #[cfg(feature= "plugin_storage")]
         storage: storage::Storage::new()
     }
-}
-
-
-#[cfg(feature = "backend_actix-web")]
-use actix_web;
-
-#[cfg(feature = "backend_actix-web")]
-pub async fn not_found() -> actix_web::HttpResponse {
-    actix_web::HttpResponse::NotFound().finish()
 }
 
 #[cfg(feature = "backend_poem")]

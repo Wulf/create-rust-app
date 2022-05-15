@@ -48,7 +48,10 @@ $ create-rust-app <project_name>
     - Database migrations (using diesel.rs)
     - Sending mail
     - PostgreSQL (but you can easily switch to another one!)
-  - React frontend
+    - ViteJS (blazing fast frontend compile speeds)
+    - SSR templating with an option to include bundles that are automatically code-split
+    - Automatically route to your single page application(s)
+  - React frontend (or install your own framework!)
     - Typescript, with backend type definition generation (via `tsync`)
     - Routing (via `react-router-dom`)
     - Typed `react-query` hooks generation (`$ cd my_project && create-rust-app`, then select "Generate react-query hooks")
@@ -72,8 +75,8 @@ $ create-rust-app <project_name>
   - Dockerfile to containerize your rust app into a single image
     
 
-- **Admin Portal plugin**
-  - View your database via the admin portal (editing functionality coming soon™)
+- **Development plugin**
+  - View your database via the admin portal at `localhost:8080/admin` (editing functionality coming soon™)
   - A "devbox" on the frontend indicates when the backend is compiling or when the database is not reachable
   - Moreover, the devbox displays when migrations are pending + includes a "run migrations" button
     
@@ -118,5 +121,7 @@ $ cd my_project && create-rust-app
 [![Gif](docs/create-rust-app-v2.gif)](https://github.com/Wulf/create-rust-app/blob/main/docs/create-rust-app-v2.mp4)
 
 # Contributing
+
+Questions and comments are welcome in the issues section! 
 
 If you're experiencing slow compilation time, make sure there isn't any bloat in the template files (look for `node_modules` or typescript / parcel caches and delete them).

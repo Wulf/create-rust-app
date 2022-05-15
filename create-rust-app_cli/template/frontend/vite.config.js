@@ -1,0 +1,49 @@
+import react from '@vitejs/plugin-react'
+import {resolve} from 'path'
+import {defineConfig} from 'vite'
+import glob from 'glob'
+
+const buildRollupInput = (isDevelopment) => {
+    const rollupInput = isDevelopment ? {
+        'main.tsx': resolve(__dirname, './src/main.tsx')
+    } : {}
+
+    // TODO: use import.meta.glob() + npm uninstall glob
+
+    glob.sync(resolve(__dirname, './src/bundles/**/*.tsx')).map(inputEntry => {
+        let outputEntry = inputEntry
+        // output entry is an absolute path, let's remove the absolute part:
+        outputEntry = outputEntry.replace(`${__dirname}/src/`, '')
+        // replace directory separator with "__"
+        outputEntry = outputEntry.replace(/\//g, '__')
+
+        rollupInput[outputEntry] = inputEntry
+    })
+
+    return rollupInput
+}
+
+// https://vitejs.dev/config/
+export default defineConfig(async ({ command, mode }) => ({
+    base: command === 'serve' ? 'http://localhost:3000' : '/',
+    build: {
+        manifest: true,
+        rollupOptions: {
+            input: buildRollupInput(command === 'serve')
+        },
+    },
+    plugins: [react()],
+    server: {
+        proxy: {
+            // with options
+            '/api': {
+                target: 'http://localhost:8080',
+                changeOrigin: true,
+            },
+            '/graphql': {
+                target: 'http://localhost:8080',
+                changeOrigin: true
+            }
+        }
+    },
+}))

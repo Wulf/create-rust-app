@@ -621,11 +621,11 @@
         let authEl = document.getElementById('auth')
         authEl.classList.add('playgroundIn')
         if (storedAccessToken) {
-            authEl.innerHTML = "<button id='logout-btn' class='button dvmgwq' onclick='logout()'>Logout</button>"
+            authEl.innerHTML = "<button id='logout-btn' style='line-height: 0;' class='button dvmgwq' onclick='logout()'>Logout</button>"
         } else {
             authEl.innerHTML = "<input id='email' type='text' name='email' placeholder='email' value='' style='margin-right: 2px; width: 100px; height: 21px' />"
                 + "<input id='password' type='password' name='password' placeholder='password' value='' style='margin-right: 2px; width: 100px; height: 21px' />"
-                + "<button id='login-btn' class='button dvmgwq' onclick='login()'>Login</button>"
+                + "<button id='login-btn' style='line-height: 0;' class='button dvmgwq' onclick='login()'>Login</button>"
         }
     })
 </script>

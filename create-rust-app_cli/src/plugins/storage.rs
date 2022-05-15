@@ -47,14 +47,14 @@ S3_SECRET_ACCESS_KEY=secret_key
         )?;
 
         fs::replace("frontend/src/App.tsx",
-        r##"<Route path="/todos"><Todos /></Route>"##,
-        r##"<Route path="/todos"><Todos /></Route>
-        <Route path="/files"><Files /></Route>"##)?;
+        r#"{/* CRA: routes */}"#,
+        r#"{/* CRA: routes */}
+        <Route path="/files" element={Files} />"#)?;
 
         fs::replace("frontend/src/App.tsx",
-        r#"<a className="NavButton" onClick={() => history.push('/todos')}>Todos</a>"#,
-            r#"<a className="NavButton" onClick={() => history.push('/todos')}>Todos</a>
-        <a className="NavButton" onClick={() => history.push('/files')}>Files</a>"#
+        r#"<a className="NavButton" onClick={() => navigate('/todos')}>Todos</a>"#,
+            r#"<a className="NavButton" onClick={() => navigate('/todos')}>Todos</a>
+        <a className="NavButton" onClick={() => navigate('/files')}>Files</a>"#
         )?;
 
         fs::replace("frontend/src/App.tsx",
@@ -97,14 +97,17 @@ DROP TABLE attachment_blobs CASCADE ALL;
 
         match install_config.backend_framework {
             BackendFramework::ActixWeb => {
+
                 crate::content::service::register_actix(
                     "file",
                     r#"services::file::endpoints(web::scope("/files"))"#
                 )?;
+
                 fs::replace("backend/main.rs",
-                "let app = app.app_data(Data::new(app_data.mailer.clone()));",
-                r#"let app = app.app_data(Data::new(app_data.mailer.clone()));
-        let app = app.app_data(Data::new(app_data.storage.clone()));"#)?;
+                            "app = app.app_data(Data::new(app_data.mailer.clone()));",
+                            r#"app = app.app_data(Data::new(app_data.mailer.clone()));
+        app = app.app_data(Data::new(app_data.storage.clone()));"#)?;
+
             },
             BackendFramework::Poem => {
                 crate::content::service::register_poem(

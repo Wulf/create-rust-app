@@ -60,6 +60,9 @@ path = ".cargo/bin/tsync.rs"
 [[bin]]
 name = "{project_name}"
 path = "backend/main.rs"
+
+[profile.dev]
+debug-assertions=true
 "#,
         project_name = project_name
     );

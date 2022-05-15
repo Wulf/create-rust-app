@@ -31,7 +31,7 @@ export const GraphQLPage = () => {
                 {auth.isAuthenticated && (pong.loading ? 'Executing GraphQL query...' : JSON.stringify(pong.data, null, 2))}
             </pre>
 
-            <p><a href={"//localhost:8080/graphql"}>Visit Playground</a></p>
+            <p><a href={"/graphql"}>Visit Playground</a></p>
         </div>
     )
 }

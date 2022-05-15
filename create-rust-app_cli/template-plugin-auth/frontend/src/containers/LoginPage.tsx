@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-import { useHistory } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 export const LoginPage = () => {
   const auth = useAuth()
-  const history = useHistory()
+  const navigate = useNavigate()
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [processing, setProcessing] = useState<boolean>(false)
@@ -16,7 +16,7 @@ export const LoginPage = () => {
   }
 
   if (auth.isAuthenticated) {
-    history.push('/')
+    navigate('/')
     return <div>Already logged in. Redirecting you to the home page...</div>
   }
 
@@ -44,14 +44,14 @@ export const LoginPage = () => {
       <a
         style={{ marginTop: '30px' }}
         href="#"
-        onClick={() => history.push('/register')}
+        onClick={() => navigate('/register')}
       >
         Don't have an account? Click here to register.
       </a>
       <a
         style={{ marginTop: '30px' }}
         href="#"
-        onClick={() => history.push('/recovery')}
+        onClick={() => navigate('/recovery')}
       >
         Forgot your password? Click here to recover your account.
       </a>

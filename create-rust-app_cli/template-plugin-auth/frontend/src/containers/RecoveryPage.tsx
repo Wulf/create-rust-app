@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
-import { useHistory } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 export const RecoveryPage = () => {
   const auth = useAuth()
-  const history = useHistory()
+  const navigate = useNavigate()
   const [email, setEmail] = useState<string>('')
   const [processing, setProcessing] = useState<boolean>(false)
 
@@ -25,7 +25,7 @@ export const RecoveryPage = () => {
   }
 
   if (auth.isAuthenticated) {
-    history.push('/')
+    navigate('/')
     return <div>Already logged in. Redirecting you to the home page...</div>
   }
 

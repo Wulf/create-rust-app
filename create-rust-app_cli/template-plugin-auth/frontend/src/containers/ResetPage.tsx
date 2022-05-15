@@ -1,11 +1,11 @@
-import React, { useMemo, useState } from 'react'
-import { useHistory, useLocation } from 'react-router-dom'
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useQueryParam } from '../hooks/useQueryParam'
 
 export const ResetPage = () => {
   const auth = useAuth()
-  const history = useHistory()
+  const navigate = useNavigate()
   const resetToken = useQueryParam('token')
   const [newPassword, setNewPassword] = useState<string>('')
   const [newPasswordConfirmation, setNewPasswordConfirmation] =
@@ -28,7 +28,7 @@ export const ResetPage = () => {
         })
       ).json()
       console.log(response)
-      history.push('/login')
+      navigate('/login')
       setNewPassword('')
       setNewPasswordConfirmation('')
     } finally {
@@ -37,7 +37,7 @@ export const ResetPage = () => {
   }
 
   if (auth.isAuthenticated) {
-    history.push('/')
+    navigate('/')
     return <div>Already logged in. Redirecting you to the home page...</div>
   }
 

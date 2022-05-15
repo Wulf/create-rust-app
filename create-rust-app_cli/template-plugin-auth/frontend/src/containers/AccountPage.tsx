@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { useHistory } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 export const AccountPage = () => {
   const auth = useAuth()
-  const history = useHistory()
+  const navigate = useNavigate()
 
   const [processing, setProcessing] = useState<boolean>(false)
   const [originalPassword, setOriginalPassword] = useState<string>('')
@@ -186,7 +186,7 @@ export const AccountPage = () => {
       )}
       {!auth.isAuthenticated && (
         <div>
-          <a href="#" onClick={() => history.push('/login')}>
+          <a href="#" onClick={() => navigate('/login')}>
             Login to view your account detials
           </a>
         </div>

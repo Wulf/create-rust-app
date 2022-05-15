@@ -254,7 +254,11 @@ pub fn register_actix(name: &str, service: &str) -> Result<()> {
     let main_file_path = PathBuf::from("backend/main.rs");
     if main_file_path.exists() && main_file_path.is_file() {
         let mut main_file_contents = std::fs::read_to_string(&main_file_path)?;
-        main_file_contents = main_file_contents.replace("web::scope(\"/api\")", &format!("web::scope(\"/api\")\n            .service({})", service));
+        main_file_contents = main_file_contents.replace(
+            r#"let mut api_scope = web::scope("/api");"#,
+            &format!(r#"let mut api_scope = web::scope("/api");
+        api_scope = api_scope.service({});"#, service)
+        );
         std::fs::write(main_file_path, main_file_contents)?;
     }
 

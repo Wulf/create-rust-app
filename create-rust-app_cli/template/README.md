@@ -19,31 +19,37 @@ This project was bootstrapped with [Create Rust App](https://github.com/wulf/cre
 
 In the project directory, you can run:
 
-### `cd frontend && yarn && yarn start`
+### `cargo fullstack`
 
-Runs the frontend in the development mode.\
-Visit [http://localhost:3000](http://localhost:3000) to view it.
+Runs the app in development mode and watches for changes. Visit [http://localhost:8080](http://localhost:8080) to view it.
 
-The page will reload if you make edits to the frontend.\
-You will also see any lint errors in the console.
-
-### `cargo watch -x run -i frontend/`
-
-Runs the backend in the development mode.\
-Endpoints are hosted at [http://localhost:8080](http://localhost:8080).
-
-The backend will recompile and restart when files change.
+Any frontend changes should instantly appear. Backend changes will need to recompile.
 Needs `cargo-watch` installed, see requirements.
 
-Note: you may need to run `cd frontend && yarn && yarn build` first in order for this command to work.
+To test/debug issues with the production build, set the `debug-assertions` to `true` for `[profile.dev]` in `Cargo.toml`. This way, development-only code paths are discarded and instead, production-only code paths are included.
 
-## Developer's note
+Alternatively, use `cargo run` to run the app in development mode without watching for file changes.
 
-When writing migrations, make sure the final schema structure is in the same order as Queryable model structs. Otherwise, diesel will fail to properly populate the struct.
+### `cargo build`
 
-### Deployment
+Builds a production-ready build.
 
-TODO
+### `cargo tsync`
+
+Generates the typescript types from rust code marked with [`tsync`](https://github.com/Wulf/tsync).
+Outputs to `frontend/src/types/rust.d.ts`.
+
+### Running frontend and backend individually
+
+```sh
+# frontend
+cd frontend && yarn && yarn start
+```
+
+```sh
+# backend
+cargo watch -x run -i frontend/
+```
 
 ## Database Migrations
 
@@ -53,24 +59,3 @@ TODO
 
 - `diesel database setup`
 - `diesel database reset`
-
-## Development
-
-**Run both frontend and backend processes at once:**
-
-```sh
-cargo fullstack
-```
-
-**Run frontend and backend individually:**
-
-Frontend:
-```sh
-cd frontend && yarn && yarn start
-```
-
-Backend:
-```sh
-# you may need to run `cd frontend && yarn && yarn build` first!
-cargo watch -x run -i frontend/
-```

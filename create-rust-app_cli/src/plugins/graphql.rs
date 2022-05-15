@@ -59,11 +59,11 @@ import { GraphQLPage } from './containers/GraphQLPage'"#,
             "frontend/src/App.tsx",
             "{/* CRA: left-aligned nav buttons */}",
             r#"{/* CRA: left-aligned nav buttons */}
-          <a className="NavButton" onClick={() => history.push('/gql')}>GraphQL</a>"#,
+          <a className="NavButton" onClick={() => navigate('/gql')}>GraphQL</a>"#,
         )?;
 
-        fs::replace("frontend/src/index.tsx", "ReactDOM.render(", r##"import {ApolloProvider} from "@apollo/client";
-import {useAuthenticatedApolloClient} from "./hooks/useAuthenticatedApolloClient";
+        fs::replace("frontend/src/bundles/index.tsx", "ReactDOM.createRoot", r##"import {ApolloProvider} from "@apollo/client";
+import {useAuthenticatedApolloClient} from "../hooks/useAuthenticatedApolloClient";
 
 const AuthenticatedApolloProvider = (props: { children: React.ReactNode }) => {
     const client = useAuthenticatedApolloClient()
@@ -73,14 +73,12 @@ const AuthenticatedApolloProvider = (props: { children: React.ReactNode }) => {
     </ApolloProvider>
 }
 
-ReactDOM.render("##)?;
+ReactDOM.createRoot"##)?;
 
-        fs::replace(
-            "frontend/src/App.tsx",
-            "{/* CRA: routes */}",
-            r#"{/* CRA: routes */}
-        <Route path={"/gql"}><GraphQLPage /></Route>"#,
-        )?;
+        fs::replace("frontend/src/App.tsx",
+                    r#"{/* CRA: routes */}"#,
+                    r#"{/* CRA: routes */}
+        <Route path="/gql" element={GraphQLPage} />"#)?;
 
         fs::replace("frontend/package.json", r##""dependencies": {"##, r##""dependencies": {
     "@apollo/client": "^3.5.10",
@@ -95,8 +93,8 @@ ReactDOM.render("##)?;
         fs::replace("frontend/src/App.tsx", old_logout_link, new_logout_link)?;
 
         // make sure auth plugin is wrapped on top
-        fs::replace("frontend/src/index.tsx", "<AuthProvider>", "<AuthProvider>\n        <AuthenticatedApolloProvider>")?;
-        fs::replace("frontend/src/index.tsx", "</AuthProvider>", "</AuthenticatedApolloProvider>\n      </AuthProvider>")?;
+        fs::replace("frontend/src/bundles/index.tsx", "<AuthProvider>", "<AuthProvider>\n        <AuthenticatedApolloProvider>")?;
+        fs::replace("frontend/src/bundles/index.tsx", "</AuthProvider>", "</AuthenticatedApolloProvider>\n      </AuthProvider>")?;
 
 
         match install_config.backend_framework {
@@ -108,10 +106,10 @@ use actix_web::guard;"##)?;
                 // GraphQL subscription endpoint
                 //
                 crate::content::service::register_actix("graphql-websocket",
-                    r##"web::resource("/graphql/ws")
+                    r#"web::resource("/graphql/ws")
                 .guard(guard::Get())
                 .guard(guard::Header("upgrade", "websocket"))
-                .to(graphql::index_ws)"##
+                .to(graphql::index_ws)"#
                 )?;
 
                 // GraphQL query endpoint
@@ -136,14 +134,14 @@ use actix_web::guard;"##)?;
                 //
                 register_service_msg("graphql-playground");
                 fs::replace("backend/main.rs",
-                            "let app = app.app_data(Data::new(app_data.mailer.clone()));",
-                            r#"let app = app.app_data(Data::new(app_data.mailer.clone()));
-        let app = app.app_data(Data::new(schema.clone()));
-
-        // Enable the GraphQL playground in development
-        #[cfg(debug_assertions)]
-        let app = app.service(web::resource("/graphql").guard(guard::Get()).to(graphql::index_playground));
-"#)?;
+                            "app = app.app_data(Data::new(app_data.mailer.clone()));",
+                            r#"app = app.app_data(Data::new(app_data.mailer.clone()));
+        app = app.app_data(Data::new(schema.clone()));"#)?;
+                fs::replace("backend/main.rs",
+                r#"/* Development-only routes */"#,
+                r#"/* Development-only routes */
+            // Mount the GraphQL playground on /graphql
+            app = app.route("/graphql", web::get().to(graphql::index_playground));"#)?;
 
             },
             BackendFramework::Poem => {

@@ -49,8 +49,8 @@ impl Plugin for Auth {
     "#,
         )?;
         fs::prepend(
-            "frontend/src/index.tsx",
-            "import { AuthProvider } from './hooks/useAuth'",
+            "frontend/src/bundles/index.tsx",
+            "import { AuthProvider } from '../hooks/useAuth'",
         )?;
         fs::replace(
             "frontend/src/App.tsx",
@@ -62,21 +62,21 @@ impl Plugin for Auth {
         )?;
         fs::replace(
             "frontend/src/App.tsx",
-            "{/* CRA: routes */}",
+            r#"{/* CRA: routes */}"#,
             r#"{/* CRA: routes */}
-        <Route path="/login"><LoginPage /></Route>
-        <Route path="/recovery"><RecoveryPage /></Route>
-        <Route path="/reset"><ResetPage /></Route>
-        <Route path="/activate"><ActivationPage /></Route>
-        <Route path="/register"><RegistrationPage /></Route>
-        <Route path="/account"><AccountPage /></Route>
+        <Route path="/login" element={LoginPage} />
+        <Route path="/recovery" element={RecoveryPage} />
+        <Route path="/reset" element={ResetPage} />
+        <Route path="/activate" element={ActivationPage} />
+        <Route path="/register" element={RegistrationPage} />
+        <Route path="/account" element={AccountPage} />
     "#,
         )?;
         fs::replace(
             "frontend/src/App.tsx",
             "{/* CRA: left-aligned nav buttons */}",
             r#"{/* CRA: left-aligned nav buttons */}
-          <a className="NavButton" onClick={() => history.push('/account')}>Account</a>
+          <a className="NavButton" onClick={() => navigate('/account')}>Account</a>
     "#,
         )?;
         fs::replace(
@@ -84,16 +84,16 @@ impl Plugin for Auth {
             "{/* CRA: right-aligned nav buttons */}",
             r#"{/* CRA: right-aligned nav buttons */}
           { auth.isAuthenticated && <a className="NavButton" onClick={() => auth.logout()}>Logout</a> }
-          { !auth.isAuthenticated && <a className="NavButton" onClick={() => history.push('/login')}>Login/Register</a> }
+          { !auth.isAuthenticated && <a className="NavButton" onClick={() => navigate('/login')}>Login/Register</a> }
     "#,
         )?;
         fs::replace(
-            "frontend/src/index.tsx",
+            "frontend/src/bundles/index.tsx",
             "{/* CRA: Wrap */}",
             "{/* CRA: Wrap */}\n<AuthProvider>",
         )?;
         fs::replace(
-            "frontend/src/index.tsx",
+            "frontend/src/bundles/index.tsx",
             "{/* CRA: Unwrap */}",
             "{/* CRA: Unwrap */}\n</AuthProvider>",
         )?;

@@ -17,6 +17,12 @@ lettre = "0.9.6"
 lettre_email = "0.9.4"
 
 ##
+## COMMON - required dependencies
+##
+tera = { version="1.15.0" }
+lazy_static = { version="1.4.0" }
+
+##
 ## PLUGINS
 ##
 
@@ -61,7 +67,7 @@ futures = { optional=true, version="0.3.21" }
 env_logger = { optional=true, version= "0.9.0" }
 
 ##
-## MISC - here, we list deps which are required by multiple features
+## MISC - here, we list deps which are required by multiple features but are not required in all configurations
 ##
 
 serde = { optional=true, version = "1.0.133", features = ["derive"] } # plugin_dev, plugin_auth
