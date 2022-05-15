@@ -15,6 +15,30 @@ use crate::BackendFramework;
 #[folder = "template"]
 struct Asset;
 
+const CRA_CARGO_TOML: &'static str = include_str!("../../../create-rust-app/Cargo.toml");
+fn get_current_cra_version() -> String {
+    let err_message = &format!("Could not parse create-rust-app toml! Here it is:\n================\n{:#?}", CRA_CARGO_TOML);
+
+    let cargo_toml = CRA_CARGO_TOML.to_string();
+    let cargo_toml = cargo_toml.parse::<toml::Value>()
+        .expect(err_message);
+    let cargo_toml = cargo_toml
+        .as_table()
+        .expect(err_message);
+
+    let package_table = cargo_toml.get("package")
+        .expect(err_message)
+        .as_table()
+        .expect(err_message);
+
+    let version = package_table.get("version")
+        .expect(err_message)
+        .as_str()
+        .expect(err_message);
+
+    version.to_string()
+}
+
 fn add_bins_to_cargo_toml(project_dir: &std::path::PathBuf) -> Result<(), std::io::Error> {
     let mut path = std::path::PathBuf::from(project_dir);
     path.push("Cargo.toml");
@@ -216,12 +240,12 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         }
     }
     add_dependency(&project_dir, "futures-util", r#"futures-util = "0.3.21""#)?;
-    add_dependency(&project_dir, "create-rust-app", &format!("create-rust-app = {{version=\"5.1.0\"{enabled_features}}}", enabled_features=enabled_features))?;
     add_dependency(&project_dir, "serde", r#"serde = { version = "1.0.133", features = ["derive"] }"#)?;
     add_dependency(&project_dir, "serde_json", r#"serde_json = "1.0.79""#)?;
     add_dependency(&project_dir, "chrono", r#"chrono = { version = "0.4.19", features = ["serde"] }"#)?;
     add_dependency(&project_dir, "tsync", r#"tsync = "1.2.1""#)?;
     add_dependency(&project_dir, "diesel", r#"diesel = { version="1.4.8", default-features = false, features = ["postgres", "r2d2", "chrono"] }"#)?;
+    add_dependency(&project_dir, "create-rust-app", &format!("create-rust-app = {{version=\"{version}\"{enabled_features}}}", version=get_current_cra_version(), enabled_features=enabled_features))?;
 
     /*
         Populate with project files
