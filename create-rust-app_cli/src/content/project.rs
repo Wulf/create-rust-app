@@ -15,7 +15,7 @@ use crate::BackendFramework;
 #[folder = "template"]
 struct Asset;
 
-const CRA_CARGO_TOML: &'static str = include_str!("../../../create-rust-app/Cargo.toml");
+const CRA_CARGO_TOML: &'static str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../create-rust-app/Cargo.toml"));
 fn get_current_cra_version() -> String {
     let err_message = &format!("Could not parse create-rust-app toml! Here it is:\n================\n{:#?}", CRA_CARGO_TOML);
 
