@@ -50,7 +50,10 @@ $ create-rust-app <project_name>
     - PostgreSQL (but you can easily switch to another one!)
     - ViteJS (blazing fast frontend compile speeds)
     - SSR templating with an option to include bundles that are automatically code-split
+      - The `/views` folder contains all templates
+      - The `/frontend/bundles` folder contains all the bundles which can be included in your views via `{{bundle(name="MyBundle.tsx")}}`
     - Automatically route to your single page application(s)
+      - Use `create_rust_app::render_single_page_application("/app","your_spa.html")`
   - React frontend (or install your own framework!)
     - Typescript, with backend type definition generation (via `tsync`)
     - Routing (via `react-router-dom`)
