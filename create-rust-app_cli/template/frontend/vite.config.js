@@ -5,15 +5,15 @@ import glob from 'glob'
 
 const buildRollupInput = (isDevelopment) => {
     const rollupInput = isDevelopment ? {
-        'main.tsx': resolve(__dirname, './src/main.tsx')
+        'main.tsx': resolve(__dirname, './src/dev.tsx')
     } : {}
 
     // TODO: use import.meta.glob() + npm uninstall glob
 
-    glob.sync(resolve(__dirname, './src/bundles/**/*.tsx')).map(inputEntry => {
+    glob.sync(resolve(__dirname, './bundles/**/*.tsx')).map(inputEntry => {
         let outputEntry = inputEntry
         // output entry is an absolute path, let's remove the absolute part:
-        outputEntry = outputEntry.replace(`${__dirname}/src/`, '')
+        outputEntry = outputEntry.replace(`${__dirname}/`, '')
         // replace directory separator with "__"
         outputEntry = outputEntry.replace(/\//g, '__')
 

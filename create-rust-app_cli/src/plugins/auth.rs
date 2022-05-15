@@ -40,17 +40,16 @@ impl Plugin for Auth {
         fs::prepend(
             "frontend/src/App.tsx",
             r#"import { useAuth, useAuthCheck } from './hooks/useAuth'
-  import { AccountPage } from './containers/AccountPage'
-  import { LoginPage } from './containers/LoginPage'
-  import { ActivationPage } from './containers/ActivationPage'
-  import { RegistrationPage } from './containers/RegistrationPage'
-  import { RecoveryPage } from './containers/RecoveryPage'
-  import { ResetPage } from './containers/ResetPage'    
-    "#,
+import { AccountPage } from './containers/AccountPage'
+import { LoginPage } from './containers/LoginPage'
+import { ActivationPage } from './containers/ActivationPage'
+import { RegistrationPage } from './containers/RegistrationPage'
+import { RecoveryPage } from './containers/RecoveryPage'
+import { ResetPage } from './containers/ResetPage'"#,
         )?;
         fs::prepend(
-            "frontend/src/bundles/index.tsx",
-            "import { AuthProvider } from '../hooks/useAuth'",
+            "frontend/bundles/index.tsx",
+            "import { AuthProvider } from '../src/hooks/useAuth'",
         )?;
         fs::replace(
             "frontend/src/App.tsx",
@@ -64,36 +63,34 @@ impl Plugin for Auth {
             "frontend/src/App.tsx",
             r#"{/* CRA: routes */}"#,
             r#"{/* CRA: routes */}
-        <Route path="/login" element={LoginPage} />
-        <Route path="/recovery" element={RecoveryPage} />
-        <Route path="/reset" element={ResetPage} />
-        <Route path="/activate" element={ActivationPage} />
-        <Route path="/register" element={RegistrationPage} />
-        <Route path="/account" element={AccountPage} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/recovery" element={<RecoveryPage />} />
+            <Route path="/reset" element={<ResetPage />} />
+            <Route path="/activate" element={<ActivationPage />} />
+            <Route path="/register" element={<RegistrationPage />} />
+            <Route path="/account" element={<AccountPage />} />
     "#,
         )?;
         fs::replace(
             "frontend/src/App.tsx",
             "{/* CRA: left-aligned nav buttons */}",
             r#"{/* CRA: left-aligned nav buttons */}
-          <a className="NavButton" onClick={() => navigate('/account')}>Account</a>
-    "#,
+          <a className="NavButton" onClick={() => navigate('/account')}>Account</a>"#,
         )?;
         fs::replace(
             "frontend/src/App.tsx",
             "{/* CRA: right-aligned nav buttons */}",
             r#"{/* CRA: right-aligned nav buttons */}
           { auth.isAuthenticated && <a className="NavButton" onClick={() => auth.logout()}>Logout</a> }
-          { !auth.isAuthenticated && <a className="NavButton" onClick={() => navigate('/login')}>Login/Register</a> }
-    "#,
+          { !auth.isAuthenticated && <a className="NavButton" onClick={() => navigate('/login')}>Login/Register</a> }"#,
         )?;
         fs::replace(
-            "frontend/src/bundles/index.tsx",
+            "frontend/bundles/index.tsx",
             "{/* CRA: Wrap */}",
             "{/* CRA: Wrap */}\n<AuthProvider>",
         )?;
         fs::replace(
-            "frontend/src/bundles/index.tsx",
+            "frontend/bundles/index.tsx",
             "{/* CRA: Unwrap */}",
             "{/* CRA: Unwrap */}\n</AuthProvider>",
         )?;

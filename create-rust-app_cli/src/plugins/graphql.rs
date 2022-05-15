@@ -62,8 +62,8 @@ import { GraphQLPage } from './containers/GraphQLPage'"#,
           <a className="NavButton" onClick={() => navigate('/gql')}>GraphQL</a>"#,
         )?;
 
-        fs::replace("frontend/src/bundles/index.tsx", "ReactDOM.createRoot", r##"import {ApolloProvider} from "@apollo/client";
-import {useAuthenticatedApolloClient} from "../hooks/useAuthenticatedApolloClient";
+        fs::replace("frontend/bundles/index.tsx", "ReactDOM.createRoot", r##"import {ApolloProvider} from "@apollo/client";
+import {useAuthenticatedApolloClient} from "../src/hooks/useAuthenticatedApolloClient";
 
 const AuthenticatedApolloProvider = (props: { children: React.ReactNode }) => {
     const client = useAuthenticatedApolloClient()
@@ -78,7 +78,7 @@ ReactDOM.createRoot"##)?;
         fs::replace("frontend/src/App.tsx",
                     r#"{/* CRA: routes */}"#,
                     r#"{/* CRA: routes */}
-        <Route path="/gql" element={GraphQLPage} />"#)?;
+            <Route path="/gql" element={<GraphQLPage />} />"#)?;
 
         fs::replace("frontend/package.json", r##""dependencies": {"##, r##""dependencies": {
     "@apollo/client": "^3.5.10",
@@ -93,8 +93,8 @@ ReactDOM.createRoot"##)?;
         fs::replace("frontend/src/App.tsx", old_logout_link, new_logout_link)?;
 
         // make sure auth plugin is wrapped on top
-        fs::replace("frontend/src/bundles/index.tsx", "<AuthProvider>", "<AuthProvider>\n        <AuthenticatedApolloProvider>")?;
-        fs::replace("frontend/src/bundles/index.tsx", "</AuthProvider>", "</AuthenticatedApolloProvider>\n      </AuthProvider>")?;
+        fs::replace("frontend/bundles/index.tsx", "<AuthProvider>", "<AuthProvider>\n        <AuthenticatedApolloProvider>")?;
+        fs::replace("frontend/bundles/index.tsx", "</AuthProvider>", "</AuthenticatedApolloProvider>\n      </AuthProvider>")?;
 
 
         match install_config.backend_framework {

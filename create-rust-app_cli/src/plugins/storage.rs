@@ -49,7 +49,7 @@ S3_SECRET_ACCESS_KEY=secret_key
         fs::replace("frontend/src/App.tsx",
         r#"{/* CRA: routes */}"#,
         r#"{/* CRA: routes */}
-        <Route path="/files" element={Files} />"#)?;
+            <Route path="/files" element={<Files />} />"#)?;
 
         fs::replace("frontend/src/App.tsx",
         r#"<a className="NavButton" onClick={() => navigate('/todos')}>Todos</a>"#,

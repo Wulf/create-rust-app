@@ -23,8 +23,8 @@ const App = () => {
       </div>
       <div style={{ margin: '0 auto', maxWidth: '800px' }}>
           <Routes>
-            <Route path="/" element={Home} />
-            <Route path="/todos" element={Todos} />
+            <Route path="/" element={<Home />} />
+            <Route path="/todos" element={<Todos />} />
             {/* CRA: routes */}
           </Routes>
       </div>

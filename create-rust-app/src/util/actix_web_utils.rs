@@ -96,7 +96,7 @@ fn template_response(content: String) -> HttpResponse {
             window.$RefreshSig$ = () => (type) => type
             window.__vite_plugin_react_preamble_installed__ = true
         </script>
-        <script type="module" src="http://localhost:3000/src/main.tsx"></script>
+        <script type="module" src="http://localhost:3000/src/dev.tsx"></script>
         "##;
 
         if content.contains("<body>") {

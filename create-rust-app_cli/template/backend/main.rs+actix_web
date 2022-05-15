@@ -9,7 +9,6 @@ use actix_web::web::Data;
 mod schema;
 mod services;
 mod models;
-mod extractors;
 mod mail;
 
 #[actix_web::main]

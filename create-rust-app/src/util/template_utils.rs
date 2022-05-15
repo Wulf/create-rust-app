@@ -31,7 +31,7 @@ impl tera::Function for InjectBundle {
                     let inject: String;
 
                     #[cfg(not(debug_assertions))] {
-                        let manifest_entry = VITE_MANIFEST.get(&format!("src/bundles/{bundle_name}"))
+                        let manifest_entry = VITE_MANIFEST.get(&format!("bundles/{bundle_name}"))
                             .expect(&format!("could not get bundle `{bundle_name}`"));
                         let entry_file = format!(r#"<script type="module" src="/{file}"></script>"#, file=manifest_entry.file);
                         let css_files = manifest_entry.css.as_ref().unwrap_or(&vec![]).into_iter().map(|css_file| {
@@ -51,7 +51,7 @@ impl tera::Function for InjectBundle {
                     }
 
                     #[cfg(debug_assertions)] {
-                        inject = format!(r#"<script type="module" src="http://localhost:3000/src/bundles/{bundle_name}"></script>"#);
+                        inject = format!(r#"<script type="module" src="http://localhost:3000/bundles/{bundle_name}"></script>"#);
                     }
 
                     Ok(tera::to_value(inject).unwrap())

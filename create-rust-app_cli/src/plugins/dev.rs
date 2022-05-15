@@ -50,7 +50,7 @@ impl Plugin for Dev {
             "const App = () => {",
             r#"if (process.env.NODE_ENV === 'development') import('./setupDevelopment')
     
-    const App = () => {"#,
+const App = () => {"#,
         )?;
 
         match install_config.backend_framework {
