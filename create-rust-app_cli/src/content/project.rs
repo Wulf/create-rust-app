@@ -39,7 +39,7 @@ struct Asset;
 //     version.to_string()
 // }
 fn get_current_cra_lib_version() -> String {
-    "6.0.0".to_string()
+    "6.0.1".to_string()
 }
 
 fn add_bins_to_cargo_toml(project_dir: &std::path::PathBuf) -> Result<(), std::io::Error> {
