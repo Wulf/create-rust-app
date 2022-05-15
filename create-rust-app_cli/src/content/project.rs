@@ -15,28 +15,31 @@ use crate::BackendFramework;
 #[folder = "template"]
 struct Asset;
 
-const CRA_CARGO_TOML: &'static str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../create-rust-app/Cargo.toml"));
-fn get_current_cra_version() -> String {
-    let err_message = &format!("Could not parse create-rust-app toml! Here it is:\n================\n{:#?}", CRA_CARGO_TOML);
-
-    let cargo_toml = CRA_CARGO_TOML.to_string();
-    let cargo_toml = cargo_toml.parse::<toml::Value>()
-        .expect(err_message);
-    let cargo_toml = cargo_toml
-        .as_table()
-        .expect(err_message);
-
-    let package_table = cargo_toml.get("package")
-        .expect(err_message)
-        .as_table()
-        .expect(err_message);
-
-    let version = package_table.get("version")
-        .expect(err_message)
-        .as_str()
-        .expect(err_message);
-
-    version.to_string()
+// const CRA_CARGO_TOML: &'static str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../create-rust-app/Cargo.toml"));
+// fn get_current_cra_lib_version() -> String {
+//     let err_message = &format!("Could not parse create-rust-app toml! Here it is:\n================\n{:#?}", CRA_CARGO_TOML);
+//
+//     let cargo_toml = CRA_CARGO_TOML.to_string();
+//     let cargo_toml = cargo_toml.parse::<toml::Value>()
+//         .expect(err_message);
+//     let cargo_toml = cargo_toml
+//         .as_table()
+//         .expect(err_message);
+//
+//     let package_table = cargo_toml.get("package")
+//         .expect(err_message)
+//         .as_table()
+//         .expect(err_message);
+//
+//     let version = package_table.get("version")
+//         .expect(err_message)
+//         .as_str()
+//         .expect(err_message);
+//
+//     version.to_string()
+// }
+fn get_current_cra_lib_version() -> String {
+    "6.0.0".to_string()
 }
 
 fn add_bins_to_cargo_toml(project_dir: &std::path::PathBuf) -> Result<(), std::io::Error> {
@@ -245,7 +248,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
     add_dependency(&project_dir, "chrono", r#"chrono = { version = "0.4.19", features = ["serde"] }"#)?;
     add_dependency(&project_dir, "tsync", r#"tsync = "1.2.1""#)?;
     add_dependency(&project_dir, "diesel", r#"diesel = { version="1.4.8", default-features = false, features = ["postgres", "r2d2", "chrono"] }"#)?;
-    add_dependency(&project_dir, "create-rust-app", &format!("create-rust-app = {{version=\"{version}\"{enabled_features}}}", version=get_current_cra_version(), enabled_features=enabled_features))?;
+    add_dependency(&project_dir, "create-rust-app", &format!("create-rust-app = {{version=\"{version}\"{enabled_features}}}", version= get_current_cra_lib_version(), enabled_features=enabled_features))?;
 
     /*
         Populate with project files
