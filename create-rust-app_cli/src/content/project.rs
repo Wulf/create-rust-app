@@ -7,6 +7,7 @@ use dialoguer::{theme::ColorfulTheme, Confirm, Input};
 use inflector::Inflector;
 use rust_embed::RustEmbed;
 use std::path::PathBuf;
+use std::time::Duration;
 use walkdir::WalkDir;
 use update_informer::{registry, Check};
 use crate::BackendFramework;
@@ -414,12 +415,15 @@ pub fn create_resource(backend: BackendFramework, resource_name: &str) -> Result
 pub fn check_cli_version() -> Result<()>{
   let name = env!("CARGO_PKG_NAME");
   let version = env!("CARGO_PKG_VERSION");
-  let informer = update_informer::new(registry::Crates, name, version);
+  let informer = update_informer::new(registry::Crates, name, version)
+      .timeout(Duration::from_secs(2))
+      .interval(Duration::ZERO);
   if let Some(new_version) = informer.check_version().ok().flatten()  {
     logger::message(&style(&format!("You are running `{name}` v{version}, which is behind the latest release ({new_version}).")).yellow().to_string());
     logger::message(&format!("If you want to update, try: {}", style("cargo install --force create-rust-app_cli").yellow()));
   } else {
-    logger::message(&format!("You are running the latest version of {name} ({version})!"));
+    // we aren't sure whether the version check succeeded here (it could have been timed out)
+    logger::message(&format!("v{version}"));
   }
   Ok(())
 }

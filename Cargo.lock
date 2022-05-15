@@ -1137,7 +1137,7 @@ dependencies = [
 
 [[package]]
 name = "create-rust-app_cli"
-version = "6.0.2"
+version = "6.0.3"
 dependencies = [
  "Inflector",
  "anyhow",
