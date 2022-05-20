@@ -1,6 +1,6 @@
 use actix_files::NamedFile;
 use actix_web::{HttpRequest, HttpResponse, Scope, web};
-use http::StatusCode;
+use actix_web::http::StatusCode;
 use tera::Context;
 use crate::util::template_utils::TEMPLATES;
 
