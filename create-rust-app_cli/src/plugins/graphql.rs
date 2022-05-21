@@ -121,14 +121,16 @@ use actix_web::guard;"##)?;
 
                 // GraphQL Schema building
                 //
-                fs::replace("backend/main.rs", "create_rust_app::setup();", r##"create_rust_app::setup();
+                let mut other_data = String::new();
+                if install_config.plugin_storage { other_data.push_str(r#"
+        .data(app_data.storage.clone())"#)}
+                fs::replace("backend/main.rs", "create_rust_app::setup();", &format!(r##"create_rust_app::setup();
 
     let schema = async_graphql::Schema::build(graphql::QueryRoot, graphql::MutationRoot, graphql::SubscriptionRoot)
         .data(app_data.database.clone())
-        .data(app_data.mailer.clone())
-        .data(app_data.storage.clone())
+        .data(app_data.mailer.clone()){other_data}
         .finish();
-"##)?;
+"##, other_data=other_data))?;
 
                 // GraphQL Playground endpoint
                 //
