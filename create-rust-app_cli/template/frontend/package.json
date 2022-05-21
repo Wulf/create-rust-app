@@ -2,7 +2,6 @@
   "name": "create-rust-app",
   "version": "0.0.0",
   "private": true,
-  "proxy": "http://localhost:8080/",
   "dependencies": {
     "dotenv": "^16.0.0",
     "react": "^18.0.0",
@@ -42,7 +41,6 @@
     "@types/node": "^15.3.0",
     "@types/react": "^18.0.6",
     "@types/react-dom": "^18.0.2",
-    "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^1.3.1",
     "concurrently": "^7.1.0",
     "glob": "^8.0.1",
