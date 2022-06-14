@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.text-btn {
+  @apply text-blue-500 hover:text-blue-700 hover:underline disabled:text-blue-100 disabled:no-underline;
+}
+
+.select {
+  @apply text-blue-500 hover:underline hover:text-blue-700 cursor-pointer bg-transparent;
+}
+
+
+/*"WOOSH" mail-builder//////////////////////////////////////////////*/
+
+.border-box-descendants, .border-box-descendants > * {
+  box-sizing: border-box;
+}
+
+.space-between-content > * {
+  display: inline-block;
+}
+.space-between-content > * + * {
+  margin-left: 15px;
+}

@@ -5,6 +5,16 @@ use tera::Context;
 use super::template_utils::SinglePageApplication;
 use crate::util::template_utils::{DEFAULT_TEMPLATE, TEMPLATES, to_template_name};
 
+trait Hostname {
+    fn hostname(&self) -> String;
+}
+
+impl Hostname for HttpRequest {
+    fn hostname(&self) -> String {
+        self.connection_info().host().split(":").next().expect("Could not extract host information for request").to_string()
+    }
+}
+
 /// 'route': the route where the SPA should be served from, for example: "/app"
 /// 'view': the view which renders the SPA, for example: "spa/index.html"
 pub fn render_single_page_application(route: &str, view: &str) -> Scope {
@@ -22,11 +32,13 @@ pub fn render_single_page_application(route: &str, view: &str) -> Scope {
 
 async fn render_spa_handler(req: HttpRequest, spa_info: web::Data<SinglePageApplication>) -> HttpResponse {
     let content = TEMPLATES.render(spa_info.view_name.as_str(), &Context::new()).unwrap();
-    template_response(content)
+
+    template_response(content, #[cfg(debug_assertions)] req.hostname())
 }
 
 pub async fn render_views(req: HttpRequest) -> HttpResponse {
     let path = req.path();
+    let ctx = Context::new();
 
     #[cfg(debug_assertions)]
     if path.eq("/__vite_ping") {
@@ -35,7 +47,7 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
     }
 
     let mut template_path = to_template_name(req.path());
-    let mut content_result = TEMPLATES.render(template_path, &Context::new());
+    let mut content_result = TEMPLATES.render(template_path, &ctx);
 
     if content_result.is_err() {
         #[cfg(debug_assertions)] {
@@ -61,7 +73,7 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
             }
         }
 
-        content_result = TEMPLATES.render(DEFAULT_TEMPLATE, &Context::new());
+        content_result = TEMPLATES.render(DEFAULT_TEMPLATE, &ctx);
         template_path = DEFAULT_TEMPLATE;
         if content_result.is_err() {
             // default template doesn't exist -- return 404 not found
@@ -73,23 +85,23 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
 
     let content = content_result.unwrap();
 
-    template_response(content)
+    template_response(content, #[cfg(debug_assertions)] req.hostname())
 }
 
-fn template_response(content: String) -> HttpResponse {
+fn template_response(content: String, #[cfg(debug_assertions)] host: String) -> HttpResponse {
     let mut content = content;
     #[cfg(debug_assertions)] {
-        let inject: &str = r##"
+        let inject = format!(r##"
         <!-- development mode -->
         <script type="module">
-            import RefreshRuntime from 'http://localhost:21012/@react-refresh'
+            import RefreshRuntime from 'http://{host}:21012/@react-refresh'
             RefreshRuntime.injectIntoGlobalHook(window)
-            window.$RefreshReg$ = () => {}
+            window.$RefreshReg$ = () => {{}}
             window.$RefreshSig$ = () => (type) => type
             window.__vite_plugin_react_preamble_installed__ = true
         </script>
-        <script type="module" src="http://localhost:21012/src/dev.tsx"></script>
-        "##;
+        <script type="module" src="http://{host}:21012/src/dev.tsx"></script>
+        "##);
 
         if content.contains("<body>") {
             content = content.replace("<body>", &format!("<body>{inject}"));

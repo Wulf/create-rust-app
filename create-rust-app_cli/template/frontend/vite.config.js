@@ -34,6 +34,7 @@ export default defineConfig(async ({ command, mode }) => ({
     },
     plugins: [react()],
     server: {
+        host: '0.0.0.0',
         port: 21012,
         proxy: {
             // with options

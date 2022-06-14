@@ -1,17 +1,22 @@
+const defaultTheme = require('tailwindcss/defaultTheme')
+
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-  purge: [
-    './src/**/*.html',
-    './src/**/*.tsx',
-    './src/**/*.ts',
-    './src/**/*.jsx',
-    './src/**/*.js',
+  content: [
+    './src/**/**/**/*.{js,jsx,ts,tsx}',
+    './src/**/**/*.{js,jsx,ts,tsx}',
+    './src/**/*.{js,jsx,ts,tsx}',
+    './src/*.{js,jsx,ts,tsx}',
+    './src/Woosh/*.tsx',
+    './src/Woosh/RichTextEditor/*.tsx',
+    './public/index.html',
+    './src/dynamic-tailwind-classes.txt',
   ],
-  darkMode: false, // or 'media' or 'class'
   theme: {
-    extend: {},
-  },
-  variants: {
-    extend: {},
+    screens: {
+      mj: '480px',
+      ...defaultTheme.screens,
+    },
   },
   plugins: [],
 }

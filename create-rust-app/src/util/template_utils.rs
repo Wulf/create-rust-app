@@ -62,7 +62,18 @@ impl tera::Function for InjectBundle {
                     }
 
                     #[cfg(debug_assertions)] {
-                        inject = format!(r#"<script type="module" src="http://localhost:21012/bundles/{bundle_name}"></script>"#);
+                        inject = format!(r##"
+                        <!-- development mode: injected bundle "{bundle_name}" -->
+                        <script>
+                        ;(() => {{
+                            const hostname = window.location.hostname
+                            const script = document.createElement('script')
+                            script.type = 'module'
+                            script.src = `http://${{hostname}}:21012/bundles/{bundle_name}`
+                            document.body.appendChild(script)
+                        }})();
+                        </script>
+                        "##);
                     }
 
                     Ok(tera::to_value(inject).unwrap())
