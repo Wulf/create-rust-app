@@ -1,28 +1,14 @@
 extern crate argonautica;
+use serde::{Serialize, Deserialize};
 
 // Auth guard / extractor
-
-#[cfg(feature = "backend_actix-web")]
-mod extractor_actixweb;
-#[cfg(feature = "backend_actix-web")]
-pub use extractor_actixweb::Auth;
-
-#[cfg(feature = "backend_poem")]
-mod extractor_poem;
-#[cfg(feature = "backend_poem")]
-pub use extractor_poem::Auth;
+mod extractors;
+pub use extractors::*;
 
 // api endpoint definitions
-
-#[cfg(feature = "backend_actix-web")]
-mod endpoints_actixweb;
-#[cfg(feature = "backend_actix-web")]
-pub use endpoints_actixweb::endpoints;
-
-#[cfg(feature = "backend_poem")]
-mod endpoints_poem;
-#[cfg(feature = "backend_poem")]
-pub use endpoints_poem::api;
+pub mod controller;
+mod endpoints;
+pub use endpoints::*;
 
 mod mail;
 mod permissions;
@@ -41,7 +27,7 @@ type ID = i32;
 type UTC = chrono::DateTime<chrono::Utc>;
 
 #[tsync::tsync]
-#[derive(serde::Deserialize)]
+#[derive(Deserialize)]
 pub struct PaginationParams {
     pub page: i64,
     pub page_size: i64,
@@ -52,7 +38,7 @@ impl PaginationParams {
 }
 
 #[tsync::tsync]
-#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserSessionJson {
     pub id: ID,
     pub device: Option<String>,
@@ -61,14 +47,14 @@ pub struct UserSessionJson {
 }
 
 #[tsync::tsync]
-#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserSessionResponse {
     pub sessions: Vec<UserSessionJson>,
     pub num_pages: i64
 }
 
 #[tsync::tsync]
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AccessTokenClaims {
     pub exp: usize,
     pub sub: ID,

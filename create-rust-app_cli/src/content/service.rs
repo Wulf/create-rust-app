@@ -240,7 +240,7 @@ pub fn register_poem(name: &str, service_api_fn: &str, service_base_endpoint_pat
     if main_file_path.exists() && main_file_path.is_file() {
         let mut main_file_contents = std::fs::read_to_string(&main_file_path)?;
 
-        main_file_contents = main_file_contents.replace("let mut api = Route::new()", &format!("let mut api = Route::new()\n\t\t.nest(\"{}\", {})", service_base_endpoint_path, service_api_fn));
+        main_file_contents = main_file_contents.replace("let mut api_routes = Route::new();", &format!("let mut api_routes = Route::new();\n\t\tapi_routes = api_routes.nest(\"{}\", {});", service_base_endpoint_path, service_api_fn));
         std::fs::write(main_file_path, main_file_contents)?;
     }
 

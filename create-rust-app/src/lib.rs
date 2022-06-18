@@ -7,8 +7,7 @@ compile_error!("feature \"backend_actix-web\" and feature \"backend_poem\" canno
 mod util;
 pub use util::*;
 
-#[macro_use]
-extern crate diesel;
+#[macro_use] extern crate diesel;
 
 #[cfg(feature = "plugin_auth")]
 pub mod auth;

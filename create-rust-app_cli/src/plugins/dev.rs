@@ -5,6 +5,7 @@ use crate::plugins::Plugin;
 use anyhow::Result;
 use rust_embed::RustEmbed;
 use crate::BackendFramework;
+use crate::logger::register_service_msg;
 
 pub struct Dev {}
 
@@ -55,6 +56,8 @@ const App = () => {"#,
 
         match install_config.backend_framework {
             BackendFramework::ActixWeb => {
+                register_service_msg("(dev-only) /development");
+                register_service_msg("(dev-only) /admin");
                 fs::replace("backend/main.rs",
                             r#"/* Development-only routes */"#,
                             r#"/* Development-only routes */
@@ -65,24 +68,15 @@ const App = () => {"#,
 
             },
             BackendFramework::Poem => {
-                fs::replace(
-                    "backend/main.rs",
-                    "let mut app = Route::new().nest(\"/api\", api);",
-                    r#"#[cfg(debug_assertions)]
-        {
-            api = api.nest("/development", create_rust_app::dev::api());
-        }
-
-        let mut app = Route::new().nest("/api", api);
-
-        #[cfg(debug_assertions)]
-        {
-            app = app.at(
-                "*",
-                StaticFilesEndpoint::new(".cargo/admin/dist").index_file("admin.html"),
-            );
-        }"#
-                )?;
+                register_service_msg("(dev-only) /development");
+                register_service_msg("(dev-only) /admin");
+                fs::replace("backend/main.rs",
+                            r#"/* Development-only routes */"#,
+                            r#"/* Development-only routes */
+        // Mount development-only API routes
+        api_routes = api_routes.nest("/development", create_rust_app::dev::api());
+        // Mount the admin dashboard on /admin
+        app = app.at("/admin", StaticFilesEndpoint::new(".cargo/admin/dist").index_file("admin.html"));"#)?;
             }
         }
 

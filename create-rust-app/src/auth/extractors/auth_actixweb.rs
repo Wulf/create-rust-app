@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use super::{AccessTokenClaims, ID, permissions::Permission};
+use crate::auth::{AccessTokenClaims, ID, permissions::Permission};
 use actix_web::dev::Payload;
 use actix_web::error::ResponseError;
 use actix_web::http::StatusCode;

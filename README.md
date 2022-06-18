@@ -10,8 +10,8 @@ Set up a modern rust+react web app by running one command.
 
 - [`tsync`](https://github.com/Wulf/tsync)
   - ```cargo install tsync```
-- `yarn`
-  - ```npm i -g yarn```
+- `diesel_cli`
+  - Instructions [here](http://diesel.rs/guides/getting-started#installing-diesel-cli)
 - Stable rust
   - ```rustup install stable``` (nightly is fine too)
 
@@ -79,7 +79,7 @@ $ create-rust-app <project_name>
     
 
 - **Development plugin**
-  - View your database via the admin portal at `localhost:8080/admin` (editing functionality coming soon™)
+  - View your database via the admin portal at `localhost:3000/admin` (editing functionality coming soon™)
   - A "devbox" on the frontend indicates when the backend is compiling or when the database is not reachable
   - Moreover, the devbox displays when migrations are pending + includes a "run migrations" button
     
@@ -106,7 +106,7 @@ $ create-rust-app <project_name>
 - **GraphQL plugin**
   - Adds all the boilerplate necessary to expose GraphQL
   - Requires the auth plugin: authentication and authorization setup out-of-the-box
-  - Find a graphql playground at `localhost:8080/graphql`
+  - Find a graphql playground at `localhost:3000/graphql`
 
 
 ### 2. Code-gen to reduce boilerplate

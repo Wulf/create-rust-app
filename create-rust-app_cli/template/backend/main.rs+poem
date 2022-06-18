@@ -8,7 +8,6 @@ use poem::{
     EndpointExt, Route, Server,
 };
 
-mod extractors;
 mod mail;
 mod models;
 mod schema;
@@ -20,20 +19,20 @@ async fn main() -> Result<(), std::io::Error> {
 
     let data = create_rust_app::setup();
 
-    let mut api = Route::new()
-        .nest("/todos", services::todo::api());
+    let mut api_routes = Route::new();
+    api_routes = api_routes.nest("/todos", services::todo::api());
 
-    let mut app = Route::new().nest("/api", api);
+    let mut app = Route::new();
 
-    #[cfg(not(debug_assertions))]
+    #[cfg(debug_assertions)]
     {
-        app = app.at(
-            "*",
-            StaticFilesEndpoint::new("./frontend/build").index_file("index.html"),
-        );
+        /* Development-only routes */
     }
 
-    Server::new(TcpListener::bind("0.0.0.0:8080"))
+    app = app.nest("/api", api_routes);
+    app = app.at("*", poem::get(create_rust_app::render_views));
+
+    Server::new(TcpListener::bind("0.0.0.0:3000"))
         .run(
             app.with(AddData::new(data.mailer))
                 .with(AddData::new(data.database))

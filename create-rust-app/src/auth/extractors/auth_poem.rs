@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use poem::{async_trait, http::HeaderValue, http::StatusCode, Error, FromRequest, Request, RequestBody, Result};
 
-use super::{permissions::Permission, AccessTokenClaims, ID};
+use crate::auth::{permissions::Permission, AccessTokenClaims, ID};
 use jsonwebtoken::decode;
 use jsonwebtoken::DecodingKey;
 use jsonwebtoken::Validation;

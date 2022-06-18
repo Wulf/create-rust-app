@@ -21,7 +21,7 @@ In the project directory, you can run:
 
 ### `cargo fullstack`
 
-Runs the app in development mode and watches for changes. Visit [http://localhost:8080](http://localhost:8080) to view it.
+Runs the app in development mode and watches for changes. Visit [http://localhost:3000](http://localhost:3000) to view it.
 
 Any frontend changes should instantly appear. Backend changes will need to recompile.
 Needs `cargo-watch` installed, see requirements.

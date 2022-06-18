@@ -17,6 +17,6 @@ COPY . .
 
 RUN cargo build --release
 
-EXPOSE 8080
+EXPOSE 3000
 
 CMD ["cargo", "run", "--release"]

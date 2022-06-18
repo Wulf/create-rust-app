@@ -2,6 +2,11 @@ use std::collections::HashMap;
 use lazy_static::lazy_static;
 use tera::Tera;
 
+#[derive(Clone)]
+pub struct SinglePageApplication {
+    pub view_name: String
+}
+
 lazy_static! {
     pub static ref TEMPLATES: Tera = {
         let mut tera = match Tera::new("backend/views/**/*.html") {
@@ -19,6 +24,12 @@ lazy_static! {
     pub static ref VITE_MANIFEST: ViteManifest = {
         load_manifest_entries()
     };
+}
+
+pub const DEFAULT_TEMPLATE: &'static str = "index.html";
+pub fn to_template_name(request_path: &str) -> &'_ str {
+    let request_path = request_path.strip_prefix("/").unwrap();
+    return if request_path.eq("") { DEFAULT_TEMPLATE } else { request_path }
 }
 
 /// This implements the {{ bundle(name="index.tsx") }} function for our templates
@@ -51,7 +62,7 @@ impl tera::Function for InjectBundle {
                     }
 
                     #[cfg(debug_assertions)] {
-                        inject = format!(r#"<script type="module" src="http://localhost:3000/bundles/{bundle_name}"></script>"#);
+                        inject = format!(r#"<script type="module" src="http://localhost:21012/bundles/{bundle_name}"></script>"#);
                     }
 
                     Ok(tera::to_value(inject).unwrap())
