@@ -115,6 +115,7 @@ DROP TABLE attachment_blobs CASCADE ALL;
                     "services::file::api()",
                     "/files",
                 )?;
+
                 fs::replace("backend/main.rs",
                 ".with(AddData::new(data.database))",
                     ".with(AddData::new(data.database))

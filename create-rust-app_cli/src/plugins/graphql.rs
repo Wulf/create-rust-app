@@ -103,6 +103,11 @@ ReactDOM.createRoot"##)?;
 
 use actix_web::guard;"##)?;
 
+                fs::replace("backend/main.rs",
+                            "app = app.app_data(Data::new(app_data.mailer.clone()));",
+                            r#"app = app.app_data(Data::new(app_data.mailer.clone()));
+        app = app.app_data(Data::new(schema.clone()));"#)?;
+
                 // GraphQL subscription endpoint
                 //
                 crate::content::service::register_actix("graphql-websocket",
@@ -135,10 +140,7 @@ use actix_web::guard;"##)?;
                 // GraphQL Playground endpoint
                 //
                 register_service_msg("graphql-playground");
-                fs::replace("backend/main.rs",
-                            "app = app.app_data(Data::new(app_data.mailer.clone()));",
-                            r#"app = app.app_data(Data::new(app_data.mailer.clone()));
-        app = app.app_data(Data::new(schema.clone()));"#)?;
+
                 fs::replace("backend/main.rs",
                 r#"/* Development-only routes */"#,
                 r#"/* Development-only routes */
@@ -160,13 +162,19 @@ use actix_web::guard;"##)?;
 
                 // GraphQL subscription + query endpoints
                 //
-                fs::replace("backend/main.rs", "let mut api = Route::new()", r#"let mut api = Route::new()
-		.at("/graphql/ws", poem::get(graphql::index_ws))
-        .at("/graphql", poem::post(graphql::index))"#)?;
+                fs::replace("backend/main.rs", "let mut api_routes = Route::new();", r#"let mut api_routes = Route::new();
+		api_routes = api_routes.at("/graphql/ws", poem::get(graphql::index_ws));
+        api_routes = api_routes.at("/graphql", poem::post(graphql::index));"#)?;
 
                 // GraphQL Playground endpoint
                 //
-                fs::replace("backend/main.rs", "let mut app = Route::new()", r#"let mut app = Route::new().at("/graphql", poem::get(graphql::playground))"#)?;
+                register_service_msg("graphql-playground");
+
+                fs::replace("backend/main.rs",
+                            r#"/* Development-only routes */"#,
+                            r#"/* Development-only routes */
+            // Mount the GraphQL playground on /graphql
+        app = app.at("/graphql", poem::get(graphql::playground));"#)?;
 
                 // Adding Schema to exposed data
                 //

@@ -25,7 +25,7 @@ const buildRollupInput = (isDevelopment) => {
 
 // https://vitejs.dev/config/
 export default defineConfig(async ({ command, mode }) => ({
-    base: command === 'serve' ? 'http://localhost:3000' : '/',
+    base: command === 'serve' ? 'http://localhost:21012' : '/',
     build: {
         manifest: true,
         rollupOptions: {
@@ -34,14 +34,15 @@ export default defineConfig(async ({ command, mode }) => ({
     },
     plugins: [react()],
     server: {
+        port: 21012,
         proxy: {
             // with options
             '/api': {
-                target: 'http://localhost:8080',
+                target: 'http://localhost:3000',
                 changeOrigin: true,
             },
             '/graphql': {
-                target: 'http://localhost:8080',
+                target: 'http://localhost:3000',
                 changeOrigin: true
             }
         }

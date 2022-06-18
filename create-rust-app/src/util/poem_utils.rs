@@ -1,40 +1,45 @@
-use actix_files::NamedFile;
-use actix_web::{HttpRequest, HttpResponse, Scope, web};
-use actix_web::http::StatusCode;
+use http::{StatusCode, Uri};
+use poem::{Body, EndpointExt, handler, IntoResponse, Response, Route};
+use poem::middleware::{AddData, AddDataEndpoint};
+use poem::web::{Data};
 use tera::Context;
-use super::template_utils::SinglePageApplication;
+
 use crate::util::template_utils::{DEFAULT_TEMPLATE, TEMPLATES, to_template_name};
 
-/// 'route': the route where the SPA should be served from, for example: "/app"
-/// 'view': the view which renders the SPA, for example: "spa/index.html"
-pub fn render_single_page_application(route: &str, view: &str) -> Scope {
-    use actix_web::web::Data;
+use super::template_utils::SinglePageApplication;
 
-    let route = route.strip_prefix("/").unwrap_or(route);
+///  view: the template which renders the app
+///
+///  Full example (to render the `views/spa.html` template):
+///  app = app.nest("/my-spa", create_rust_app::render_single_page_application("spa.html"));
+pub fn render_single_page_application(view: &str) -> AddDataEndpoint<Route, SinglePageApplication> {
     let view = view.strip_prefix("/").unwrap_or(view);
 
-    actix_web::web::scope(&format!("/{}{{tail:(/.*)?}}", route))
-        .app_data(Data::new(SinglePageApplication {
+    Route::new()
+        .at("*", poem::get(render_spa_handler))
+        .with(AddData::new(SinglePageApplication {
             view_name: view.to_string()
         }))
-        .route("", web::get().to(render_spa_handler))
 }
 
-async fn render_spa_handler(req: HttpRequest, spa_info: web::Data<SinglePageApplication>) -> HttpResponse {
+#[handler]
+async fn render_spa_handler(spa_info: Data<&SinglePageApplication>) -> impl IntoResponse {
     let content = TEMPLATES.render(spa_info.view_name.as_str(), &Context::new()).unwrap();
     template_response(content)
 }
 
-pub async fn render_views(req: HttpRequest) -> HttpResponse {
-    let path = req.path();
+
+#[handler]
+pub async fn render_views(uri: &Uri) -> impl IntoResponse {
+    let path = uri.path();
 
     #[cfg(debug_assertions)]
     if path.eq("/__vite_ping") {
         println!("The vite dev server seems to be down...");
-        return HttpResponse::NotFound().finish();
+        return StatusCode::NOT_FOUND.into_response();
     }
 
-    let mut template_path = to_template_name(req.path());
+    let mut template_path = to_template_name(path);
     let mut content_result = TEMPLATES.render(template_path, &Context::new());
 
     if content_result.is_err() {
@@ -43,13 +48,15 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
             let asset_path = &format!("./frontend{path}");
             if std::path::PathBuf::from(asset_path).is_file() {
                 println!("ASSET_FILE {path} => {asset_path}");
-                return NamedFile::open(asset_path).unwrap().into_response(&req)
+
+                return file_response(asset_path).await;
             }
 
             let public_path = &format!("./frontend/public{path}");
             if std::path::PathBuf::from(public_path).is_file() {
                 println!("PUBLIC_FILE {path} => {public_path}");
-                return NamedFile::open(public_path).unwrap().into_response(&req)
+
+                return file_response(public_path).await;
             }
         }
 
@@ -57,7 +64,7 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
             // production asset serving
             let static_path = &format!("./frontend/dist{path}");
             if std::path::PathBuf::from(static_path).is_file() {
-                return NamedFile::open(static_path).unwrap().into_response(&req);
+                return file_response(static_path).await;
             }
         }
 
@@ -65,7 +72,7 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
         template_path = DEFAULT_TEMPLATE;
         if content_result.is_err() {
             // default template doesn't exist -- return 404 not found
-            return HttpResponse::NotFound().finish()
+            return StatusCode::NOT_FOUND.into();
         }
     }
 
@@ -76,7 +83,7 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
     template_response(content)
 }
 
-fn template_response(content: String) -> HttpResponse {
+fn template_response(content: String) -> Response {
     let mut content = content;
     #[cfg(debug_assertions)] {
         let inject: &str = r##"
@@ -98,7 +105,18 @@ fn template_response(content: String) -> HttpResponse {
         }
     }
 
-    HttpResponse::build(StatusCode::OK)
+    Response::builder()
+        .status(StatusCode::OK)
         .content_type("text/html")
         .body(content)
 }
+
+async fn file_response(path: &String) -> Response {
+    let file = tokio::fs::read(path).await.unwrap();
+    let content_type = mime_guess::from_path(path).first_raw();
+    let mut response = Response::builder();
+    if content_type.is_some() { response = response.content_type(content_type.unwrap()); }
+    response = response.status(StatusCode::OK);
+    response.body(Body::from(file))
+}
+

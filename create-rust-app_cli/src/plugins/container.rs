@@ -40,7 +40,7 @@ impl Plugin for Container {
 `docker build -t image-name .`
 
 ## Running the container
-`docker run -e SECRET_KEY=123 -e DATABASE_URL=postgres://postgres:postgres@localhost/database -p 8080:8080 image-name`
+`docker run -e SECRET_KEY=123 -e DATABASE_URL=postgres://postgres:postgres@localhost/database -p 3000:3000 image-name`
 
 "##,
         )?;
