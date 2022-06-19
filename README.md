@@ -58,7 +58,6 @@ $ create-rust-app <project_name>
     - Typescript, with backend type definition generation (via `tsync`)
     - Routing (via `react-router-dom`)
     - Typed `react-query` hooks generation (`$ cd my_project && create-rust-app`, then select "Generate react-query hooks")
-    - Update to latest create-react-app (generated frontend is not ejected from `create-react-app`)
 
 **Available Plugins**
 
