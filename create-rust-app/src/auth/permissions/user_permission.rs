@@ -1,4 +1,3 @@
-use diesel::dsl::any;
 use diesel::QueryResult;
 use serde::{Deserialize, Serialize};
 
@@ -11,8 +10,7 @@ use crate::diesel::*;
 
 #[tsync::tsync]
 #[derive(Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Associations, AsChangeset)]
-#[table_name = "user_permissions"]
-#[belongs_to(User)]
+#[diesel(table_name=user_permissions,belongs_to(User))]
 pub struct UserPermission {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -23,7 +21,7 @@ pub struct UserPermission {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]
-#[table_name = "user_permissions"]
+#[diesel(table_name=user_permissions)]
 pub struct UserPermissionChangeset {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -35,7 +33,7 @@ pub struct UserPermissionChangeset {
 }
 
 impl UserPermission {
-    pub fn create(db: &Connection, item: &UserPermissionChangeset) -> QueryResult<Self> {
+    pub fn create(db: &mut Connection, item: &UserPermissionChangeset) -> QueryResult<Self> {
         use crate::auth::schema::user_permissions::dsl::*;
 
         insert_into(user_permissions)
@@ -43,7 +41,7 @@ impl UserPermission {
             .get_result::<UserPermission>(db)
     }
 
-    pub fn create_many(db: &Connection, items: Vec<UserPermissionChangeset>) -> QueryResult<Self> {
+    pub fn create_many(db: &mut Connection, items: Vec<UserPermissionChangeset>) -> QueryResult<Self> {
         use crate::auth::schema::user_permissions::dsl::*;
 
         insert_into(user_permissions)
@@ -51,7 +49,7 @@ impl UserPermission {
             .get_result::<UserPermission>(db)
     }
 
-    pub fn read(db: &Connection, item_user_id: ID, item_permission: String) -> QueryResult<Self> {
+    pub fn read(db: &mut Connection, item_user_id: ID, item_permission: String) -> QueryResult<Self> {
         use crate::auth::schema::user_permissions::dsl::*;
 
         user_permissions
@@ -59,7 +57,7 @@ impl UserPermission {
             .first::<UserPermission>(db)
     }
 
-    pub fn read_all(db: &Connection, item_user_id: ID) -> QueryResult<Vec<Self>> {
+    pub fn read_all(db: &mut Connection, item_user_id: ID) -> QueryResult<Vec<Self>> {
         use crate::auth::schema::user_permissions::dsl::*;
 
         user_permissions
@@ -69,20 +67,20 @@ impl UserPermission {
     }
 
     pub fn delete(
-        db: &Connection,
+        db: &mut Connection,
         item_user_id: ID,
         item_permission: String,
     ) -> QueryResult<usize> {
         use crate::auth::schema::user_permissions::dsl::*;
 
         diesel::delete(
-            user_permissions.filter(user_id.eq(item_user_id).and(permission.eq(item_permission))),
+            user_permissions.filter(user_id.eq(item_user_id).and(permission.eq(item_permission)))
         )
             .execute(db)
     }
 
     pub fn delete_many(
-        db: &Connection,
+        db: &mut Connection,
         item_user_id: ID,
         item_permissions: Vec<String>,
     ) -> QueryResult<usize> {
@@ -91,13 +89,13 @@ impl UserPermission {
         diesel::delete(
             user_permissions
                 .filter(user_id.eq(item_user_id))
-                .filter(permission.eq(any(item_permissions)))
+                .filter(permission.eq_any(item_permissions))
         )
             .execute(db)
     }
 
     pub fn delete_all(
-        db: &Connection,
+        db: &mut Connection,
         item_user_id: ID,
     ) -> QueryResult<usize> {
         use crate::auth::schema::user_permissions::dsl::*;

@@ -15,10 +15,9 @@ use serde::{Deserialize, Serialize};
     Queryable,
     Insertable,
     Identifiable,
-    Associations,
     AsChangeset,
 )]
-#[table_name = "users"]
+#[diesel(table_name=users)]
 pub struct User {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -35,7 +34,7 @@ pub struct User {
 
 #[tsync::tsync]
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]
-#[table_name = "users"]
+#[diesel(table_name=users)]
 pub struct UserChangeset {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -48,25 +47,25 @@ pub struct UserChangeset {
 }
 
 impl User {
-    pub fn create(db: &Connection, item: &UserChangeset) -> QueryResult<Self> {
+    pub fn create(db: &mut Connection, item: &UserChangeset) -> QueryResult<Self> {
         use super::schema::users::dsl::*;
 
         insert_into(users).values(item).get_result::<User>(db)
     }
 
-    pub fn read(db: &Connection, item_id: ID) -> QueryResult<Self> {
+    pub fn read(db: &mut Connection, item_id: ID) -> QueryResult<Self> {
         use super::schema::users::dsl::*;
 
         users.filter(id.eq(item_id)).first::<User>(db)
     }
 
-    pub fn find_by_email(db: &Connection, item_email: String) -> QueryResult<Self> {
+    pub fn find_by_email(db: &mut Connection, item_email: String) -> QueryResult<Self> {
         use super::schema::users::dsl::*;
 
         users.filter(email.eq(item_email)).first::<User>(db)
     }
 
-    pub fn read_all(db: &Connection, pagination: &PaginationParams) -> QueryResult<Vec<Self>> {
+    pub fn read_all(db: &mut Connection, pagination: &PaginationParams) -> QueryResult<Vec<Self>> {
         use super::schema::users::dsl::*;
 
         users
@@ -79,7 +78,7 @@ impl User {
             .load::<User>(db)
     }
 
-    pub fn update(db: &Connection, item_id: ID, item: &UserChangeset) -> QueryResult<Self> {
+    pub fn update(db: &mut Connection, item_id: ID, item: &UserChangeset) -> QueryResult<Self> {
         use super::schema::users::dsl::*;
 
         diesel::update(users.filter(id.eq(item_id)))
@@ -87,7 +86,7 @@ impl User {
             .get_result(db)
     }
 
-    pub fn delete(db: &Connection, item_id: ID) -> QueryResult<usize> {
+    pub fn delete(db: &mut Connection, item_id: ID) -> QueryResult<usize> {
         use super::schema::users::dsl::*;
 
         diesel::delete(users.filter(id.eq(item_id))).execute(db)

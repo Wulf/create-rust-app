@@ -17,10 +17,10 @@ struct FileInfo {
 
 #[handler]
 async fn all(db: Data<&Database>, storage: Data<&Storage>) -> Result<impl IntoResponse> {
-    let db = db.pool.get().unwrap();
-    let files = Attachment::find_all_for_record(&db, "file".to_string(), "NULL".to_string(), 0).unwrap_or_default();
+    let mut db = db.pool.get().unwrap();
+    let files = Attachment::find_all_for_record(&mut db, "file".to_string(), "NULL".to_string(), 0).unwrap_or_default();
     let blob_ids = files.iter().map(|f| f.blob_id).collect::<Vec<_>>();
-    let blobs = AttachmentBlob::find_all_by_id(&db, blob_ids).unwrap_or_default();
+    let blobs = AttachmentBlob::find_all_by_id(&mut db, blob_ids).unwrap_or_default();
 
     let mut files = blobs.iter().enumerate().map(|b| FileInfo {
         id: files[b.0].id,

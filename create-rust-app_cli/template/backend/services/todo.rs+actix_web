@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 #[tsync::tsync]
 #[derive(Debug, Serialize, Deserialize, Identifiable, AsChangeset, Clone, Queryable)]
-#[table_name = "todos"]
+#[diesel(table_name=todos)]
 pub struct Todo {
     pub id: i32,
     pub text: String,
@@ -18,7 +18,7 @@ pub struct Todo {
 
 #[tsync::tsync]
 #[derive(Debug, Insertable, Serialize, Deserialize, AsChangeset)]
-#[table_name = "todos"]
+#[diesel(table_name=todos)]
 pub struct TodoJson {
     pub text: String,
 }
@@ -36,14 +36,14 @@ async fn index(
     db: Data<Database>,
     Query(info): Query<IndexRequest>,
 ) -> HttpResponse {
-    let db = db.pool.get().unwrap();
+    let mut db = db.pool.get().unwrap();
 
     use crate::schema::todos::dsl::*;
     let result = todos
         .order(created_at)
         .limit(10)
         .offset(info.page * std::cmp::max(info.page_size, MAX_PAGE_SIZE as i64))
-        .load::<Todo>(&db);
+        .load::<Todo>(&mut db);
 
     if result.is_ok() {
         HttpResponse::Ok().json(result.unwrap())
@@ -57,10 +57,10 @@ async fn read(
     db: Data<Database>,
     item_id: Path<i32>,
 ) -> HttpResponse {
-    let db = db.pool.get().unwrap();
+    let mut db = db.pool.get().unwrap();
 
     use crate::schema::todos::dsl::*;
-    let result = todos.filter(id.eq(item_id.into_inner())).first::<Todo>(&db);
+    let result = todos.filter(id.eq(item_id.into_inner())).first::<Todo>(&mut db);
 
     if result.is_ok() {
         HttpResponse::Ok().json(result.unwrap())
@@ -74,13 +74,13 @@ async fn create(
     db: Data<Database>,
     Json(item): Json<TodoJson>,
 ) -> Result<HttpResponse, Error> {
-    let db = db.pool.get().unwrap();
+    let mut db = db.pool.get().unwrap();
 
     use crate::schema::todos::dsl::*;
 
     let result: Todo = insert_into(todos)
         .values(&item)
-        .get_result::<Todo>(&db)
+        .get_result::<Todo>(&mut db)
         .expect("Creation error");
 
     Ok(HttpResponse::Created().json(result))
@@ -92,7 +92,7 @@ async fn update(
     item_id: Path<i32>,
     Json(item): Json<TodoJson>,
 ) -> HttpResponse {
-    let db = db.pool.get().unwrap();
+    let mut db = db.pool.get().unwrap();
 
     use crate::schema::todos::dsl::*;
 
@@ -100,7 +100,7 @@ async fn update(
         .set(&TodoJson {
             ..item
         })
-        .execute(&db);
+        .execute(&mut db);
 
     if result.is_ok() {
         HttpResponse::Ok().finish()
@@ -114,11 +114,11 @@ async fn destroy(
     db: Data<Database>,
     item_id: Path<i32>,
 ) -> HttpResponse {
-    let db = db.pool.get().unwrap();
+    let mut db = db.pool.get().unwrap();
 
     use crate::schema::todos::dsl::*;
 
-    let result = diesel::delete(todos.filter(id.eq(item_id.into_inner()))).execute(&db);
+    let result = diesel::delete(todos.filter(id.eq(item_id.into_inner()))).execute(&mut db);
 
     if result.is_ok() {
         HttpResponse::Ok().finish()

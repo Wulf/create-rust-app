@@ -50,8 +50,8 @@ fn generate(resource_name: &str) -> Model {
         use crate::DB;
         
         #[tsync::tsync]
-        #[derive(Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Identifiable, Associations, AsChangeset)]
-        #[table_name = \"$TABLE_NAME\"]
+        #[derive(Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Identifiable, AsChangeset)]
+        #[diesel(table_name=$TABLE_NAME)]
         pub struct $MODEL_NAME {
           /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
              Add columns here in the same order as the schema
@@ -64,7 +64,7 @@ fn generate(resource_name: &str) -> Model {
         
         #[tsync::tsync]
         #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]
-        #[table_name = \"$TABLE_NAME\"]
+        #[diesel(table_name=$TABLE_NAME)]
         pub struct $MODEL_NAMEChangeset {
           /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
              Don't include non-mutable columns

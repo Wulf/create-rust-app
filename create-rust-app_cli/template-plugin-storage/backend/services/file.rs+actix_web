@@ -16,10 +16,10 @@ struct FileInfo {
 
 #[actix_web::get("")]
 async fn all(db: Data<Database>, storage: Data<Storage>) -> HttpResponse {
-    let db = db.pool.get().unwrap();
-    let files = Attachment::find_all_for_record(&db, "file".to_string(), "NULL".to_string(), 0).unwrap_or_default();
+    let mut db = db.pool.get().unwrap();
+    let files = Attachment::find_all_for_record(&mut db, "file".to_string(), "NULL".to_string(), 0).unwrap_or_default();
     let blob_ids = files.iter().map(|f| f.blob_id).collect::<Vec<_>>();
-    let blobs = AttachmentBlob::find_all_by_id(&db, blob_ids).unwrap_or_default();
+    let blobs = AttachmentBlob::find_all_by_id(&mut db, blob_ids).unwrap_or_default();
 
     let mut files = blobs.iter().enumerate().map(|b| FileInfo {
         id: files[b.0].id,
@@ -42,10 +42,10 @@ async fn all(db: Data<Database>, storage: Data<Storage>) -> HttpResponse {
 
 #[actix_web::delete("/{id}")]
 async fn delete(db: Data<Database>, storage: Data<Storage>, file_id: Path<i32>) -> HttpResponse {
-    let db = db.pool.get().unwrap();
+    let mut db = db.pool.get().unwrap();
     let file_id = file_id.into_inner();
 
-    let detach_op = Attachment::detach(&db, &storage, file_id).await;
+    let detach_op = Attachment::detach(&mut db, &storage, file_id).await;
 
     if detach_op.is_err() {
         return HttpResponse::InternalServerError().json(detach_op.err().unwrap());
@@ -56,7 +56,7 @@ async fn delete(db: Data<Database>, storage: Data<Storage>, file_id: Path<i32>) 
 
 #[actix_web::post("")]
 async fn create(db: Data<Database>, store: Data<Storage>, mut payload: Multipart) -> HttpResponse {
-    let db = db.pool.get().unwrap();
+    let mut db = db.pool.get().unwrap();
 
     while let Some(item) = payload.next().await {
         let mut field = if item.is_ok() {
@@ -78,7 +78,7 @@ async fn create(db: Data<Database>, store: Data<Storage>, mut payload: Multipart
                     data.extend_from_slice(&chunk.unwrap()[..]);
                 }
 
-                let attached_req = Attachment::attach(&db, &store, "file".to_string(), "NULL".to_string(), 0, AttachmentData {
+                let attached_req = Attachment::attach(&mut db, &store, "file".to_string(), "NULL".to_string(), 0, AttachmentData {
                     data,
                     file_name
                 }, true, false).await;

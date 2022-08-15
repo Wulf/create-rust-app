@@ -2,7 +2,6 @@ use argonautica::config::Version::_0x10;
 use poem::{get, handler, http::StatusCode, post, web::{Json, Data}, Error, IntoResponse, Result, Route};
 
 use diesel::{sql_types::Text, sql_query, QueryableByName, RunQueryDsl};
-use diesel_migrations::{any_pending_migrations, run_pending_migrations};
 use serde::{Deserialize, Serialize};
 
 use crate::dev::{controller, controller::{HealthCheckResponse, MySqlQuery, MyQueryResult}};

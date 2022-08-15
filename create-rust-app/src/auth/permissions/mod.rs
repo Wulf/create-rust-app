@@ -22,14 +22,14 @@ pub struct Role;
 
 #[derive(Debug, Serialize, Deserialize, QueryableByName, Clone)]
 struct RoleQueryRow {
-    #[sql_type = "Text"]
+    #[diesel(sql_type=Text)]
     role: String
 }
 
 impl Role {
-    pub fn assign(db: &Connection, user_id: ID, role: &str) -> Result<bool> {
+    pub fn assign(db: &mut Connection, user_id: ID, role: &str) -> Result<bool> {
         let assigned = UserRole::create(
-            &db,
+            db,
             &UserRoleChangeset {
                 user_id: user_id,
                 role: role.to_string(),
@@ -39,9 +39,9 @@ impl Role {
         Ok(assigned.is_ok())
     }
 
-    pub fn assign_many(db: &Connection, user_id: ID, roles: Vec<String>) -> Result<bool> {
+    pub fn assign_many(db: &mut Connection, user_id: ID, roles: Vec<String>) -> Result<bool> {
         let assigned = UserRole::create_many(
-            &db,
+            db,
             roles.into_iter().map(|r| UserRoleChangeset {
                 user_id: user_id,
                 role: r,
@@ -51,19 +51,19 @@ impl Role {
         Ok(assigned.is_ok())
     }
 
-    pub fn unassign(db: &Connection, user_id: ID, role: &str) -> Result<bool> {
-        let unassigned = UserRole::delete(&db, user_id, role.to_string());
+    pub fn unassign(db: &mut Connection, user_id: ID, role: &str) -> Result<bool> {
+        let unassigned = UserRole::delete(db, user_id, role.to_string());
 
         Ok(unassigned.is_ok())
     }
 
-    pub fn unassign_many(db: &Connection, user_id: ID, roles: Vec<String>) -> Result<bool> {
-        let unassigned = UserRole::delete_many(&db, user_id, roles);
+    pub fn unassign_many(db: &mut Connection, user_id: ID, roles: Vec<String>) -> Result<bool> {
+        let unassigned = UserRole::delete_many(db, user_id, roles);
 
         Ok(unassigned.is_ok())
     }
 
-    pub fn fetch_all(db: &Connection, user_id: ID) -> Result<Vec<String>> {
+    pub fn fetch_all(db: &mut Connection, user_id: ID) -> Result<Vec<String>> {
         let roles = sql_query(
             "SELECT role FROM user_roles WHERE user_id = $1"
         );
@@ -83,10 +83,10 @@ impl Role {
 #[tsync::tsync]
 #[derive(Debug, Serialize, Deserialize, QueryableByName, Clone)]
 pub struct Permission {
-    #[sql_type = "Text"]
+    #[diesel(sql_type=Text)]
     pub from_role: String,
 
-    #[sql_type = "Text"]
+    #[diesel(sql_type=Text)]
     pub permission: String,
 }
 
@@ -105,16 +105,16 @@ impl Eq for Permission {}
 
 
 impl Permission {
-    // pub fn is_granted_to_user(db: &Connection, user_id: ID, permission: String) -> Result<bool> {
+    // pub fn is_granted_to_user(db: &mut Connection, user_id: ID, permission: String) -> Result<bool> {
     //   let permissions = Permission::for_user(&db, user_id)?;
     //   let user_has_permission = permissions.iter().any(|perm| perm.permission == permission);
 
     //   Ok(user_has_permission)
     // }
 
-    pub fn grant_to_user(db: &Connection, user_id: ID, permission: &str) -> Result<bool> {
+    pub fn grant_to_user(db: &mut Connection, user_id: ID, permission: &str) -> Result<bool> {
         let granted = UserPermission::create(
-            &db,
+            db,
             &UserPermissionChangeset {
                 permission: permission.to_string(),
                 user_id,
@@ -124,9 +124,9 @@ impl Permission {
         Ok(granted.is_ok())
     }
 
-    pub fn grant_to_role(db: &Connection, role: &str, permission: &str) -> Result<bool> {
+    pub fn grant_to_role(db: &mut Connection, role: &str, permission: &str) -> Result<bool> {
         let granted = RolePermission::create(
-            &db,
+            db,
             &RolePermissionChangeset {
                 permission: permission.to_string(),
                 role: role.to_string(),
@@ -136,9 +136,9 @@ impl Permission {
         Ok(granted.is_ok())
     }
 
-    pub fn grant_many_to_role(db: &Connection, role: String, permissions: Vec<String>) -> Result<bool> {
+    pub fn grant_many_to_role(db: &mut Connection, role: String, permissions: Vec<String>) -> Result<bool> {
         let granted = RolePermission::create_many(
-            &db,
+            db,
             permissions.into_iter().map(|permission| RolePermissionChangeset {
                 permission,
                 role: role.clone(),
@@ -148,9 +148,9 @@ impl Permission {
         Ok(granted.is_ok())
     }
 
-    pub fn grant_many_to_user(db: &Connection, user_id: i32, permissions: Vec<String>) -> Result<bool> {
+    pub fn grant_many_to_user(db: &mut Connection, user_id: i32, permissions: Vec<String>) -> Result<bool> {
         let granted = UserPermission::create_many(
-            &db,
+            db,
             permissions.into_iter().map(|permission| UserPermissionChangeset {
                 permission,
                 user_id,
@@ -160,43 +160,43 @@ impl Permission {
         Ok(granted.is_ok())
     }
 
-    pub fn revoke_from_user(db: &Connection, user_id: ID, permission: &str) -> Result<bool> {
-        let deleted = UserPermission::delete(&db, user_id, permission.to_string());
+    pub fn revoke_from_user(db: &mut Connection, user_id: ID, permission: &str) -> Result<bool> {
+        let deleted = UserPermission::delete(db, user_id, permission.to_string());
 
         Ok(deleted.is_ok())
     }
 
-    pub fn revoke_from_role(db: &Connection, role: String, permission: String) -> Result<bool> {
-        let deleted = RolePermission::delete(&db, role, permission.to_string());
+    pub fn revoke_from_role(db: &mut Connection, role: String, permission: String) -> Result<bool> {
+        let deleted = RolePermission::delete(db, role, permission.to_string());
 
         Ok(deleted.is_ok())
     }
 
-    pub fn revoke_many_from_user(db: &Connection, user_id: ID, permissions: Vec<String>) -> Result<bool> {
-        let deleted = UserPermission::delete_many(&db, user_id, permissions);
+    pub fn revoke_many_from_user(db: &mut Connection, user_id: ID, permissions: Vec<String>) -> Result<bool> {
+        let deleted = UserPermission::delete_many(db, user_id, permissions);
 
         Ok(deleted.is_ok())
     }
 
-    pub fn revoke_many_from_role(db: &Connection, role: String, permissions: Vec<String>) -> Result<bool> {
-        let deleted = RolePermission::delete_many(&db, role, permissions);
+    pub fn revoke_many_from_role(db: &mut Connection, role: String, permissions: Vec<String>) -> Result<bool> {
+        let deleted = RolePermission::delete_many(db, role, permissions);
 
         Ok(deleted.is_ok())
     }
 
-    pub fn revoke_all_from_role(db: &Connection, role: &str) -> Result<bool> {
-        let deleted = RolePermission::delete_all(&db, role);
+    pub fn revoke_all_from_role(db: &mut Connection, role: &str) -> Result<bool> {
+        let deleted = RolePermission::delete_all(db, role);
 
         Ok(deleted.is_ok())
     }
 
-    pub fn revoke_all_from_user(db: &Connection, user_id: i32) -> Result<bool> {
-        let deleted = UserPermission::delete_all(&db, user_id);
+    pub fn revoke_all_from_user(db: &mut Connection, user_id: i32) -> Result<bool> {
+        let deleted = UserPermission::delete_all(db, user_id);
 
         Ok(deleted.is_ok())
     }
 
-    pub fn fetch_all(db: &Connection, user_id: ID) -> Result<Vec<Permission>> {
+    pub fn fetch_all(db: &mut Connection, user_id: ID) -> Result<Vec<Permission>> {
         let permissions = sql_query(
             r#"
       SELECT 

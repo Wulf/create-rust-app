@@ -19,8 +19,7 @@ use serde::{Deserialize, Serialize};
     Associations,
     AsChangeset,
 )]
-#[table_name = "user_sessions"]
-#[belongs_to(User)]
+#[diesel(table_name=user_sessions, belongs_to(User))]
 pub struct UserSession {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -37,7 +36,7 @@ pub struct UserSession {
 
 #[tsync::tsync]
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]
-#[table_name = "user_sessions"]
+#[diesel(table_name=user_sessions)]
 pub struct UserSessionChangeset {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -50,7 +49,7 @@ pub struct UserSessionChangeset {
 }
 
 impl UserSession {
-    pub fn create(db: &Connection, item: &UserSessionChangeset) -> QueryResult<Self> {
+    pub fn create(db: &mut Connection, item: &UserSessionChangeset) -> QueryResult<Self> {
         use super::schema::user_sessions::dsl::*;
 
         insert_into(user_sessions)
@@ -58,7 +57,7 @@ impl UserSession {
             .get_result::<UserSession>(db)
     }
 
-    pub fn read(db: &Connection, item_id: ID) -> QueryResult<Self> {
+    pub fn read(db: &mut Connection, item_id: ID) -> QueryResult<Self> {
         use super::schema::user_sessions::dsl::*;
 
         user_sessions
@@ -66,7 +65,7 @@ impl UserSession {
             .first::<UserSession>(db)
     }
 
-    pub fn find_by_refresh_token(db: &Connection, item_refresh_token: &str) -> QueryResult<Self> {
+    pub fn find_by_refresh_token(db: &mut Connection, item_refresh_token: &str) -> QueryResult<Self> {
         use super::schema::user_sessions::dsl::*;
 
         user_sessions
@@ -75,7 +74,7 @@ impl UserSession {
     }
 
     pub fn read_all(
-        db: &Connection,
+        db: &mut Connection,
         pagination: &PaginationParams,
         item_user_id: ID,
     ) -> QueryResult<Vec<Self>> {
@@ -92,7 +91,7 @@ impl UserSession {
             .load::<UserSession>(db)
     }
 
-    pub fn count_all(db: &Connection, item_user_id: ID) -> QueryResult<i64> {
+    pub fn count_all(db: &mut Connection, item_user_id: ID) -> QueryResult<i64> {
         use super::schema::user_sessions::dsl::*;
 
         user_sessions
@@ -101,7 +100,7 @@ impl UserSession {
             .get_result(db)
     }
 
-    pub fn update(db: &Connection, item_id: ID, item: &UserSessionChangeset) -> QueryResult<Self> {
+    pub fn update(db: &mut Connection, item_id: ID, item: &UserSessionChangeset) -> QueryResult<Self> {
         use super::schema::user_sessions::dsl::*;
 
         diesel::update(user_sessions.filter(id.eq(item_id)))
@@ -109,13 +108,13 @@ impl UserSession {
             .get_result(db)
     }
 
-    pub fn delete(db: &Connection, item_id: ID) -> QueryResult<usize> {
+    pub fn delete(db: &mut Connection, item_id: ID) -> QueryResult<usize> {
         use super::schema::user_sessions::dsl::*;
 
         diesel::delete(user_sessions.filter(id.eq(item_id))).execute(db)
     }
 
-    pub fn delete_all_for_user(db: &Connection, item_user_id: ID) -> QueryResult<usize> {
+    pub fn delete_all_for_user(db: &mut Connection, item_user_id: ID) -> QueryResult<usize> {
         use super::schema::user_sessions::dsl::*;
 
         diesel::delete(user_sessions.filter(user_id.eq(item_user_id))).execute(db)

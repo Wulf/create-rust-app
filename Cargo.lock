@@ -1113,7 +1113,7 @@ dependencies = [
  "chrono",
  "derive_more",
  "diesel",
- "diesel_derives",
+ "diesel_derives 1.4.1",
  "diesel_migrations",
  "dotenv",
  "env_logger 0.9.0",
@@ -1224,17 +1224,18 @@ dependencies = [
 
 [[package]]
 name = "diesel"
-version = "1.4.8"
+version = "2.0.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b28135ecf6b7d446b43e27e225622a038cc4e2930a1022f51cdb97ada19b8e4d"
+checksum = "876a12f2d98c35d1dfaf74083664be5bb71606b72f4756f3792cdb1ddb192b46"
 dependencies = [
  "bitflags",
  "byteorder",
  "chrono",
- "diesel_derives",
+ "diesel_derives 2.0.0-rc.1",
+ "itoa",
  "pq-sys",
  "r2d2",
- "uuid 0.6.5",
+ "uuid 0.8.2",
 ]
 
 [[package]]
@@ -1249,11 +1250,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "diesel_migrations"
-version = "1.4.0"
+name = "diesel_derives"
+version = "2.0.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf3cde8413353dc7f5d72fa8ce0b99a560a359d2c5ef1e5817ca731cd9008f4c"
+checksum = "2497d9cefebedc40492310f3c94493e1d0bd5b11b5e1bfc0a7f4b106012203ea"
 dependencies = [
+ "proc-macro-error",
+ "proc-macro2 1.0.39",
+ "quote 1.0.15",
+ "syn",
+]
+
+[[package]]
+name = "diesel_migrations"
+version = "2.0.0-rc.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af3e284b00439e362c3f55849a103f38b4c5a9918ae3cf34fca2268b6eb52fef"
+dependencies = [
+ "diesel",
  "migrations_internals",
  "migrations_macros",
 ]
@@ -2154,23 +2168,23 @@ checksum = "308cc39be01b73d0d18f82a0e7b2a3df85245f84af96fdddc5d202d27e47b86a"
 
 [[package]]
 name = "migrations_internals"
-version = "1.4.1"
+version = "2.0.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b4fc84e4af020b837029e017966f86a1c2d5e83e64b589963d5047525995860"
+checksum = "e03913f1a1c044aa53b37c8f34011599bbf98914092a0444081555e9ca35022c"
 dependencies = [
- "diesel",
+ "serde",
+ "toml",
 ]
 
 [[package]]
 name = "migrations_macros"
-version = "1.4.2"
+version = "2.0.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9753f12909fd8d923f75ae5c3258cae1ed3c8ec052e1b38c93c21a6d157f789c"
+checksum = "9ccfa634200e9de9fe6497f568d54951e933e9e0ddf61058e52e24bda896de48"
 dependencies = [
  "migrations_internals",
  "proc-macro2 1.0.39",
  "quote 1.0.15",
- "syn",
 ]
 
 [[package]]
@@ -3877,15 +3891,6 @@ name = "urlencoding"
 version = "1.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5a1f0175e03a0973cf4afd476bef05c26e228520400eb1fd473ad417b1c00ffb"
-
-[[package]]
-name = "uuid"
-version = "0.6.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1436e58182935dcd9ce0add9ea0b558e8a87befe01c1a301e6020aeb0876363"
-dependencies = [
- "cfg-if 0.1.10",
-]
 
 [[package]]
 name = "uuid"
