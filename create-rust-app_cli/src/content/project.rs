@@ -248,7 +248,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
     add_dependency(&project_dir, "serde_json", r#"serde_json = "1.0.79""#)?;
     add_dependency(&project_dir, "chrono", r#"chrono = { version = "0.4.19", features = ["serde"] }"#)?;
     add_dependency(&project_dir, "tsync", r#"tsync = "1.2.1""#)?;
-    add_dependency(&project_dir, "diesel", r#"diesel = { version="1.4.8", default-features = false, features = ["postgres", "r2d2", "chrono"] }"#)?;
+    add_dependency(&project_dir, "diesel", r#"diesel = { version="2.0.0-rc.1", default-features = false, features = ["postgres", "r2d2", "chrono"] }"#)?;
     add_dependency(&project_dir, "create-rust-app", &format!("create-rust-app = {{version=\"{version}\"{enabled_features}}}", version= get_current_cra_lib_version(), enabled_features=enabled_features))?;
 
     /*
