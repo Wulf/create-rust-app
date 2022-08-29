@@ -25,7 +25,7 @@ async fn all(db: Data<&Database>, storage: Data<&Storage>) -> Result<impl IntoRe
     let mut files = blobs.iter().enumerate().map(|b| FileInfo {
         id: files[b.0].id,
         key: b.1.clone().key,
-        name: b.1.clone().file_name.unwrap_or("".to_string()),
+        name: b.1.clone().file_name,
         url: None,
     }).collect::<Vec<FileInfo>>();
 

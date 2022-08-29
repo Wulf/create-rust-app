@@ -1,6 +1,8 @@
+use crate::content::cargo_toml::add_dependency;
 use crate::utils::git;
 use crate::utils::logger;
-use crate::content::cargo_toml::add_dependency;
+use crate::BackendDatabase;
+use crate::BackendFramework;
 use anyhow::Result;
 use console::style;
 use dialoguer::{theme::ColorfulTheme, Confirm, Input};
@@ -8,9 +10,8 @@ use inflector::Inflector;
 use rust_embed::RustEmbed;
 use std::path::PathBuf;
 use std::time::Duration;
-use walkdir::WalkDir;
 use update_informer::{registry, Check};
-use crate::BackendFramework;
+use walkdir::WalkDir;
 
 #[derive(RustEmbed)]
 #[folder = "template"]
@@ -70,10 +71,11 @@ fn add_bins_to_cargo_toml(project_dir: &std::path::PathBuf) -> Result<(), std::i
         None => panic!("Could not determine project name from generated Cargo.toml"),
     };
 
-    if !found_project_name { logger::error("Failed to find the project's package name! Defaulting main executable name to 'app'. Feel free to change it in `Cargo.toml`."); }
+    if !found_project_name {
+        logger::error("Failed to find the project's package name! Defaulting main executable name to 'app'. Feel free to change it in `Cargo.toml`.");
+    }
 
     let updated_toml = toml::to_string(&parsed_toml).unwrap();
-
 
     let append_to_toml = format!(
         r#"
@@ -107,10 +109,14 @@ debug-assertions=true
 
 pub struct CreationOptions {
     pub cra_enabled_features: Vec<String>,
-    pub backend_framework: BackendFramework
+    pub backend_framework: BackendFramework,
+    pub backend_database: BackendDatabase,
 }
 
-pub fn remove_non_framework_files(project_dir: &PathBuf, framework: BackendFramework) -> Result<()> {
+pub fn remove_non_framework_files(
+    project_dir: &PathBuf,
+    framework: BackendFramework,
+) -> Result<()> {
     /* Choose framework-specific files */
     for entry in WalkDir::new(project_dir) {
         let entry = entry.unwrap();
@@ -124,7 +130,12 @@ pub fn remove_non_framework_files(project_dir: &PathBuf, framework: BackendFrame
                 std::fs::remove_file(file)?;
             };
             if framework == BackendFramework::ActixWeb {
-                let dest = file.with_extension(file.extension().unwrap().to_string_lossy().replace("+actix_web", ""));
+                let dest = file.with_extension(
+                    file.extension()
+                        .unwrap()
+                        .to_string_lossy()
+                        .replace("+actix_web", ""),
+                );
                 logger::rename_file_msg(&format!("{:#?}", &file), &format!("{:#?}", &dest));
                 std::fs::rename(file, dest)?;
             };
@@ -134,7 +145,59 @@ pub fn remove_non_framework_files(project_dir: &PathBuf, framework: BackendFrame
                 std::fs::remove_file(file)?;
             };
             if framework == BackendFramework::Poem {
-                let dest = file.with_extension(file.extension().unwrap().to_string_lossy().replace("+poem", ""));
+                let dest = file.with_extension(
+                    file.extension()
+                        .unwrap()
+                        .to_string_lossy()
+                        .replace("+poem", ""),
+                );
+                logger::rename_file_msg(&format!("{:#?}", &file), &format!("{:#?}", &dest));
+                std::fs::rename(file, dest)?;
+            };
+        }
+    }
+
+    Ok(())
+}
+
+pub fn remove_non_database_files(
+    project_dir: &PathBuf,
+    database: BackendDatabase,
+) -> Result<()> {
+    /* Choose framework-specific files */
+    for entry in WalkDir::new(project_dir) {
+        let entry = entry.unwrap();
+
+        let file = entry.path();
+        let path = file.clone().to_str().unwrap().to_string();
+
+        if path.ends_with("+database_postgres") {
+            if database != BackendDatabase::Postgres {
+                logger::remove_file_msg(&format!("{:#?}", &file));
+                std::fs::remove_file(file)?;
+            };
+            if database == BackendDatabase::Postgres{
+                let dest = file.with_extension(
+                    file.extension()
+                        .unwrap()
+                        .to_string_lossy()
+                        .replace("+database_postgres", ""),
+                );
+                logger::rename_file_msg(&format!("{:#?}", &file), &format!("{:#?}", &dest));
+                std::fs::rename(file, dest)?;
+            };
+        } else if path.ends_with("+database_sqlite") {
+            if database != BackendDatabase::Sqlite {
+                logger::remove_file_msg(&format!("{:#?}", &file));
+                std::fs::remove_file(file)?;
+            };
+            if database == BackendDatabase::Sqlite {
+                let dest = file.with_extension(
+                    file.extension()
+                        .unwrap()
+                        .to_string_lossy()
+                        .replace("+database_sqlite", ""),
+                );
                 logger::rename_file_msg(&format!("{:#?}", &file), &format!("{:#?}", &dest));
                 std::fs::rename(file, dest)?;
             };
@@ -222,34 +285,83 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
 
     add_bins_to_cargo_toml(&project_dir)?;
 
-
     let framework = creation_options.backend_framework;
+    let database = creation_options.backend_database;
     let cra_enabled_features = creation_options.cra_enabled_features;
 
-    let mut enabled_features: String = cra_enabled_features.iter().map(|f| format!("\"{}\"", f)).collect::<Vec<String>>().join(", ");
-    if !cra_enabled_features.is_empty() { enabled_features = ", features=[".to_string() + &enabled_features + "]"; }
+    let mut enabled_features: String = cra_enabled_features
+        .iter()
+        .map(|f| format!("\"{}\"", f))
+        .collect::<Vec<String>>()
+        .join(", ");
+    if !cra_enabled_features.is_empty() {
+        enabled_features = ", features=[".to_string() + &enabled_features + "]";
+    }
 
     match framework {
         BackendFramework::ActixWeb => {
             add_dependency(&project_dir, "actix-files", r#"actix-files = "0.6.0""#)?;
             add_dependency(&project_dir, "actix-http", r#"actix-http = "3.0.0""#)?;
             add_dependency(&project_dir, "actix-web", r#"actix-web = "4.0.1""#)?;
-            add_dependency(&project_dir, "actix-multipart", r#"actix-multipart = "0.4.0""#)?;
-            add_dependency(&project_dir, "tokio", r#"tokio = { version = "1", features = ["full"] }"#)?;
-        },
+            add_dependency(
+                &project_dir,
+                "actix-multipart",
+                r#"actix-multipart = "0.4.0""#,
+            )?;
+            add_dependency(
+                &project_dir,
+                "tokio",
+                r#"tokio = { version = "1", features = ["full"] }"#,
+            )?;
+        }
         BackendFramework::Poem => {
-            add_dependency(&project_dir, "poem", r#"poem = { version="1.3.18", features=["anyhow", "cookie", "static-files", "multipart"] }"#)?;
-            add_dependency(&project_dir, "tokio", r#"tokio = { version = "1.15.0", features = ["rt-multi-thread", "macros"] }"#)?;
-            add_dependency(&project_dir, "tracing_subscriber", r#"tracing-subscriber = "0.3.7""#)?;
+            add_dependency(
+                &project_dir,
+                "poem",
+                r#"poem = { version="1.3.18", features=["anyhow", "cookie", "static-files", "multipart"] }"#,
+            )?;
+            add_dependency(
+                &project_dir,
+                "tokio",
+                r#"tokio = { version = "1.15.0", features = ["rt-multi-thread", "macros"] }"#,
+            )?;
+            add_dependency(
+                &project_dir,
+                "tracing_subscriber",
+                r#"tracing-subscriber = "0.3.7""#,
+            )?;
         }
     }
     add_dependency(&project_dir, "futures-util", r#"futures-util = "0.3.21""#)?;
-    add_dependency(&project_dir, "serde", r#"serde = { version = "1.0.133", features = ["derive"] }"#)?;
+    add_dependency(
+        &project_dir,
+        "serde",
+        r#"serde = { version = "1.0.133", features = ["derive"] }"#,
+    )?;
     add_dependency(&project_dir, "serde_json", r#"serde_json = "1.0.79""#)?;
-    add_dependency(&project_dir, "chrono", r#"chrono = { version = "0.4.19", features = ["serde"] }"#)?;
+    add_dependency(
+        &project_dir,
+        "chrono",
+        r#"chrono = { version = "0.4.19", features = ["serde"] }"#,
+    )?;
     add_dependency(&project_dir, "tsync", r#"tsync = "1.2.1""#)?;
-    add_dependency(&project_dir, "diesel", r#"diesel = { version="2.0.0-rc.1", default-features = false, features = ["postgres", "r2d2", "chrono"] }"#)?;
-    add_dependency(&project_dir, "create-rust-app", &format!("create-rust-app = {{version=\"{version}\"{enabled_features}}}", version= get_current_cra_lib_version(), enabled_features=enabled_features))?;
+    add_dependency(
+        &project_dir,
+        "diesel",
+        &format!(r#"diesel = {{ version="2.0.0-rc.1", default-features = false, features = ["{db}", "r2d2", "chrono"] }}"#, db = match database {
+            BackendDatabase::Postgres => "postgres",
+            BackendDatabase::Sqlite => "sqlite",
+        }),
+    )?;
+    add_dependency(
+        &project_dir,
+        "create-rust-app",
+        &format!(
+            "create-rust-app = {{version=\"{version}\"{enabled_features}}}",
+            version = get_current_cra_lib_version(),
+            enabled_features = enabled_features
+        ),
+    )?;
 
     /*
         Populate with project files
@@ -267,6 +379,44 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
     }
 
     remove_non_framework_files(&project_dir, framework)?;
+    remove_non_database_files(&project_dir, database)?;
+
+    if database == BackendDatabase::Sqlite {
+        // for sqlite, we don't want the initial diesel setup or database timezone adjustment
+        let mut mig1 = PathBuf::from(&project_dir);
+        mig1.push("migrations");
+        let mut mig2 = mig1.clone();
+        let mut mig3 = mig1.clone();
+        let mut mig0 = mig1.clone();
+        mig1.push("00000000000000_diesel_initial_setup");
+        mig2.push("00000000000001_utc");
+        mig3.push("00000000000002_todos");
+        mig0.push("00000000000099_todos");
+        std::fs::remove_dir(mig1)?;
+        std::fs::remove_dir(mig2)?;
+        std::fs::create_dir(&mig0)?;
+        let mut up = mig3.clone();
+        up.push("up.sql");
+        let mut down = mig3.clone();
+        down.push("down.sql");
+        let mut new_up = mig0.clone();
+        new_up.push("up.sql");
+        let mut new_down = mig0.clone();
+        new_down.push("down.sql");
+        std::fs::rename(up, new_up)?;
+        std::fs::rename(down, new_down)?;
+        std::fs::remove_dir(mig3)?;
+
+        // also, let's update the env files
+        let mut env_example_file = PathBuf::from(&project_dir);
+        let mut env_file = PathBuf::from(&project_dir);
+        env_example_file.push(".env.example");
+        env_file.push(".env");
+        let contents = std::fs::read_to_string(&env_example_file)?;
+        let contents = contents.replace("postgres://postgres:postgres@localhost/database", "dev.sqlite");
+        std::fs::write(env_example_file, contents.clone())?;
+        std::fs::write(env_file, contents.clone())?;
+    }
 
     /*
         Finalize; create the initial commit.
@@ -412,18 +562,21 @@ pub fn create_resource(backend: BackendFramework, resource_name: &str) -> Result
     Ok(())
 }
 
-pub fn check_cli_version() -> Result<()>{
-  let name = env!("CARGO_PKG_NAME");
-  let version = env!("CARGO_PKG_VERSION");
-  let informer = update_informer::new(registry::Crates, name, version)
-      .timeout(Duration::from_secs(2))
-      .interval(Duration::ZERO);
-  if let Some(new_version) = informer.check_version().ok().flatten()  {
-    logger::message(&style(&format!("You are running `{name}` v{version}, which is behind the latest release ({new_version}).")).yellow().to_string());
-    logger::message(&format!("If you want to update, try: {}", style("cargo install --force create-rust-app_cli").yellow()));
-  } else {
-    // we aren't sure whether the version check succeeded here (it could have been timed out)
-    logger::message(&format!("v{version}"));
-  }
-  Ok(())
+pub fn check_cli_version() -> Result<()> {
+    let name = env!("CARGO_PKG_NAME");
+    let version = env!("CARGO_PKG_VERSION");
+    let informer = update_informer::new(registry::Crates, name, version)
+        .timeout(Duration::from_secs(2))
+        .interval(Duration::ZERO);
+    if let Some(new_version) = informer.check_version().ok().flatten() {
+        logger::message(&style(&format!("You are running `{name}` v{version}, which is behind the latest release ({new_version}).")).yellow().to_string());
+        logger::message(&format!(
+            "If you want to update, try: {}",
+            style("cargo install --force create-rust-app_cli").yellow()
+        ));
+    } else {
+        // we aren't sure whether the version check succeeded here (it could have been timed out)
+        logger::message(&format!("v{version}"));
+    }
+    Ok(())
 }

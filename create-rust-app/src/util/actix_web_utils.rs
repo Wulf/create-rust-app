@@ -1,9 +1,9 @@
-use actix_files::NamedFile;
-use actix_web::{HttpRequest, HttpResponse, Scope, web};
-use actix_web::http::StatusCode;
-use tera::Context;
 use super::template_utils::SinglePageApplication;
-use crate::util::template_utils::{DEFAULT_TEMPLATE, TEMPLATES, to_template_name};
+use crate::util::template_utils::{to_template_name, DEFAULT_TEMPLATE, TEMPLATES};
+use actix_files::NamedFile;
+use actix_web::http::StatusCode;
+use actix_web::{web, HttpRequest, HttpResponse, Scope};
+use tera::Context;
 
 /// 'route': the route where the SPA should be served from, for example: "/app"
 /// 'view': the view which renders the SPA, for example: "spa/index.html"
@@ -15,13 +15,18 @@ pub fn render_single_page_application(route: &str, view: &str) -> Scope {
 
     actix_web::web::scope(&format!("/{}{{tail:(/.*)?}}", route))
         .app_data(Data::new(SinglePageApplication {
-            view_name: view.to_string()
+            view_name: view.to_string(),
         }))
         .route("", web::get().to(render_spa_handler))
 }
 
-async fn render_spa_handler(req: HttpRequest, spa_info: web::Data<SinglePageApplication>) -> HttpResponse {
-    let content = TEMPLATES.render(spa_info.view_name.as_str(), &Context::new()).unwrap();
+async fn render_spa_handler(
+    req: HttpRequest,
+    spa_info: web::Data<SinglePageApplication>,
+) -> HttpResponse {
+    let content = TEMPLATES
+        .render(spa_info.view_name.as_str(), &Context::new())
+        .unwrap();
     template_response(content)
 }
 
@@ -38,22 +43,24 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
     let mut content_result = TEMPLATES.render(template_path, &Context::new());
 
     if content_result.is_err() {
-        #[cfg(debug_assertions)] {
+        #[cfg(debug_assertions)]
+        {
             // dev asset serving
             let asset_path = &format!("./frontend{path}");
             if std::path::PathBuf::from(asset_path).is_file() {
                 println!("ASSET_FILE {path} => {asset_path}");
-                return NamedFile::open(asset_path).unwrap().into_response(&req)
+                return NamedFile::open(asset_path).unwrap().into_response(&req);
             }
 
             let public_path = &format!("./frontend/public{path}");
             if std::path::PathBuf::from(public_path).is_file() {
                 println!("PUBLIC_FILE {path} => {public_path}");
-                return NamedFile::open(public_path).unwrap().into_response(&req)
+                return NamedFile::open(public_path).unwrap().into_response(&req);
             }
         }
 
-        #[cfg(not(debug_assertions))] {
+        #[cfg(not(debug_assertions))]
+        {
             // production asset serving
             let static_path = &format!("./frontend/dist{path}");
             if std::path::PathBuf::from(static_path).is_file() {
@@ -65,7 +72,7 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
         template_path = DEFAULT_TEMPLATE;
         if content_result.is_err() {
             // default template doesn't exist -- return 404 not found
-            return HttpResponse::NotFound().finish()
+            return HttpResponse::NotFound().finish();
         }
     }
 
@@ -78,7 +85,8 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
 
 fn template_response(content: String) -> HttpResponse {
     let mut content = content;
-    #[cfg(debug_assertions)] {
+    #[cfg(debug_assertions)]
+    {
         let inject: &str = r##"
         <!-- development mode -->
         <script type="module">

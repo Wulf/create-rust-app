@@ -7,4 +7,3 @@ pub use service_poem::api;
 mod service_actixweb;
 #[cfg(feature = "backend_actix-web")]
 pub use service_actixweb::endpoints;
-

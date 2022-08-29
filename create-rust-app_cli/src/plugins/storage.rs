@@ -2,10 +2,10 @@ use crate::plugins::InstallConfig;
 use crate::plugins::Plugin;
 use crate::utils::fs;
 use crate::utils::logger::add_file_msg;
+use crate::{BackendDatabase, BackendFramework};
 use anyhow::Result;
 use indoc::indoc;
 use rust_embed::RustEmbed;
-use crate::BackendFramework;
 
 pub struct Storage {}
 
@@ -36,35 +36,41 @@ impl Plugin for Storage {
         // ===============================
 
         fs::append(
-           ".env.example",
+            ".env.example",
             r#"
 S3_HOST=http://localhost:9000
 S3_REGION=minio
 S3_BUCKET=bucket
 S3_ACCESS_KEY_ID=access_key
 S3_SECRET_ACCESS_KEY=secret_key
-"#
+"#,
         )?;
 
-        fs::replace("frontend/src/App.tsx",
-        r#"{/* CRA: routes */}"#,
-        r#"{/* CRA: routes */}
-            <Route path="/files" element={<Files />} />"#)?;
+        fs::replace(
+            "frontend/src/App.tsx",
+            r#"{/* CRA: routes */}"#,
+            r#"{/* CRA: routes */}
+            <Route path="/files" element={<Files />} />"#,
+        )?;
 
-        fs::replace("frontend/src/App.tsx",
-        r#"<a className="NavButton" onClick={() => navigate('/todos')}>Todos</a>"#,
+        fs::replace(
+            "frontend/src/App.tsx",
+            r#"<a className="NavButton" onClick={() => navigate('/todos')}>Todos</a>"#,
             r#"<a className="NavButton" onClick={() => navigate('/todos')}>Todos</a>
-        <a className="NavButton" onClick={() => navigate('/files')}>Files</a>"#
+        <a className="NavButton" onClick={() => navigate('/files')}>Files</a>"#,
         )?;
 
-        fs::replace("frontend/src/App.tsx",
-        r##"import { Todos } from './containers/Todo'"##,
-        r##"import { Todos } from './containers/Todo'
-import { Files } from './containers/Files'"##)?;
+        fs::replace(
+            "frontend/src/App.tsx",
+            r##"import { Todos } from './containers/Todo'"##,
+            r##"import { Todos } from './containers/Todo'
+import { Files } from './containers/Files'"##,
+        )?;
 
         crate::content::migration::create(
             "plugin_storage",
-            indoc! {r#"
+            match install_config.backend_database {
+                BackendDatabase::Postgres => indoc! {r#"
 CREATE TABLE attachment_blobs(
   id SERIAL PRIMARY KEY,
 
@@ -89,6 +95,32 @@ CREATE TABLE attachments(
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 "#},
+                BackendDatabase::Sqlite => indoc! {r#"
+CREATE TABLE attachment_blobs(
+  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+
+  key TEXT NOT NULL,
+  file_name TEXT NOT NULL,
+  content_type TEXT,
+  byte_size BIGINT NOT NULL,
+  checksum TEXT NOT NULL,
+  service_name TEXT NOT NULL,
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE attachments(
+  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+
+  name TEXT NOT NULL,
+  record_type TEXT NOT NULL,
+  record_id INTEGER NOT NULL,
+  blob_id INTEGER REFERENCES attachment_blobs(id) NOT NULL,
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+"#}
+            },
             indoc! {r#"
 DROP TABLE attachments CASCADE ALL;
 DROP TABLE attachment_blobs CASCADE ALL;
@@ -97,31 +129,28 @@ DROP TABLE attachment_blobs CASCADE ALL;
 
         match install_config.backend_framework {
             BackendFramework::ActixWeb => {
-
                 crate::content::service::register_actix(
                     "file",
-                    r#"services::file::endpoints(web::scope("/files"))"#
+                    r#"services::file::endpoints(web::scope("/files"))"#,
                 )?;
 
-                fs::replace("backend/main.rs",
-                            "app = app.app_data(Data::new(app_data.mailer.clone()));",
-                            r#"app = app.app_data(Data::new(app_data.mailer.clone()));
-        app = app.app_data(Data::new(app_data.storage.clone()));"#)?;
-
-            },
+                fs::replace(
+                    "backend/main.rs",
+                    "app = app.app_data(Data::new(app_data.mailer.clone()));",
+                    r#"app = app.app_data(Data::new(app_data.mailer.clone()));
+        app = app.app_data(Data::new(app_data.storage.clone()));"#,
+                )?;
+            }
             BackendFramework::Poem => {
-                crate::content::service::register_poem(
-                    "file",
-                    "services::file::api()",
-                    "/files",
-                )?;
+                crate::content::service::register_poem("file", "services::file::api()", "/files")?;
 
-                fs::replace("backend/main.rs",
-                ".with(AddData::new(data.database))",
+                fs::replace(
+                    "backend/main.rs",
+                    ".with(AddData::new(data.database))",
                     ".with(AddData::new(data.database))
-                .with(AddData::new(data.storage))"
+                .with(AddData::new(data.storage))",
                 )?;
-            },
+            }
         };
 
         fs::append("backend/services/mod.rs", "pub mod file;")?;

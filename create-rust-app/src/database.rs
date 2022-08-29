@@ -1,10 +1,13 @@
-use diesel::{
-    r2d2::{self, ConnectionManager, PooledConnection},
-    PgConnection,
-};
+use diesel::r2d2::{self, ConnectionManager, PooledConnection};
 
-pub type Pool = r2d2::Pool<ConnectionManager<PgConnection>>;
-pub type Connection = PooledConnection<ConnectionManager<PgConnection>>;
+#[cfg(feature = "database_postgres")]
+type DbCon = diesel::PgConnection;
+
+#[cfg(feature = "database_sqlite")]
+type DbCon = diesel::SqliteConnection;
+
+pub type Pool = r2d2::Pool<ConnectionManager<DbCon>>;
+pub type Connection = PooledConnection<ConnectionManager<DbCon>>;
 
 #[derive(Clone)]
 pub struct Database {
@@ -17,7 +20,7 @@ impl Database {
             std::env::var("DATABASE_URL").expect("DATABASE_URL environment variable expected.");
         let database_pool = Pool::builder()
             .connection_timeout(std::time::Duration::from_secs(5))
-            .build(ConnectionManager::<PgConnection>::new(database_url))
+            .build(ConnectionManager::<DbCon>::new(database_url))
             .unwrap();
 
         Database {

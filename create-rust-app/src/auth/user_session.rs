@@ -1,5 +1,5 @@
-use crate::diesel::*;
 use super::schema::*;
+use crate::diesel::*;
 
 use super::user::User;
 use super::{PaginationParams, ID, UTC};
@@ -31,6 +31,7 @@ pub struct UserSession {
     pub device: Option<String>,
 
     pub created_at: UTC,
+    #[cfg(not(feature = "database_sqlite"))]
     pub updated_at: UTC,
 }
 
@@ -65,7 +66,10 @@ impl UserSession {
             .first::<UserSession>(db)
     }
 
-    pub fn find_by_refresh_token(db: &mut Connection, item_refresh_token: &str) -> QueryResult<Self> {
+    pub fn find_by_refresh_token(
+        db: &mut Connection,
+        item_refresh_token: &str,
+    ) -> QueryResult<Self> {
         use super::schema::user_sessions::dsl::*;
 
         user_sessions
@@ -100,7 +104,11 @@ impl UserSession {
             .get_result(db)
     }
 
-    pub fn update(db: &mut Connection, item_id: ID, item: &UserSessionChangeset) -> QueryResult<Self> {
+    pub fn update(
+        db: &mut Connection,
+        item_id: ID,
+        item: &UserSessionChangeset,
+    ) -> QueryResult<Self> {
         use super::schema::user_sessions::dsl::*;
 
         diesel::update(user_sessions.filter(id.eq(item_id)))

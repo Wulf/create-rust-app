@@ -1,19 +1,21 @@
-use std::sync::Arc;
-use diesel::QueryResult;
 use diesel::result::{DatabaseErrorKind, Error};
+use diesel::QueryResult;
 use md5;
 use mime_guess;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use uuid::Uuid;
 
-use crate::{Connection, Pool};
 use crate::diesel::*;
-use crate::storage::{AttachmentBlob, ID, schema, UTC};
 use crate::storage::attachment_blob::AttachmentBlobChangeset;
+use crate::storage::{schema, AttachmentBlob, ID, UTC};
+use crate::{Connection, Pool};
 
 use super::{schema::*, Storage};
 
-#[derive(Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Identifiable, AsChangeset)]
+#[derive(
+    Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Identifiable, AsChangeset,
+)]
 #[diesel(table_name=attachments)]
 pub struct Attachment {
     pub id: ID,
@@ -37,20 +39,35 @@ pub struct AttachmentChangeset {
 
 pub struct AttachmentData {
     pub data: Vec<u8>,
-    pub file_name: Option<String>
+    pub file_name: Option<String>,
 }
 
 impl Attachment {
     /// in actix_web we don't need to support send+sync handlers, so we can use the &mut Connection directly.
     #[cfg(feature = "backend_actix-web")]
-    pub async fn attach(db: &mut Connection, storage: &Storage, name: String, record_type: String, record_id: ID, data: AttachmentData, allow_multiple: bool, overwrite_existing: bool) -> Result<String, String> {
+    pub async fn attach(
+        db: &mut Connection,
+        storage: &Storage,
+        name: String,
+        record_type: String,
+        record_id: ID,
+        data: AttachmentData,
+        allow_multiple: bool,
+        overwrite_existing: bool,
+    ) -> Result<String, String> {
         let checksum = format!("{:x}", md5::compute(&data.data));
         let file_name = data.file_name.clone();
-        let content_type = if file_name.is_some() { mime_guess::from_path(file_name.unwrap()).first_raw() } else { None }.map(|t| t.to_string());
+        let content_type = if file_name.is_some() {
+            mime_guess::from_path(file_name.unwrap()).first_raw()
+        } else {
+            None
+        }
+        .map(|t| t.to_string());
         let key = Uuid::new_v4().to_string();
 
         if !allow_multiple {
-            let existing = Attachment::find_for_record(db, name.clone(), record_type.clone(), record_id);
+            let existing =
+                Attachment::find_for_record(db, name.clone(), record_type.clone(), record_id);
 
             if existing.is_ok() {
                 // one already exists, we need to delete it
@@ -60,34 +77,45 @@ impl Attachment {
                     })?;
                 } else {
                     // throw the error
-                    return Err(format!("Only 1 attachment is allowed for '{name}' type attachments on '{record_type}'", name=name.clone(), record_type=record_type.clone()))
+                    return Err(format!("Only 1 attachment is allowed for '{name}' type attachments on '{record_type}'", name=name.clone(), record_type=record_type.clone()));
                 }
             }
         }
 
         let attached = diesel::connection::Connection::transaction::<Self, Error, _>(db, |db| {
-            let blob = AttachmentBlob::create(db, &AttachmentBlobChangeset {
-                byte_size: data.data.len() as i64,
-                service_name: "s3".to_string(),
-                key: key.clone(),
-                checksum: checksum.clone(),
-                content_type: content_type.clone(),
-                file_name: data.file_name.clone()
-            })?;
+            let blob = AttachmentBlob::create(
+                db,
+                &AttachmentBlobChangeset {
+                    byte_size: data.data.len() as i64,
+                    service_name: "s3".to_string(),
+                    key: key.clone(),
+                    checksum: checksum.clone(),
+                    content_type: content_type.clone(),
+                    file_name: data.file_name.clone().unwrap_or(String::new()),
+                },
+            )?;
 
-            let attached = Attachment::create(db, &AttachmentChangeset {
-                blob_id: blob.id,
-                record_id,
-                record_type,
-                name,
-            })?;
+            let attached = Attachment::create(
+                db,
+                &AttachmentChangeset {
+                    blob_id: blob.id,
+                    record_id,
+                    record_type,
+                    name,
+                },
+            )?;
 
             Ok(attached)
-        }).map_err(|err| {
-            err.to_string()
-        })?;
+        })
+        .map_err(|err| err.to_string())?;
 
-        let upload_result = storage.upload(key.clone(), data.data, content_type.clone().unwrap_or("".to_string()), checksum.clone())
+        let upload_result = storage
+            .upload(
+                key.clone(),
+                data.data,
+                content_type.clone().unwrap_or("".to_string()),
+                checksum.clone(),
+            )
             .await
             .map(|_| key);
 
@@ -104,16 +132,31 @@ impl Attachment {
 
     /// in poem, we need to pass in the pool itself because the Connection is not Send+Sync which poem handlers require
     #[cfg(feature = "backend_poem")]
-    pub async fn attach(pool: Arc<Pool>, storage: &Storage, name: String, record_type: String, record_id: ID, data: AttachmentData, allow_multiple: bool, overwrite_existing: bool) -> Result<String, String> {
+    pub async fn attach(
+        pool: Arc<Pool>,
+        storage: &Storage,
+        name: String,
+        record_type: String,
+        record_id: ID,
+        data: AttachmentData,
+        allow_multiple: bool,
+        overwrite_existing: bool,
+    ) -> Result<String, String> {
         let mut db = pool.clone().get().unwrap();
 
         let checksum = format!("{:x}", md5::compute(&data.data));
         let file_name = data.file_name.clone();
-        let content_type = if file_name.is_some() { mime_guess::from_path(file_name.unwrap()).first_raw() } else { None }.map(|t| t.to_string());
+        let content_type = if file_name.is_some() {
+            mime_guess::from_path(file_name.unwrap()).first_raw()
+        } else {
+            None
+        }
+        .map(|t| t.to_string());
         let key = Uuid::new_v4().to_string();
 
         if !allow_multiple {
-            let existing = Attachment::find_for_record(&mut db, name.clone(), record_type.clone(), record_id);
+            let existing =
+                Attachment::find_for_record(&mut db, name.clone(), record_type.clone(), record_id);
 
             if existing.is_ok() {
                 // one already exists, we need to delete it
@@ -123,34 +166,46 @@ impl Attachment {
                     })?;
                 } else {
                     // throw the error
-                    return Err(format!("Only 1 attachment is allowed for '{name}' type attachments on '{record_type}'", name=name.clone(), record_type=record_type.clone()))
+                    return Err(format!("Only 1 attachment is allowed for '{name}' type attachments on '{record_type}'", name=name.clone(), record_type=record_type.clone()));
                 }
             }
         }
 
-        let attached = diesel::connection::Connection::transaction::<Self, Error, _>(&mut db, |db| {
-            let blob = AttachmentBlob::create(db, &AttachmentBlobChangeset {
-                byte_size: data.data.len() as i64,
-                service_name: "s3".to_string(),
-                key: key.clone(),
-                checksum: checksum.clone(),
-                content_type: content_type.clone(),
-                file_name: data.file_name.clone()
-            })?;
+        let attached =
+            diesel::connection::Connection::transaction::<Self, Error, _>(&mut db, |db| {
+                let blob = AttachmentBlob::create(
+                    db,
+                    &AttachmentBlobChangeset {
+                        byte_size: data.data.len() as i64,
+                        service_name: "s3".to_string(),
+                        key: key.clone(),
+                        checksum: checksum.clone(),
+                        content_type: content_type.clone(),
+                        file_name: data.file_name.clone().unwrap_or(String::new()),
+                    },
+                )?;
 
-            let attached = Attachment::create(db, &AttachmentChangeset {
-                blob_id: blob.id,
-                record_id,
-                record_type,
-                name,
-            })?;
+                let attached = Attachment::create(
+                    db,
+                    &AttachmentChangeset {
+                        blob_id: blob.id,
+                        record_id,
+                        record_type,
+                        name,
+                    },
+                )?;
 
-            Ok(attached)
-        }).map_err(|err| {
-            err.to_string()
-        })?;
+                Ok(attached)
+            })
+            .map_err(|err| err.to_string())?;
 
-        let upload_result = storage.upload(key.clone(), data.data, content_type.clone().unwrap_or("".to_string()), checksum.clone())
+        let upload_result = storage
+            .upload(
+                key.clone(),
+                data.data,
+                content_type.clone().unwrap_or("".to_string()),
+                checksum.clone(),
+            )
             .await
             .map(|_| key);
 
@@ -168,11 +223,12 @@ impl Attachment {
     /// in actix_web we don't need to support send+sync handlers, so we can use the &mut Connection directly.
     #[cfg(feature = "backend_actix-web")]
     pub async fn detach(db: &mut Connection, storage: &Storage, item_id: ID) -> Result<(), String> {
-        let attached = Attachment::find_by_id(db, item_id).map_err(|_| "Could not load attachment")?;
-        let blob = AttachmentBlob::find_by_id(db, attached.blob_id).map_err(|_| "Could not load attachment blob")?;
+        let attached =
+            Attachment::find_by_id(db, item_id).map_err(|_| "Could not load attachment")?;
+        let blob = AttachmentBlob::find_by_id(db, attached.blob_id)
+            .map_err(|_| "Could not load attachment blob")?;
 
-        let delete_result = storage.delete(blob.key.clone())
-            .await;
+        let delete_result = storage.delete(blob.key.clone()).await;
 
         if delete_result.is_err() {
             // we continue even if there's an error deleting the actual object
@@ -187,9 +243,8 @@ impl Attachment {
             AttachmentBlob::delete(db, blob.id)?;
 
             Ok(())
-        }).map_err(|err| {
-            err.to_string()
-        })?;
+        })
+        .map_err(|err| err.to_string())?;
 
         Ok(())
     }
@@ -199,11 +254,12 @@ impl Attachment {
     pub async fn detach(pool: Arc<Pool>, storage: &Storage, item_id: ID) -> Result<(), String> {
         let mut db = pool.get().unwrap();
 
-        let attached = Attachment::find_by_id(&mut db, item_id).map_err(|_| "Could not load attachment")?;
-        let blob = AttachmentBlob::find_by_id(&mut db, attached.blob_id).map_err(|_| "Could not load attachment blob")?;
+        let attached =
+            Attachment::find_by_id(&mut db, item_id).map_err(|_| "Could not load attachment")?;
+        let blob = AttachmentBlob::find_by_id(&mut db, attached.blob_id)
+            .map_err(|_| "Could not load attachment blob")?;
 
-        let delete_result = storage.delete(blob.key.clone())
-            .await;
+        let delete_result = storage.delete(blob.key.clone()).await;
 
         if delete_result.is_err() {
             // we continue even if there's an error deleting the actual object
@@ -218,19 +274,35 @@ impl Attachment {
             AttachmentBlob::delete(db, blob.id)?;
 
             Ok(())
-        }).map_err(|err| {
-            err.to_string()
-        })?;
+        })
+        .map_err(|err| err.to_string())?;
 
         Ok(())
     }
 
-    pub async fn detach_all(db: &mut Connection, storage: &Storage, name: String, record_type: String, record_id: ID) -> Result<(), String> {
-        let attached = Attachment::find_all_for_record(db, name, record_type, record_id).map_err(|_| "Could not load attachments")?;
-        let attached_ids = attached.iter().map(|attached| attached.id).collect::<Vec<_>>();
-        let blob_ids = attached.iter().map(|attached| attached.blob_id).collect::<Vec<_>>();
-        let blobs = AttachmentBlob::find_all_by_id(db, blob_ids.clone()).map_err(|_| "Could not load attachment blobs")?;
-        let keys = blobs.iter().map(|blob| blob.key.to_string()).collect::<Vec<_>>();
+    pub async fn detach_all(
+        db: &mut Connection,
+        storage: &Storage,
+        name: String,
+        record_type: String,
+        record_id: ID,
+    ) -> Result<(), String> {
+        let attached = Attachment::find_all_for_record(db, name, record_type, record_id)
+            .map_err(|_| "Could not load attachments")?;
+        let attached_ids = attached
+            .iter()
+            .map(|attached| attached.id)
+            .collect::<Vec<_>>();
+        let blob_ids = attached
+            .iter()
+            .map(|attached| attached.blob_id)
+            .collect::<Vec<_>>();
+        let blobs = AttachmentBlob::find_all_by_id(db, blob_ids.clone())
+            .map_err(|_| "Could not load attachment blobs")?;
+        let keys = blobs
+            .iter()
+            .map(|blob| blob.key.to_string())
+            .collect::<Vec<_>>();
 
         let delete_result = storage.delete_many(keys).await;
 
@@ -247,9 +319,8 @@ impl Attachment {
             AttachmentBlob::delete_all(db, blob_ids)?;
 
             Ok(())
-        }).map_err(|err| {
-            err.to_string()
-        })?;
+        })
+        .map_err(|err| err.to_string())?;
 
         Ok(())
     }
@@ -268,7 +339,12 @@ impl Attachment {
             .first(db)
     }
 
-    pub fn find_for_record(db: &mut Connection, item_name: String, item_record_type: String, item_record_id: ID) -> QueryResult<Self> {
+    pub fn find_for_record(
+        db: &mut Connection,
+        item_name: String,
+        item_record_type: String,
+        item_record_id: ID,
+    ) -> QueryResult<Self> {
         schema::attachments::table
             .filter(schema::attachments::name.eq(item_name))
             .filter(schema::attachments::record_type.eq(item_record_type))
@@ -276,7 +352,12 @@ impl Attachment {
             .first::<Self>(db)
     }
 
-    pub fn find_all_for_record(db: &mut Connection, item_name: String, item_record_type: String, item_record_id: ID) -> QueryResult<Vec<Self>> {
+    pub fn find_all_for_record(
+        db: &mut Connection,
+        item_name: String,
+        item_record_type: String,
+        item_record_id: ID,
+    ) -> QueryResult<Vec<Self>> {
         schema::attachments::table
             .filter(schema::attachments::name.eq(item_name))
             .filter(schema::attachments::record_type.eq(item_record_type))
@@ -284,7 +365,12 @@ impl Attachment {
             .get_results::<Self>(db)
     }
 
-    pub fn find_all_for_records(db: &mut Connection, item_name: String, item_record_type: String, item_record_ids: Vec<ID>) -> QueryResult<Vec<Self>> {
+    pub fn find_all_for_records(
+        db: &mut Connection,
+        item_name: String,
+        item_record_type: String,
+        item_record_ids: Vec<ID>,
+    ) -> QueryResult<Vec<Self>> {
         schema::attachments::table
             .filter(schema::attachments::name.eq(item_name))
             .filter(schema::attachments::record_type.eq(item_record_type))
@@ -303,14 +389,12 @@ impl Attachment {
     fn delete(db: &mut Connection, item_id: ID) -> QueryResult<usize> {
         use super::schema::attachments::dsl::*;
 
-        diesel::delete(attachments.filter(id.eq(item_id))).execute(db)
+        diesel::delete(attachments.filter(schema::attachments::id.eq(item_id))).execute(db)
     }
 
     fn delete_all(db: &mut Connection, item_ids: Vec<ID>) -> QueryResult<usize> {
         use super::schema::attachments::dsl::*;
 
-        diesel::delete(attachments.filter(id.eq_any(item_ids))).execute(db)
+        diesel::delete(attachments.filter(schema::attachments::id.eq_any(item_ids))).execute(db)
     }
-
 }
-

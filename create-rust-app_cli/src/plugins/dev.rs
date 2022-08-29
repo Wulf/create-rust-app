@@ -1,11 +1,11 @@
-use crate::utils::fs;
-use crate::utils::logger::add_file_msg;
+use crate::logger::register_service_msg;
 use crate::plugins::InstallConfig;
 use crate::plugins::Plugin;
+use crate::utils::fs;
+use crate::utils::logger::add_file_msg;
+use crate::BackendFramework;
 use anyhow::Result;
 use rust_embed::RustEmbed;
-use crate::BackendFramework;
-use crate::logger::register_service_msg;
 
 pub struct Dev {}
 
@@ -20,7 +20,9 @@ impl Plugin for Dev {
 
     fn install(&self, install_config: InstallConfig) -> Result<()> {
         for filename in Asset::iter() {
-            if filename.starts_with("README.md") || filename.contains(".cargo/admin") && !filename.contains(".cargo/admin/dist") {
+            if filename.starts_with("README.md")
+                || filename.contains(".cargo/admin") && !filename.contains(".cargo/admin/dist")
+            {
                 continue;
             }
 
@@ -58,25 +60,28 @@ const App = () => {"#,
             BackendFramework::ActixWeb => {
                 register_service_msg("(dev-only) /development");
                 register_service_msg("(dev-only) /admin");
-                fs::replace("backend/main.rs",
-                            r#"/* Development-only routes */"#,
-                            r#"/* Development-only routes */
+                fs::replace(
+                    "backend/main.rs",
+                    r#"/* Development-only routes */"#,
+                    r#"/* Development-only routes */
             // Mount development-only API routes
             api_scope = api_scope.service(create_rust_app::dev::endpoints(web::scope("/development")));
             // Mount the admin dashboard on /admin
-            app = app.service(web::scope("/admin").service(Files::new("/", ".cargo/admin/dist/").index_file("admin.html")));"#)?;
-
-            },
+            app = app.service(web::scope("/admin").service(Files::new("/", ".cargo/admin/dist/").index_file("admin.html")));"#,
+                )?;
+            }
             BackendFramework::Poem => {
                 register_service_msg("(dev-only) /development");
                 register_service_msg("(dev-only) /admin");
-                fs::replace("backend/main.rs",
-                            r#"/* Development-only routes */"#,
-                            r#"/* Development-only routes */
+                fs::replace(
+                    "backend/main.rs",
+                    r#"/* Development-only routes */"#,
+                    r#"/* Development-only routes */
         // Mount development-only API routes
         api_routes = api_routes.nest("/development", create_rust_app::dev::api());
         // Mount the admin dashboard on /admin
-        app = app.at("/admin", StaticFilesEndpoint::new(".cargo/admin/dist").index_file("admin.html"));"#)?;
+        app = app.at("/admin", StaticFilesEndpoint::new(".cargo/admin/dist").index_file("admin.html"));"#,
+                )?;
             }
         }
 

@@ -28,7 +28,10 @@ pub fn add_dependency(
         .unwrap()
         .as_table_mut()
         .unwrap();
-    deps_table.insert("replace_me".to_string(), toml::Value::String("123".to_string()));
+    deps_table.insert(
+        "replace_me".to_string(),
+        toml::Value::String("123".to_string()),
+    );
 
     let updated_toml = toml::to_string(&parsed_toml).unwrap();
     let updated_toml = updated_toml.replace("replace_me = \"123\"", dependency_entry);
@@ -37,4 +40,3 @@ pub fn add_dependency(
 
     Ok(())
 }
-

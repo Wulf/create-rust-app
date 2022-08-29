@@ -1,9 +1,12 @@
-use jsonwebtoken::{decode, DecodingKey, encode, EncodingKey, Header, Validation};
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 
+use crate::auth::{
+    mail, AccessTokenClaims, Auth, PaginationParams, Permission, Role, User, UserChangeset,
+    UserSession, UserSessionChangeset, UserSessionJson, UserSessionResponse, ID,
+};
 use crate::{Database, Mailer};
-use crate::auth::{AccessTokenClaims, Auth, ID, mail, PaginationParams, Permission, Role, User, UserChangeset, UserSession, UserSessionChangeset, UserSessionJson, UserSessionResponse};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 pub const COOKIE_NAME: &'static str = "refresh_token";
 
@@ -16,7 +19,7 @@ pub struct LoginInput {
     email: String,
     password: String,
     device: Option<String>,
-    ttl: Option<Seconds>
+    ttl: Option<Seconds>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -69,7 +72,11 @@ pub struct ResetInput {
 }
 
 /// /sessions
-pub fn get_sessions(db: &Database, auth: &Auth, info: &PaginationParams) -> Result<UserSessionResponse, (StatusCode, Message)> {
+pub fn get_sessions(
+    db: &Database,
+    auth: &Auth,
+    info: &PaginationParams,
+) -> Result<UserSessionResponse, (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
     let sessions = UserSession::read_all(&mut db, &info, auth.user_id);
@@ -86,6 +93,7 @@ pub fn get_sessions(db: &Database, auth: &Auth, info: &PaginationParams) -> Resu
             id: session.id,
             device: session.device,
             created_at: session.created_at,
+            #[cfg(not(feature = "database_sqlite"))]
             updated_at: session.updated_at,
         };
 
@@ -98,7 +106,12 @@ pub fn get_sessions(db: &Database, auth: &Auth, info: &PaginationParams) -> Resu
     }
 
     let num_sessions = num_sessions.unwrap();
-    let num_pages = (num_sessions / info.page_size) + (if num_sessions % info.page_size != 0 { 1 } else { 0 });
+    let num_pages = (num_sessions / info.page_size)
+        + (if num_sessions % info.page_size != 0 {
+            1
+        } else {
+            0
+        });
 
     let resp = UserSessionResponse {
         sessions: sessions_json,
@@ -109,7 +122,11 @@ pub fn get_sessions(db: &Database, auth: &Auth, info: &PaginationParams) -> Resu
 }
 
 /// /sessions/{id}
-pub fn destroy_session(db: &Database, auth: &Auth, item_id: ID) -> Result<(), (StatusCode, Message)> {
+pub fn destroy_session(
+    db: &Database,
+    auth: &Auth,
+    item_id: ID,
+) -> Result<(), (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
     let user_session = UserSession::read(&mut db, item_id);
@@ -149,7 +166,10 @@ type RefreshToken = String;
 /// Returns a tuple;
 /// - the access token should be sent to the user in the body, and,
 /// - the reset token should be sent as a secure, http-only, and same_site=strict cookie.
-pub fn login(db: &Database, item: &LoginInput) -> Result<(AccessToken, RefreshToken), (StatusCode, Message)> {
+pub fn login(
+    db: &Database,
+    item: &LoginInput,
+) -> Result<(AccessToken, RefreshToken), (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
     // verify device
@@ -202,14 +222,12 @@ pub fn login(db: &Database, item: &LoginInput) -> Result<(AccessToken, RefreshTo
     }
     let roles = roles.unwrap();
 
-    let access_token_duration = chrono::Duration::seconds(
-        if item.ttl.is_some() {
-            std::cmp::max(item.ttl.unwrap(), 1)
-        } else {
-            /* 15 minutes */
-            15 * 60
-        }
-    );
+    let access_token_duration = chrono::Duration::seconds(if item.ttl.is_some() {
+        std::cmp::max(item.ttl.unwrap(), 1)
+    } else {
+        /* 15 minutes */
+        15 * 60
+    });
 
     let access_token_claims = AccessTokenClaims {
         exp: (chrono::Utc::now() + access_token_duration).timestamp() as usize,
@@ -229,19 +247,24 @@ pub fn login(db: &Database, item: &LoginInput) -> Result<(AccessToken, RefreshTo
         &Header::default(),
         &access_token_claims,
         &EncodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
-    ).unwrap();
+    )
+    .unwrap();
 
     let refresh_token = encode(
         &Header::default(),
         &refresh_token_claims,
         &EncodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
-    ).unwrap();
+    )
+    .unwrap();
 
-    let user_session = UserSession::create(&mut db, &UserSessionChangeset {
-        user_id: user.id,
-        refresh_token: refresh_token.clone(),
-        device,
-    });
+    let user_session = UserSession::create(
+        &mut db,
+        &UserSessionChangeset {
+            user_id: user.id,
+            refresh_token: refresh_token.clone(),
+            device,
+        },
+    );
 
     if user_session.is_err() {
         return Err((500, "Could not create a session."));
@@ -256,7 +279,7 @@ pub fn logout(db: &Database, refresh_token: Option<&'_ str>) -> Result<(), (Stat
     let mut db = db.pool.get().unwrap();
 
     if refresh_token.is_none() {
-        return Err((401, "Invalid session."))
+        return Err((401, "Invalid session."));
     }
 
     let refresh_token = refresh_token.unwrap();
@@ -282,7 +305,10 @@ pub fn logout(db: &Database, refresh_token: Option<&'_ str>) -> Result<(), (Stat
 /// Returns a tuple;
 /// - the access token should be sent to the user in the body, and,
 /// - the reset token should be sent as a secure, http-only, and same_site=strict cookie.
-pub fn refresh(db: &Database, refresh_token_str: Option<&'_ str>) -> Result<(AccessToken, RefreshToken), (StatusCode, Message)> {
+pub fn refresh(
+    db: &Database,
+    refresh_token_str: Option<&'_ str>,
+) -> Result<(AccessToken, RefreshToken), (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
     if refresh_token_str.is_none() {
@@ -303,7 +329,11 @@ pub fn refresh(db: &Database, refresh_token_str: Option<&'_ str>) -> Result<(Acc
 
     let refresh_token = refresh_token.unwrap();
 
-    if !refresh_token.claims.token_type.eq_ignore_ascii_case("refresh_token") {
+    if !refresh_token
+        .claims
+        .token_type
+        .eq_ignore_ascii_case("refresh_token")
+    {
         return Err((401, "Invalid token."));
     }
 
@@ -316,11 +346,15 @@ pub fn refresh(db: &Database, refresh_token_str: Option<&'_ str>) -> Result<(Acc
     let session = session.unwrap();
 
     let permissions = Permission::fetch_all(&mut db, session.user_id);
-    if permissions.is_err() { return Err((500, "An internal server error occurred.")); }
+    if permissions.is_err() {
+        return Err((500, "An internal server error occurred."));
+    }
     let permissions = permissions.unwrap();
 
     let roles = Role::fetch_all(&mut db, session.user_id);
-    if roles.is_err() { return Err((500, "An internal server error occurred.")); }
+    if roles.is_err() {
+        return Err((500, "An internal server error occurred."));
+    }
     let roles = roles.unwrap();
 
     let access_token_claims = AccessTokenClaims {
@@ -341,20 +375,26 @@ pub fn refresh(db: &Database, refresh_token_str: Option<&'_ str>) -> Result<(Acc
         &Header::default(),
         &access_token_claims,
         &EncodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
-    ).unwrap();
+    )
+    .unwrap();
 
     let refresh_token_str = encode(
         &Header::default(),
         &refresh_token_claims,
         &EncodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
-    ).unwrap();
+    )
+    .unwrap();
 
     // update session with the new refresh token
-    let session_update = UserSession::update(&mut db, session.id, &UserSessionChangeset {
-        user_id: session.user_id,
-        refresh_token: refresh_token_str.clone(),
-        device: session.device,
-    });
+    let session_update = UserSession::update(
+        &mut db,
+        session.id,
+        &UserSessionChangeset {
+            user_id: session.user_id,
+            refresh_token: refresh_token_str.clone(),
+            device: session.device,
+        },
+    );
 
     if session_update.is_err() {
         return Err((500, "Could not update the session."));
@@ -364,7 +404,11 @@ pub fn refresh(db: &Database, refresh_token_str: Option<&'_ str>) -> Result<(Acc
 }
 
 /// /register
-pub fn register(db: &Database, item: &RegisterInput, mailer: &Mailer) -> Result<(), (StatusCode, Message)> {
+pub fn register(
+    db: &Database,
+    item: &RegisterInput,
+    mailer: &Mailer,
+) -> Result<(), (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
     let user = User::find_by_email(&mut db, (&item.email).to_string());
@@ -388,11 +432,15 @@ pub fn register(db: &Database, item: &RegisterInput, mailer: &Mailer) -> Result<
         .hash()
         .unwrap();
 
-    let user = User::create(&mut db, &UserChangeset {
-        activated: false,
-        email: item.email.clone(),
-        hash_password: hash,
-    }).unwrap();
+    let user = User::create(
+        &mut db,
+        &UserChangeset {
+            activated: false,
+            email: item.email.clone(),
+            hash_password: hash,
+        },
+    )
+    .unwrap();
 
     let registration_claims = RegistrationClaims {
         exp: (chrono::Utc::now() + chrono::Duration::days(30)).timestamp() as usize,
@@ -404,15 +452,27 @@ pub fn register(db: &Database, item: &RegisterInput, mailer: &Mailer) -> Result<
         &Header::default(),
         &registration_claims,
         &EncodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
-    ).unwrap();
+    )
+    .unwrap();
 
-    mail::auth_register::send(&mailer, &user.email, &format!("http://localhost:3000/activate?token={token}", token = token));
+    mail::auth_register::send(
+        &mailer,
+        &user.email,
+        &format!(
+            "http://localhost:3000/activate?token={token}",
+            token = token
+        ),
+    );
 
     Ok(())
 }
 
 /// /activate
-pub fn activate(db: &Database, item: &ActivationInput, mailer: &Mailer) -> Result<(), (StatusCode, Message)> {
+pub fn activate(
+    db: &Database,
+    item: &ActivationInput,
+    mailer: &Mailer,
+) -> Result<(), (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
     let token = decode::<RegistrationClaims>(
@@ -427,7 +487,11 @@ pub fn activate(db: &Database, item: &ActivationInput, mailer: &Mailer) -> Resul
 
     let token = token.unwrap();
 
-    if !token.claims.token_type.eq_ignore_ascii_case("activation_token") {
+    if !token
+        .claims
+        .token_type
+        .eq_ignore_ascii_case("activation_token")
+    {
         return Err((401, "Invalid token."));
     }
 
@@ -443,11 +507,15 @@ pub fn activate(db: &Database, item: &ActivationInput, mailer: &Mailer) -> Resul
         return Err((200, "Already activated!"));
     }
 
-    let activated_user = User::update(&mut db, user.id, &UserChangeset {
-        activated: true,
-        email: user.email.clone(),
-        hash_password: user.hash_password,
-    });
+    let activated_user = User::update(
+        &mut db,
+        user.id,
+        &UserChangeset {
+            activated: true,
+            email: user.email.clone(),
+            hash_password: user.hash_password,
+        },
+    );
 
     if activated_user.is_err() {
         return Err((500, "Could not activate user."));
@@ -459,7 +527,11 @@ pub fn activate(db: &Database, item: &ActivationInput, mailer: &Mailer) -> Resul
 }
 
 /// /forgot
-pub fn forgot_password(db: &Database, item: &ForgotInput, mailer: &Mailer) -> Result<(), (StatusCode, Message)> {
+pub fn forgot_password(
+    db: &Database,
+    item: &ForgotInput,
+    mailer: &Mailer,
+) -> Result<(), (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
     let user_result = User::find_by_email(&mut db, item.email.clone());
@@ -481,9 +553,13 @@ pub fn forgot_password(db: &Database, item: &ForgotInput, mailer: &Mailer) -> Re
             &Header::default(),
             &reset_token_claims,
             &EncodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
-        ).unwrap();
+        )
+        .unwrap();
 
-        let link = &format!("http://localhost:3000/reset?token={reset_token}", reset_token = reset_token);
+        let link = &format!(
+            "http://localhost:3000/reset?token={reset_token}",
+            reset_token = reset_token
+        );
         mail::auth_recover_existent_account::send(&mailer, &user.email, link);
     } else {
         let link = &format!("http://localhost:300/register");
@@ -494,7 +570,12 @@ pub fn forgot_password(db: &Database, item: &ForgotInput, mailer: &Mailer) -> Re
 }
 
 /// /change
-pub fn change_password(db: &Database, item: &ChangeInput, auth: &Auth, mailer: &Mailer) -> Result<(), (StatusCode, Message)> {
+pub fn change_password(
+    db: &Database,
+    item: &ChangeInput,
+    auth: &Auth,
+    mailer: &Mailer,
+) -> Result<(), (StatusCode, Message)> {
     if item.old_password.len() == 0 || item.new_password.len() == 0 {
         return Err((400, "Missing password"));
     }
@@ -542,11 +623,15 @@ pub fn change_password(db: &Database, item: &ChangeInput, auth: &Auth, mailer: &
         .hash()
         .unwrap();
 
-    let updated_user = User::update(&mut db, auth.user_id, &UserChangeset {
-        email: user.email.clone(),
-        hash_password: new_hash,
-        activated: user.activated,
-    });
+    let updated_user = User::update(
+        &mut db,
+        auth.user_id,
+        &UserChangeset {
+            email: user.email.clone(),
+            hash_password: new_hash,
+            activated: user.activated,
+        },
+    );
 
     if updated_user.is_err() {
         return Err((500, "Could not update password"));
@@ -558,11 +643,14 @@ pub fn change_password(db: &Database, item: &ChangeInput, auth: &Auth, mailer: &
 }
 
 /// /check
-pub fn check(_: &Auth) {
-}
+pub fn check(_: &Auth) {}
 
 /// reset
-pub fn reset_password(db: &Database, item: &ResetInput, mailer: &Mailer) -> Result<(), (StatusCode, Message)> {
+pub fn reset_password(
+    db: &Database,
+    item: &ResetInput,
+    mailer: &Mailer,
+) -> Result<(), (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
     if item.new_password.len() == 0 {
@@ -607,11 +695,15 @@ pub fn reset_password(db: &Database, item: &ResetInput, mailer: &Mailer) -> Resu
         .hash()
         .unwrap();
 
-    let update = User::update(&mut db, user.id, &UserChangeset {
-        email: user.email.clone(),
-        hash_password: new_hash,
-        activated: user.activated,
-    });
+    let update = User::update(
+        &mut db,
+        user.id,
+        &UserChangeset {
+            email: user.email.clone(),
+            hash_password: new_hash,
+            activated: user.activated,
+        },
+    );
 
     if update.is_err() {
         return Err((500, "Could not update password"));

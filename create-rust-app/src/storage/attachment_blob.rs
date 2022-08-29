@@ -1,19 +1,18 @@
-use diesel::QueryResult;
 use serde::{Deserialize, Serialize};
 
 use crate::Connection;
 use crate::diesel::*;
-use crate::storage::{ID, schema, UTC};
+use crate::storage::{ID, schema, schema::*, UTC};
 
-use super::schema::*;
-
-#[derive(Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Identifiable, AsChangeset)]
-#[diesel(table_name=attachment_blobs)]
+#[derive(
+Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Identifiable, AsChangeset,
+)]
+#[diesel(table_name = attachment_blobs)]
 pub struct AttachmentBlob {
     pub id: ID,
 
     pub key: String,
-    pub file_name: Option<String>,
+    pub file_name: String,
     pub content_type: Option<String>,
     pub byte_size: i64,
     pub checksum: String,
@@ -21,15 +20,16 @@ pub struct AttachmentBlob {
 
     pub created_at: UTC,
 }
+
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]
-#[diesel(table_name=attachment_blobs)]
+#[diesel(table_name = attachment_blobs)]
 pub struct AttachmentBlobChangeset {
     pub key: String,
-    pub file_name: Option<String>,
+    pub file_name: String,
     pub content_type: Option<String>,
     pub byte_size: i64,
     pub checksum: String,
-    pub service_name: String
+    pub service_name: String,
 }
 
 impl AttachmentBlob {
@@ -44,13 +44,17 @@ impl AttachmentBlob {
     pub fn find_by_id(db: &mut Connection, item_id: ID) -> QueryResult<Self> {
         use super::schema::attachment_blobs::dsl::*;
 
-        attachment_blobs.filter(id.eq(item_id)).first::<AttachmentBlob>(db)
+        attachment_blobs
+            .filter(schema::attachment_blobs::id.eq(item_id))
+            .first::<AttachmentBlob>(db)
     }
 
     pub fn find_all_by_id(db: &mut Connection, item_ids: Vec<ID>) -> QueryResult<Vec<Self>> {
         use super::schema::attachment_blobs::dsl::*;
 
-        attachment_blobs.filter(id.eq_any(item_ids)).load::<AttachmentBlob>(db)
+        attachment_blobs
+            .filter(schema::attachment_blobs::id.eq_any(item_ids))
+            .load::<AttachmentBlob>(db)
     }
 
     // fn read_all(db: &mut Connection, pagination: &PaginationParams) -> QueryResult<Vec<Self>> {
@@ -72,13 +76,15 @@ impl AttachmentBlob {
     // }
 
     pub fn delete(db: &mut Connection, item_id: ID) -> QueryResult<usize> {
-        let query = schema::attachment_blobs::table.filter(schema::attachment_blobs::id.eq(item_id));
+        let query =
+            schema::attachment_blobs::table.filter(schema::attachment_blobs::id.eq(item_id));
 
         diesel::delete(query).execute(db)
     }
 
     pub fn delete_all(db: &mut Connection, item_ids: Vec<ID>) -> QueryResult<usize> {
-        let query = schema::attachment_blobs::table.filter(schema::attachment_blobs::id.eq_any(item_ids));
+        let query =
+            schema::attachment_blobs::table.filter(schema::attachment_blobs::id.eq_any(item_ids));
 
         diesel::delete(query).execute(db)
     }

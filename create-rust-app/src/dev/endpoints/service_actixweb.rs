@@ -1,12 +1,21 @@
+use crate::{
+    auth::Auth,
+    dev::controller,
+    dev::controller::{HealthCheckResponse, MyQueryResult, MySqlQuery},
+    Database,
+};
+use actix_web::{
+    get, post,
+    web::{Data, Json},
+    HttpResponse, Scope,
+};
 use std::ops::Deref;
-use actix_web::{get, HttpResponse, post, Scope, web::{Data, Json}};
-use crate::{auth::Auth, Database, dev::controller, dev::controller::{HealthCheckResponse, MyQueryResult, MySqlQuery}};
 
 #[post("/db/query")]
 async fn query_db(db: Data<Database>, body: Json<MySqlQuery>) -> HttpResponse {
     match controller::query_db(&db, body.deref()) {
         Ok(result) => HttpResponse::Ok().body(result),
-        Err(t) => HttpResponse::InternalServerError().finish()
+        Err(t) => HttpResponse::InternalServerError().finish(),
     }
 }
 

@@ -13,7 +13,10 @@ pub fn add_file_msg(file: &str) {
 }
 
 pub fn register_service_msg(service_name: &str) {
-    message(&format!("Registering service {}", style(service_name).yellow()));
+    message(&format!(
+        "Registering service {}",
+        style(service_name).yellow()
+    ));
 }
 
 pub fn modify_file_msg(file: &str) {
@@ -25,7 +28,11 @@ pub fn remove_file_msg(file: &str) {
 }
 
 pub fn rename_file_msg(src: &str, dest: &str) {
-    message(&format!("Renaming {} to {}", style(src).yellow(), style(dest).yellow()));
+    message(&format!(
+        "Renaming {} to {}",
+        style(src).yellow(),
+        style(dest).yellow()
+    ));
 }
 
 pub fn plugin_msg(name: &str) {
@@ -105,11 +112,10 @@ pub fn project_created_msg(project_dir: std::path::PathBuf) {
     }
 
     if !is_tsync_cli_installed {
-        message(&format!("• Install tsync (to generate typescript types from rust)"));
         message(&format!(
-            "  $ {}",
-            style("cargo install tsync").cyan()
+            "• Install tsync (to generate typescript types from rust)"
         ));
+        message(&format!("  $ {}", style("cargo install tsync").cyan()));
     }
 
     message(&format!("• Begin development!"));

@@ -36,9 +36,7 @@ impl Mailer {
 
     pub fn check_environment_variables() {
         if std::env::var("SMTP_FROM_ADDRESS").is_err() {
-            println!(
-                "Note: Mailing disabled; 'SMTP_FROM_ADDRESS' not set."
-            );
+            println!("Note: Mailing disabled; 'SMTP_FROM_ADDRESS' not set.");
         }
 
         if std::env::var("SMTP_SERVER").is_err() {
@@ -53,10 +51,12 @@ impl Mailer {
             println!("Note: Mailing disabled; 'SMTP_PASSWORD' not set.");
         }
 
-        if std::env::var("SEND_MAIL").is_err() || !std::env::var("SEND_MAIL").unwrap().eq_ignore_ascii_case("true") {
-            println!(
-                "Note: Mailing disabled; 'SEND_MAIL' not 'true'."
-            );
+        if std::env::var("SEND_MAIL").is_err()
+            || !std::env::var("SEND_MAIL")
+                .unwrap()
+                .eq_ignore_ascii_case("true")
+        {
+            println!("Note: Mailing disabled; 'SEND_MAIL' not 'true'.");
         }
     }
 

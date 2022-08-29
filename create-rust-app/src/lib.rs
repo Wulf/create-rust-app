@@ -1,5 +1,7 @@
 #[cfg(all(feature = "backend_actix-web", feature = "backend_poem"))]
-compile_error!("feature \"backend_actix-web\" and feature \"backend_poem\" cannot be enabled at the same time");
+compile_error!(
+    "feature \"backend_actix-web\" and feature \"backend_poem\" cannot be enabled at the same time"
+);
 
 // #[cfg(not(any(feature = "backend_poem", feature = "backend_actix-web")))]
 // compile_error!("Please enable one of the backend features (options: 'backend_actix-web', 'backend-poem')");
@@ -7,7 +9,8 @@ compile_error!("feature \"backend_actix-web\" and feature \"backend_poem\" canno
 mod util;
 pub use util::*;
 
-#[macro_use] extern crate diesel;
+#[macro_use]
+extern crate diesel;
 
 #[cfg(feature = "plugin_auth")]
 pub mod auth;
@@ -16,7 +19,7 @@ pub mod auth;
 pub mod dev;
 
 mod database;
-pub use database::{Database, Pool, Connection};
+pub use database::{Connection, Database, Pool};
 
 #[cfg(feature = "backend_poem")]
 mod logger;
@@ -26,7 +29,7 @@ pub use logger::Logger as PoemLogger;
 #[cfg(feature = "plugin_storage")]
 mod storage;
 #[cfg(feature = "plugin_storage")]
-pub use storage::{Storage, Attachment, AttachmentData, AttachmentBlob};
+pub use storage::{Attachment, AttachmentBlob, AttachmentData, Storage};
 
 mod mailer;
 pub use mailer::Mailer;
@@ -39,8 +42,8 @@ pub use mailer::Mailer;
 pub struct AppData {
     pub mailer: Mailer,
     pub database: Database,
-    #[cfg(feature= "plugin_storage")]
-    pub storage: storage::Storage
+    #[cfg(feature = "plugin_storage")]
+    pub storage: storage::Storage,
 }
 
 pub fn setup() -> AppData {
@@ -56,7 +59,7 @@ pub fn setup() -> AppData {
         // diesel_migrations::embed_migrations!();
     }
 
-    #[cfg(feature="plugin_auth")]
+    #[cfg(feature = "plugin_auth")]
     if std::env::var("SECRET_KEY").is_err() {
         panic!("No SECRET_KEY environment variable set!");
     }
@@ -70,8 +73,8 @@ pub fn setup() -> AppData {
     AppData {
         mailer: Mailer::new(),
         database: Database::new(),
-        #[cfg(feature= "plugin_storage")]
-        storage: storage::Storage::new()
+        #[cfg(feature = "plugin_storage")]
+        storage: storage::Storage::new(),
     }
 }
 
