@@ -1,16 +1,18 @@
-use crate::diesel::*;
-use crate::auth::schema::*;
+use diesel::QueryResult;
+use serde::{Deserialize, Serialize};
 
+use crate::auth::schema::*;
+use crate::diesel::*;
 use crate::{
     auth::{user::User, ID, UTC},
     database::Connection,
 };
-use diesel::QueryResult;
-use serde::{Deserialize, Serialize};
 
 #[tsync::tsync]
-#[derive(Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Associations, AsChangeset)]
-#[diesel(table_name=user_roles,belongs_to(User))]
+#[derive(
+    Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Associations, AsChangeset,
+)]
+#[diesel(table_name = user_roles, belongs_to(User))]
 pub struct UserRole {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -21,7 +23,7 @@ pub struct UserRole {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]
-#[diesel(table_name=user_roles)]
+#[diesel(table_name = user_roles)]
 pub struct UserRoleChangeset {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -41,7 +43,18 @@ impl UserRole {
             .get_result::<UserRole>(db)
     }
 
-    pub fn create_many(db: &mut Connection, items: Vec<UserRoleChangeset>) -> QueryResult<Vec<Self>> {
+    #[cfg(feature = "database_sqlite")]
+    pub fn create_many(db: &mut Connection, items: Vec<UserRoleChangeset>) -> QueryResult<usize> {
+        use crate::auth::schema::user_roles::dsl::*;
+
+        insert_into(user_roles).values(items).execute(db)
+    }
+
+    #[cfg(not(feature = "database_sqlite"))]
+    pub fn create_many(
+        db: &mut Connection,
+        items: Vec<UserRoleChangeset>,
+    ) -> QueryResult<Vec<Self>> {
         use crate::auth::schema::user_roles::dsl::*;
 
         insert_into(user_roles)
@@ -73,7 +86,11 @@ impl UserRole {
             .execute(db)
     }
 
-    pub fn delete_many(db: &mut Connection, item_user_id: ID, item_roles: Vec<String>) -> QueryResult<usize> {
+    pub fn delete_many(
+        db: &mut Connection,
+        item_user_id: ID,
+        item_roles: Vec<String>,
+    ) -> QueryResult<usize> {
         use crate::auth::schema::user_roles::dsl::*;
 
         diesel::delete(user_roles.filter(user_id.eq(item_user_id).and(role.eq_any(item_roles))))

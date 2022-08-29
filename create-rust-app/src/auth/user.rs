@@ -1,5 +1,5 @@
-use crate::diesel::*;
 use super::schema::*;
+use crate::diesel::*;
 
 use super::{PaginationParams, ID, UTC};
 use crate::database::Connection;
@@ -8,14 +8,7 @@ use serde::{Deserialize, Serialize};
 
 #[tsync::tsync]
 #[derive(
-    Debug,
-    Serialize,
-    Deserialize,
-    Clone,
-    Queryable,
-    Insertable,
-    Identifiable,
-    AsChangeset,
+    Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Identifiable, AsChangeset,
 )]
 #[diesel(table_name=users)]
 pub struct User {
@@ -29,6 +22,7 @@ pub struct User {
     pub activated: bool,
 
     pub created_at: UTC,
+    #[cfg(not(feature = "database_sqlite"))]
     pub updated_at: UTC,
 }
 

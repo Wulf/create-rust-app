@@ -1,15 +1,17 @@
 use diesel::QueryResult;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    auth::{ID, user::User, UTC},
-    database::Connection,
-};
 use crate::auth::schema::*;
 use crate::diesel::*;
+use crate::{
+    auth::{user::User, ID, UTC},
+    database::Connection,
+};
 
 #[tsync::tsync]
-#[derive(Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Associations, AsChangeset)]
+#[derive(
+    Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Associations, AsChangeset,
+)]
 #[diesel(table_name=user_permissions,belongs_to(User))]
 pub struct UserPermission {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -41,7 +43,23 @@ impl UserPermission {
             .get_result::<UserPermission>(db)
     }
 
-    pub fn create_many(db: &mut Connection, items: Vec<UserPermissionChangeset>) -> QueryResult<Self> {
+    #[cfg(feature="database_sqlite")]
+    pub fn create_many(
+        db: &mut Connection,
+        items: Vec<UserPermissionChangeset>,
+    ) -> QueryResult<usize> {
+        use crate::auth::schema::user_permissions::dsl::*;
+
+        insert_into(user_permissions)
+            .values(items)
+            .execute(db)
+    }
+
+    #[cfg(not(feature="database_sqlite"))]
+    pub fn create_many(
+        db: &mut Connection,
+        items: Vec<UserPermissionChangeset>,
+    ) -> QueryResult<Self> {
         use crate::auth::schema::user_permissions::dsl::*;
 
         insert_into(user_permissions)
@@ -49,7 +67,11 @@ impl UserPermission {
             .get_result::<UserPermission>(db)
     }
 
-    pub fn read(db: &mut Connection, item_user_id: ID, item_permission: String) -> QueryResult<Self> {
+    pub fn read(
+        db: &mut Connection,
+        item_user_id: ID,
+        item_permission: String,
+    ) -> QueryResult<Self> {
         use crate::auth::schema::user_permissions::dsl::*;
 
         user_permissions
@@ -74,9 +96,9 @@ impl UserPermission {
         use crate::auth::schema::user_permissions::dsl::*;
 
         diesel::delete(
-            user_permissions.filter(user_id.eq(item_user_id).and(permission.eq(item_permission)))
+            user_permissions.filter(user_id.eq(item_user_id).and(permission.eq(item_permission))),
         )
-            .execute(db)
+        .execute(db)
     }
 
     pub fn delete_many(
@@ -89,20 +111,14 @@ impl UserPermission {
         diesel::delete(
             user_permissions
                 .filter(user_id.eq(item_user_id))
-                .filter(permission.eq_any(item_permissions))
+                .filter(permission.eq_any(item_permissions)),
         )
-            .execute(db)
+        .execute(db)
     }
 
-    pub fn delete_all(
-        db: &mut Connection,
-        item_user_id: ID,
-    ) -> QueryResult<usize> {
+    pub fn delete_all(db: &mut Connection, item_user_id: ID) -> QueryResult<usize> {
         use crate::auth::schema::user_permissions::dsl::*;
 
-        diesel::delete(
-            user_permissions.filter(user_id.eq(item_user_id)),
-        )
-            .execute(db)
+        diesel::delete(user_permissions.filter(user_id.eq(item_user_id))).execute(db)
     }
 }

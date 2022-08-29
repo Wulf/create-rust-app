@@ -2,10 +2,10 @@ use crate::plugins::InstallConfig;
 use crate::plugins::Plugin;
 use crate::utils::fs;
 use crate::utils::logger::add_file_msg;
+use crate::{BackendDatabase, BackendFramework};
 use anyhow::Result;
 use indoc::indoc;
 use rust_embed::RustEmbed;
-use crate::BackendFramework;
 
 pub struct Auth {}
 
@@ -97,7 +97,8 @@ import { ResetPage } from './containers/ResetPage'"#,
 
         crate::content::migration::create(
             "plugin_auth",
-            indoc! {r#"
+            match install_config.backend_database {
+                BackendDatabase::Postgres => indoc! {r#"
       CREATE TABLE users (
         id SERIAL PRIMARY KEY,
         email TEXT NOT NULL,
@@ -141,6 +142,45 @@ import { ResetPage } from './containers/ResetPage'"#,
         PRIMARY KEY (role, permission)
       );
     "#},
+                BackendDatabase::Sqlite => indoc! {r#"
+      CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        email TEXT NOT NULL,
+        hash_password TEXT NOT NULL,
+        activated BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE user_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        refresh_token TEXT NOT NULL,
+        device TEXT,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE user_permissions (
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        permission TEXT NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, permission)
+      );
+
+      CREATE TABLE user_roles (
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        role TEXT NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, role)
+      );
+
+      CREATE TABLE role_permissions (
+        role TEXT NOT NULL,
+        permission TEXT NOT NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (role, permission)
+      );
+    "#}
+            },
             indoc! {r#"
       DROP TABLE users CASCADE ALL;
       DROP TABLE user_sessions CASCADE ALL;
@@ -151,12 +191,10 @@ import { ResetPage } from './containers/ResetPage'"#,
         )?;
 
         match install_config.backend_framework {
-            BackendFramework::ActixWeb => {
-                crate::content::service::register_actix(
-                    "auth",
-                    r#"create_rust_app::auth::endpoints(web::scope("/auth"))"#
-                )?
-            },
+            BackendFramework::ActixWeb => crate::content::service::register_actix(
+                "auth",
+                r#"create_rust_app::auth::endpoints(web::scope("/auth"))"#,
+            )?,
             BackendFramework::Poem => crate::content::service::register_poem(
                 "auth",
                 "create_rust_app::auth::api()",

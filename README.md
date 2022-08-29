@@ -47,7 +47,7 @@ $ create-rust-app <project_name>
     - One of the following frameworks: `actix-web`, `poem` or let us know which one you want to use!
     - Database migrations (using diesel.rs)
     - Sending mail
-    - PostgreSQL (but you can easily switch to another one!)
+    - PostgreSQL, SQLite 3.35+ support
     - ViteJS (blazing fast frontend compile speeds)
     - SSR templating with an option to include bundles that are automatically code-split
       - The `/views` folder contains all templates

@@ -1,23 +1,24 @@
-pub mod dev;
 pub mod auth;
 pub mod container;
-pub mod storage;
+pub mod dev;
 pub mod graphql;
+pub mod storage;
 
-use crate::utils::logger;
+use crate::{project, BackendFramework};
+use crate::{utils::logger, BackendDatabase};
 use anyhow::Result;
 use std::path::PathBuf;
-use crate::{BackendFramework, project};
 
 #[derive(Clone)]
 pub struct InstallConfig {
     pub project_dir: PathBuf,
     pub backend_framework: BackendFramework,
+    pub backend_database: BackendDatabase,
     pub plugin_dev: bool,
     pub plugin_auth: bool,
     pub plugin_container: bool,
     pub plugin_storage: bool,
-    pub plugin_graphql: bool
+    pub plugin_graphql: bool,
 }
 
 pub trait Plugin {
@@ -48,7 +49,10 @@ pub trait Plugin {
 
     fn after_install(&self, install_config: InstallConfig) -> Result<()> {
         // cleanup
-        project::remove_non_framework_files(&install_config.project_dir, install_config.backend_framework)?;
+        project::remove_non_framework_files(
+            &install_config.project_dir,
+            install_config.backend_framework,
+        )?;
 
         logger::command_msg("git add -A");
 

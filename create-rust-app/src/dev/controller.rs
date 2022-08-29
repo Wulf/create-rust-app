@@ -1,8 +1,8 @@
-use diesel::{sql_query, sql_types::Text, query_dsl::RunQueryDsl};
-use diesel_migrations::{FileBasedMigrations, MigrationHarness};
-use serde::{Deserialize, Serialize};
 use crate::auth::{Auth, Role};
 use crate::Database;
+use diesel::{query_dsl::RunQueryDsl, sql_query, sql_types::Text};
+use diesel_migrations::{FileBasedMigrations, MigrationHarness};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, QueryableByName)]
 pub struct MyQueryResult {
@@ -58,7 +58,7 @@ pub fn is_connected(db: &Database) -> bool {
 /// checks if a migration is needed
 pub fn needs_migration(db: &Database) -> bool {
     let mut db = db.pool.clone().get().unwrap();
-    
+
     let source = FileBasedMigrations::find_migrations_directory().unwrap();
     MigrationHarness::has_pending_migration(&mut db, source).unwrap()
 }
@@ -69,7 +69,8 @@ pub fn migrate_db(db: &Database) -> bool {
     let mut db = db.pool.clone().get().unwrap();
 
     let source = FileBasedMigrations::find_migrations_directory().unwrap();
-    let has_pending_migrations = MigrationHarness::has_pending_migration(&mut db, source.clone()).unwrap();
+    let has_pending_migrations =
+        MigrationHarness::has_pending_migration(&mut db, source.clone()).unwrap();
 
     if !has_pending_migrations {
         return true;

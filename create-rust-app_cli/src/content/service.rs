@@ -1,9 +1,9 @@
+use crate::logger::register_service_msg;
+use crate::BackendFramework;
 use anyhow::Result;
 use indoc::indoc;
 use inflector::Inflector;
 use std::path::PathBuf;
-use crate::BackendFramework;
-use crate::logger::register_service_msg;
 
 struct Service {
     pub config: ServiceConfig,
@@ -15,10 +15,15 @@ struct ServiceConfig {
     pub file_name: String,
 }
 
-pub fn create(backend: BackendFramework, resource_name: &str, service_api_fn: &str, base_endpoint_path: &str) -> Result<()> {
+pub fn create(
+    backend: BackendFramework,
+    resource_name: &str,
+    service_api_fn: &str,
+    base_endpoint_path: &str,
+) -> Result<()> {
     let resource = match backend {
         BackendFramework::ActixWeb => generate_actix(resource_name),
-        BackendFramework::Poem => generate_poem(resource_name)
+        BackendFramework::Poem => generate_poem(resource_name),
     };
 
     crate::fs::add_rust_file(
@@ -30,10 +35,17 @@ pub fn create(backend: BackendFramework, resource_name: &str, service_api_fn: &s
     match backend {
         BackendFramework::ActixWeb => {
             let name = resource.config.file_name.as_str();
-            let service_entry = &format!("services::{}::endpoints(web::scope(\"{}\"))", name, base_endpoint_path);
+            let service_entry = &format!(
+                "services::{}::endpoints(web::scope(\"{}\"))",
+                name, base_endpoint_path
+            );
             register_actix(name, service_entry)?;
-        },
-        BackendFramework::Poem => register_poem(&resource.config.file_name, service_api_fn, base_endpoint_path)?
+        }
+        BackendFramework::Poem => register_poem(
+            &resource.config.file_name,
+            service_api_fn,
+            base_endpoint_path,
+        )?,
     };
 
     Ok(())
@@ -234,13 +246,23 @@ fn generate_actix(service_name: &str) -> Service {
 
 /// use fs::replace instead and also fs::append for the services/mod.rs entry
 // #[deprecated]
-pub fn register_poem(name: &str, service_api_fn: &str, service_base_endpoint_path: &str) -> Result<()> {
+pub fn register_poem(
+    name: &str,
+    service_api_fn: &str,
+    service_base_endpoint_path: &str,
+) -> Result<()> {
     register_service_msg(name);
     let main_file_path = PathBuf::from("backend/main.rs");
     if main_file_path.exists() && main_file_path.is_file() {
         let mut main_file_contents = std::fs::read_to_string(&main_file_path)?;
 
-        main_file_contents = main_file_contents.replace("let mut api_routes = Route::new();", &format!("let mut api_routes = Route::new();\n\t\tapi_routes = api_routes.nest(\"{}\", {});", service_base_endpoint_path, service_api_fn));
+        main_file_contents = main_file_contents.replace(
+            "let mut api_routes = Route::new();",
+            &format!(
+                "let mut api_routes = Route::new();\n\t\tapi_routes = api_routes.nest(\"{}\", {});",
+                service_base_endpoint_path, service_api_fn
+            ),
+        );
         std::fs::write(main_file_path, main_file_contents)?;
     }
 
@@ -256,8 +278,11 @@ pub fn register_actix(name: &str, service: &str) -> Result<()> {
         let mut main_file_contents = std::fs::read_to_string(&main_file_path)?;
         main_file_contents = main_file_contents.replace(
             r#"let mut api_scope = web::scope("/api");"#,
-            &format!(r#"let mut api_scope = web::scope("/api");
-        api_scope = api_scope.service({});"#, service)
+            &format!(
+                r#"let mut api_scope = web::scope("/api");
+        api_scope = api_scope.service({});"#,
+                service
+            ),
         );
         std::fs::write(main_file_path, main_file_contents)?;
     }

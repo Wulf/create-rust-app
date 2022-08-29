@@ -1,14 +1,12 @@
-use crate::diesel::*;
-use crate::auth::schema::*;
-
-use crate::auth::UTC;
-use crate::database::Connection;
-use diesel::QueryResult;
 use serde::{Deserialize, Serialize};
+
+use crate::auth::{UTC, schema::*};
+use crate::database::Connection;
+use crate::diesel::*;
 
 #[tsync::tsync]
 #[derive(Debug, Serialize, Deserialize, Clone, Queryable, Insertable, AsChangeset)]
-#[diesel(table_name=role_permissions)]
+#[diesel(table_name = role_permissions)]
 pub struct RolePermission {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -19,7 +17,7 @@ pub struct RolePermission {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]
-#[diesel(table_name=role_permissions)]
+#[diesel(table_name = role_permissions)]
 pub struct RolePermissionChangeset {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -39,7 +37,23 @@ impl RolePermission {
             .get_result::<RolePermission>(db)
     }
 
-    pub fn create_many(db: &mut Connection, items: Vec<RolePermissionChangeset>) -> QueryResult<Vec<Self>> {
+    #[cfg(feature = "database_sqlite")]
+    pub fn create_many(
+        db: &mut Connection,
+        items: Vec<RolePermissionChangeset>,
+    ) -> QueryResult<usize> {
+        use crate::auth::schema::role_permissions::dsl::*;
+
+        insert_into(role_permissions)
+            .values(items)
+            .execute(db)
+    }
+
+    #[cfg(not(feature = "database_sqlite"))]
+    pub fn create_many(
+        db: &mut Connection,
+        items: Vec<RolePermissionChangeset>,
+    ) -> QueryResult<Vec<Self>> {
         use crate::auth::schema::role_permissions::dsl::*;
 
         insert_into(role_permissions)
@@ -47,7 +61,11 @@ impl RolePermission {
             .get_results::<RolePermission>(db)
     }
 
-    pub fn read(db: &mut Connection, item_role: String, item_permission: String) -> QueryResult<Self> {
+    pub fn read(
+        db: &mut Connection,
+        item_role: String,
+        item_permission: String,
+    ) -> QueryResult<Self> {
         use crate::auth::schema::role_permissions::dsl::*;
 
         role_permissions
@@ -95,8 +113,6 @@ impl RolePermission {
     pub fn delete_all(db: &mut Connection, item_role: &str) -> QueryResult<usize> {
         use crate::auth::schema::role_permissions::dsl::*;
 
-        diesel::delete(
-            role_permissions.filter(role.eq(item_role)),
-        ).execute(db)
+        diesel::delete(role_permissions.filter(role.eq(item_role))).execute(db)
     }
 }

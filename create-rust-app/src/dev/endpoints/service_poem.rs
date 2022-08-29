@@ -1,16 +1,25 @@
 use argonautica::config::Version::_0x10;
-use poem::{get, handler, http::StatusCode, post, web::{Json, Data}, Error, IntoResponse, Result, Route};
+use poem::{
+    get, handler,
+    http::StatusCode,
+    post,
+    web::{Data, Json},
+    Error, IntoResponse, Result, Route,
+};
 
-use diesel::{sql_types::Text, sql_query, QueryableByName, RunQueryDsl};
+use diesel::{sql_query, sql_types::Text, QueryableByName, RunQueryDsl};
 use serde::{Deserialize, Serialize};
 
-use crate::dev::{controller, controller::{HealthCheckResponse, MySqlQuery, MyQueryResult}};
+use crate::dev::{
+    controller,
+    controller::{HealthCheckResponse, MyQueryResult, MySqlQuery},
+};
 
+use crate::auth::Role;
 use crate::{
     auth::{Auth, Permission},
     Database,
 };
-use crate::auth::Role;
 
 #[handler]
 async fn health() -> Result<impl IntoResponse> {
@@ -18,8 +27,8 @@ async fn health() -> Result<impl IntoResponse> {
     Ok(Json(HealthCheckResponse {
         message: "healthy".to_string(),
     })
-        .with_status(StatusCode::OK)
-        .into_response())
+    .with_status(StatusCode::OK)
+    .into_response())
 }
 
 #[handler]
@@ -42,7 +51,7 @@ async fn needs_migration(db: Data<&Database>) -> Result<impl IntoResponse> {
 async fn query(db: Data<&Database>, body: Json<MySqlQuery>) -> Result<impl IntoResponse> {
     match controller::query_db(db.0, &body) {
         Ok(result) => Ok(result),
-        Err(_) => Err(Error::from_status(StatusCode::INTERNAL_SERVER_ERROR))
+        Err(_) => Err(Error::from_status(StatusCode::INTERNAL_SERVER_ERROR)),
     }
 }
 

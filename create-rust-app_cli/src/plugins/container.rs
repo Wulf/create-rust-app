@@ -1,7 +1,7 @@
-use crate::utils::fs;
-use crate::utils::logger::add_file_msg;
 use crate::plugins::InstallConfig;
 use crate::plugins::Plugin;
+use crate::utils::fs;
+use crate::utils::logger::add_file_msg;
 use anyhow::Result;
 use rust_embed::RustEmbed;
 

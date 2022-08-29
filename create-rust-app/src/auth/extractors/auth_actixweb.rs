@@ -1,5 +1,5 @@
-use std::collections::HashSet;
-use crate::auth::{AccessTokenClaims, ID, permissions::Permission};
+use crate::auth::{permissions::Permission, AccessTokenClaims, ID};
+use actix_http::header::HeaderValue;
 use actix_web::dev::Payload;
 use actix_web::error::ResponseError;
 use actix_web::http::StatusCode;
@@ -10,8 +10,8 @@ use jsonwebtoken::decode;
 use jsonwebtoken::DecodingKey;
 use jsonwebtoken::Validation;
 use serde_json::json;
+use std::collections::HashSet;
 use std::iter::FromIterator;
-use actix_http::header::HeaderValue;
 
 #[derive(Debug, Clone)]
 pub struct Auth {
@@ -22,7 +22,10 @@ pub struct Auth {
 
 impl Auth {
     pub fn has_permission(&self, permission: String) -> bool {
-        self.permissions.contains(&Permission { permission: permission.to_string(), from_role: String::new() })
+        self.permissions.contains(&Permission {
+            permission: permission.to_string(),
+            from_role: String::new(),
+        })
     }
 
     pub fn has_all_permissions(&self, perms: Vec<String>) -> bool {
@@ -56,9 +59,12 @@ impl ResponseError for AuthError {
     fn error_response(&self) -> HttpResponse {
         // HttpResponse::Unauthorized().json(self.reason.as_str())
         // println!("error_response");
-        HttpResponse::build(StatusCode::UNAUTHORIZED).body(json!({
-          "message": self.reason.as_str()
-        }).to_string())
+        HttpResponse::build(StatusCode::UNAUTHORIZED).body(
+            json!({
+              "message": self.reason.as_str()
+            })
+            .to_string(),
+        )
     }
 
     fn status_code(&self) -> StatusCode {
@@ -106,7 +112,8 @@ impl FromRequest for Auth {
         }
 
         let user_id = access_token.claims.sub;
-        let permissions: HashSet<Permission> = HashSet::from_iter(access_token.claims.permissions.iter().cloned());
+        let permissions: HashSet<Permission> =
+            HashSet::from_iter(access_token.claims.permissions.iter().cloned());
         let roles: HashSet<String> = HashSet::from_iter(access_token.claims.roles.iter().cloned());
 
         return ready(Ok(Auth {

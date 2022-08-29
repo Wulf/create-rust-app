@@ -1,5 +1,8 @@
+use poem::{
+    async_trait, http::HeaderValue, http::StatusCode, Error, FromRequest, Request, RequestBody,
+    Result,
+};
 use std::collections::HashSet;
-use poem::{async_trait, http::HeaderValue, http::StatusCode, Error, FromRequest, Request, RequestBody, Result};
 
 use crate::auth::{permissions::Permission, AccessTokenClaims, ID};
 use jsonwebtoken::decode;
@@ -16,7 +19,10 @@ pub struct Auth {
 
 impl Auth {
     pub fn has_permission(&self, permission: String) -> bool {
-        self.permissions.contains(&Permission { permission: permission.to_string(), from_role: String::new() })
+        self.permissions.contains(&Permission {
+            permission: permission.to_string(),
+            from_role: String::new(),
+        })
     }
 
     pub fn has_all_permissions(&self, perms: Vec<String>) -> bool {
@@ -81,7 +87,8 @@ impl<'a> FromRequest<'a> for Auth {
         }
 
         let user_id = access_token.claims.sub;
-        let permissions: HashSet<Permission> = HashSet::from_iter(access_token.claims.permissions.iter().cloned());
+        let permissions: HashSet<Permission> =
+            HashSet::from_iter(access_token.claims.permissions.iter().cloned());
         let roles: HashSet<String> = HashSet::from_iter(access_token.claims.roles.iter().cloned());
 
         return Ok(Auth {

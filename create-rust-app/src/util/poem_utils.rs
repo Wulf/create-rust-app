@@ -1,10 +1,10 @@
 use http::{StatusCode, Uri};
-use poem::{Body, EndpointExt, handler, IntoResponse, Response, Route};
 use poem::middleware::{AddData, AddDataEndpoint};
-use poem::web::{Data};
+use poem::web::Data;
+use poem::{handler, Body, EndpointExt, IntoResponse, Response, Route};
 use tera::Context;
 
-use crate::util::template_utils::{DEFAULT_TEMPLATE, TEMPLATES, to_template_name};
+use crate::util::template_utils::{to_template_name, DEFAULT_TEMPLATE, TEMPLATES};
 
 use super::template_utils::SinglePageApplication;
 
@@ -18,16 +18,17 @@ pub fn render_single_page_application(view: &str) -> AddDataEndpoint<Route, Sing
     Route::new()
         .at("*", poem::get(render_spa_handler))
         .with(AddData::new(SinglePageApplication {
-            view_name: view.to_string()
+            view_name: view.to_string(),
         }))
 }
 
 #[handler]
 async fn render_spa_handler(spa_info: Data<&SinglePageApplication>) -> impl IntoResponse {
-    let content = TEMPLATES.render(spa_info.view_name.as_str(), &Context::new()).unwrap();
+    let content = TEMPLATES
+        .render(spa_info.view_name.as_str(), &Context::new())
+        .unwrap();
     template_response(content)
 }
-
 
 #[handler]
 pub async fn render_views(uri: &Uri) -> impl IntoResponse {
@@ -43,7 +44,8 @@ pub async fn render_views(uri: &Uri) -> impl IntoResponse {
     let mut content_result = TEMPLATES.render(template_path, &Context::new());
 
     if content_result.is_err() {
-        #[cfg(debug_assertions)] {
+        #[cfg(debug_assertions)]
+        {
             // dev asset serving
             let asset_path = &format!("./frontend{path}");
             if std::path::PathBuf::from(asset_path).is_file() {
@@ -60,7 +62,8 @@ pub async fn render_views(uri: &Uri) -> impl IntoResponse {
             }
         }
 
-        #[cfg(not(debug_assertions))] {
+        #[cfg(not(debug_assertions))]
+        {
             // production asset serving
             let static_path = &format!("./frontend/dist{path}");
             if std::path::PathBuf::from(static_path).is_file() {
@@ -85,7 +88,8 @@ pub async fn render_views(uri: &Uri) -> impl IntoResponse {
 
 fn template_response(content: String) -> Response {
     let mut content = content;
-    #[cfg(debug_assertions)] {
+    #[cfg(debug_assertions)]
+    {
         let inject: &str = r##"
         <!-- development mode -->
         <script type="module">
@@ -115,8 +119,9 @@ async fn file_response(path: &String) -> Response {
     let file = tokio::fs::read(path).await.unwrap();
     let content_type = mime_guess::from_path(path).first_raw();
     let mut response = Response::builder();
-    if content_type.is_some() { response = response.content_type(content_type.unwrap()); }
+    if content_type.is_some() {
+        response = response.content_type(content_type.unwrap());
+    }
     response = response.status(StatusCode::OK);
     response.body(Body::from(file))
 }
-

@@ -2,41 +2,44 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::Duration;
 
-use aws_sdk_s3::{Client, Config, Endpoint};
 use aws_sdk_s3::model::{Delete, ObjectIdentifier};
 use aws_sdk_s3::presigning::config::PresigningConfig;
 use aws_sdk_s3::types::ByteStream;
 use aws_sdk_s3::types::SdkError::*;
-use aws_types::Credentials;
+use aws_sdk_s3::{Client, Config, Endpoint};
 use aws_types::region::Region;
+use aws_types::Credentials;
+use base64;
 use http::{HeaderMap, Uri};
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
-use base64;
 
 pub use attachment::{Attachment, AttachmentData};
 pub use attachment_blob::AttachmentBlob;
 
-mod schema;
 mod attachment;
 mod attachment_blob;
+mod schema;
 
 #[tsync::tsync]
 type ID = i32;
 
 #[tsync::tsync]
+#[cfg(not(feature = "database_sqlite"))]
 type UTC = chrono::DateTime<chrono::Utc>;
+#[cfg(feature = "database_sqlite")]
+type UTC = chrono::NaiveDateTime;
 
 #[derive(Clone)]
 pub struct Storage {
     client: Option<Client>,
     bucket: String,
-    host: String
+    host: String,
 }
 
 pub struct UploadURI {
     pub headers: HeaderMap,
-    pub uri: Uri
+    pub uri: Uri,
 }
 
 impl Storage {
@@ -53,13 +56,9 @@ impl Storage {
                 self.error_string("Could not download object", key.clone(), err.to_string())
             })?;
 
-        let data = response
-            .body
-            .collect()
-            .await
-            .map_err(|err| {
-                self.error_string("Could not download object", key.clone(), err.to_string())
-            })?;
+        let data = response.body.collect().await.map_err(|err| {
+            self.error_string("Could not download object", key.clone(), err.to_string())
+        })?;
 
         let mut file = File::create(to_path).await.map_err(|err| {
             self.error_string("Could not download object", key.clone(), err.to_string())
@@ -74,32 +73,55 @@ impl Storage {
 
     /// if `expires_in` is `None`, then we assume the bucket is publicly accessible and return the
     /// public URL. For this to work, you have to make sure the bucket's policy allows public access.
-    pub async fn download_uri(&self, key: String, expires_in: Option<Duration>) -> Result<String, String> {
+    pub async fn download_uri(
+        &self,
+        key: String,
+        expires_in: Option<Duration>,
+    ) -> Result<String, String> {
         if expires_in.is_none() {
             let host = self.host.clone();
-            let host = if host.ends_with("/") { host } else { format!("{host}/") };
+            let host = if host.ends_with("/") {
+                host
+            } else {
+                format!("{host}/")
+            };
             let bucket = &self.bucket;
-            return Ok(format!("{host}{bucket}/{key}"))
+            return Ok(format!("{host}{bucket}/{key}"));
         }
-        let expires_in=  expires_in.unwrap();
+        let expires_in = expires_in.unwrap();
 
         let client = self.client_or_error()?;
 
-        let response = client.get_object()
+        let response = client
+            .get_object()
             .bucket(&self.bucket)
             .key(key.clone())
             .presigned(PresigningConfig::expires_in(expires_in).map_err(|err| {
-                self.error_string("Could not retrieve download URI", key.clone(), err.to_string())
+                self.error_string(
+                    "Could not retrieve download URI",
+                    key.clone(),
+                    err.to_string(),
+                )
             })?)
             .await
             .map_err(|err| {
-                self.error_string("Could not retrieve download URI", key.clone(), err.to_string())
+                self.error_string(
+                    "Could not retrieve download URI",
+                    key.clone(),
+                    err.to_string(),
+                )
             })?;
 
         Ok(response.uri().to_string())
     }
 
-    pub async fn upload(&self, key: String, bytes: Vec<u8>, content_type: String, content_md5: String) -> Result<(), String> {
+    pub async fn upload(
+        &self,
+        key: String,
+        bytes: Vec<u8>,
+        content_type: String,
+        content_md5: String,
+    ) -> Result<(), String> {
         let stream = ByteStream::from(bytes);
 
         let client = self.client_or_error()?;
@@ -129,7 +151,11 @@ impl Storage {
             .bucket(&self.bucket)
             .key(&key)
             .presigned(PresigningConfig::expires_in(expires_in).map_err(|err| {
-                self.error_string("Could not retrieve upload URI", key.clone(), err.to_string())
+                self.error_string(
+                    "Could not retrieve upload URI",
+                    key.clone(),
+                    err.to_string(),
+                )
             })?)
             .await
             .map_err(|err| {
@@ -138,7 +164,7 @@ impl Storage {
 
         let upload_uri = UploadURI {
             uri: response.uri().clone(),
-            headers: response.headers().clone()
+            headers: response.headers().clone(),
         };
 
         Ok(upload_uri)
@@ -163,7 +189,14 @@ impl Storage {
     pub async fn delete_many(&self, keys: Vec<String>) -> Result<(), String> {
         let client = self.client_or_error()?;
 
-        let ids = keys.iter().map(|k| ObjectIdentifier::builder().set_key(Some(k.to_string())).build()).collect::<Vec<ObjectIdentifier>>();
+        let ids = keys
+            .iter()
+            .map(|k| {
+                ObjectIdentifier::builder()
+                    .set_key(Some(k.to_string()))
+                    .build()
+            })
+            .collect::<Vec<ObjectIdentifier>>();
         let delete = Delete::builder().set_objects(Some(ids)).build();
 
         client
@@ -173,7 +206,11 @@ impl Storage {
             .send()
             .await
             .map_err(|err| {
-                self.error_string("Could not delete objects", format!("{:#?}", keys), err.to_string())
+                self.error_string(
+                    "Could not delete objects",
+                    format!("{:#?}", keys),
+                    err.to_string(),
+                )
             })?;
 
         Ok(())
@@ -185,7 +222,10 @@ impl Storage {
     }
 
     fn client_or_error(&self) -> Result<&Client, String> {
-        self.client.as_ref().ok_or("The storage is not available; did you set the right environment variables?".to_string())
+        self.client.as_ref().ok_or(
+            "The storage is not available; did you set the right environment variables?"
+                .to_string(),
+        )
     }
 
     fn check_environment_variables() {
@@ -210,18 +250,31 @@ impl Storage {
         }
     }
 
-    fn init(host: String, region: String, access_key_id: String, secret_access_key: String) -> Result<Option<Client>, String> {
+    fn init(
+        host: String,
+        region: String,
+        access_key_id: String,
+        secret_access_key: String,
+    ) -> Result<Option<Client>, String> {
         Storage::check_environment_variables();
 
         let host = host.clone();
         let region = Region::new(region);
         let s3_config = Config::builder()
             .region(region)
-            .endpoint_resolver(Endpoint::immutable(Uri::from_str(host.as_str()).map_err(|err| {
-                let error = err.to_string();
-                format!("Could not initialize storage (error: '{error}')")
-            })?))
-            .credentials_provider(Credentials::new(access_key_id, secret_access_key, None, None, "UNNAMED_PROVIDER"))
+            .endpoint_resolver(Endpoint::immutable(Uri::from_str(host.as_str()).map_err(
+                |err| {
+                    let error = err.to_string();
+                    format!("Could not initialize storage (error: '{error}')")
+                },
+            )?))
+            .credentials_provider(Credentials::new(
+                access_key_id,
+                secret_access_key,
+                None,
+                None,
+                "UNNAMED_PROVIDER",
+            ))
             .build();
         let client = Client::from_conf(s3_config);
 
@@ -235,12 +288,13 @@ impl Storage {
         let access_key_id = std::env::var("S3_ACCESS_KEY_ID").unwrap_or("".to_string());
         let secret_access_key = std::env::var("S3_SECRET_ACCESS_KEY").unwrap_or("".to_string());
 
-        let client = Storage::init(host.clone(), region, access_key_id, secret_access_key).unwrap_or(None);
+        let client =
+            Storage::init(host.clone(), region, access_key_id, secret_access_key).unwrap_or(None);
 
         Storage {
             client,
             bucket,
-            host
+            host,
         }
     }
 }
