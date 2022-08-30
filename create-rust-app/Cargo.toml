@@ -1,7 +1,7 @@
 [package]
 name = "create-rust-app"
 description = "Set up a modern rust+react web app by running one command."
-version = "8.0.0"
+version = "8.0.2"
 edition = "2018"
 authors = ["Haris <4259838+Wulf@users.noreply.github.com>"]
 readme = "../README.md"
@@ -74,7 +74,7 @@ mime_guess = { optional=true, version="2.0.4" } # backend_poem, plugin_storage
 anyhow = { optional=true, version="1.0.57" } # backend_poem, plugin_auth
 
 [features]
-default = [] # ["INTERNAL_DEV_DO_NOT_USE"]
+default = ["backend_actix-web", "database_postgres", "plugin_auth", "plugin_container", "plugin_dev", "plugin_graphql", "plugin_storage"]
 plugin_dev = ["diesel_migrations"]
 plugin_container = []
 plugin_auth = ["anyhow", "argonautica", "jsonwebtoken", "chrono", "tsync"]
@@ -84,4 +84,3 @@ backend_poem = ["poem", "anyhow", "mime_guess"]
 backend_actix-web = ["actix-web", "actix-http", "actix-files", "actix-multipart", "actix-web-httpauth","derive_more", "futures", "env_logger"]
 database_sqlite = ["diesel/sqlite"]
 database_postgres = ["diesel/postgres"]
-INTERNAL_DEV_DO_NOT_USE = ["plugin_auth", "plugin_container", "plugin_dev", "plugin_graphql", "plugin_storage", "backend_actix-web", "database_sqlite"]

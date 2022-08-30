@@ -41,7 +41,7 @@ struct Asset;
 //     version.to_string()
 // }
 fn get_current_cra_lib_version() -> String {
-    "8.0.0".to_string()
+    "8.0.2".to_string()
 }
 
 fn add_bins_to_cargo_toml(project_dir: &std::path::PathBuf) -> Result<(), std::io::Error> {
@@ -357,7 +357,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         &project_dir,
         "create-rust-app",
         &format!(
-            "create-rust-app = {{version=\"{version}\"{enabled_features}}}",
+            "create-rust-app = {{version=\"{version}\", default-features = false{enabled_features}}}",
             version = get_current_cra_lib_version(),
             enabled_features = enabled_features
         ),
