@@ -70,7 +70,7 @@ pub fn read_all(db: &mut Connection, pagination: &PaginationParams) -> QueryResu
         .limit(pagination.page_size)
         .offset(
             pagination.page
-                * std::cmp::max(pagination.page_size, PaginationParams::MAX_PAGE_SIZE as i64),
+                * std::cmp::min(pagination.page_size, PaginationParams::MAX_PAGE_SIZE as i64),
         )
         .load::<Todo>(db)
 }
