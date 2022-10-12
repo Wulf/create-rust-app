@@ -1,4 +1,3 @@
-extern crate argonautica;
 use serde::{Deserialize, Serialize};
 
 // Auth guard / extractor

@@ -35,7 +35,8 @@ libsqlite3-sys = { version = "0.25", optional = true, features = ["bundled"] }
 ##
 
 # plugin_auth
-argonautica = { optional=true, version="0.2.0" }
+rust-argon2 = { optional=true, version="1.0" }
+rand = { optional=true, version="0.8.5" }
 jsonwebtoken = { optional=true, version="7.2.0" }
 tsync = { optional=true, version="1.3.0" }
 chrono = { optional=true, version = "0.4.22", features = ["serde"] }
@@ -83,7 +84,7 @@ tokio = { optional=true, version = "1", features = ["full"] } # backend_poem, pl
 default = ["backend_actix-web", "database_postgres", "plugin_auth", "plugin_container", "plugin_dev", "plugin_graphql", "plugin_storage"]
 plugin_dev = ["diesel_migrations"]
 plugin_container = []
-plugin_auth = ["anyhow", "argonautica", "jsonwebtoken", "chrono", "tsync"]
+plugin_auth = ["anyhow", "rust-argon2", "rand", "jsonwebtoken", "chrono", "tsync"]
 plugin_storage = [ "aws-config", "aws-types", "aws-endpoint", "aws-sdk-s3", "tokio", "futures-util", "http", "diesel_derives", "uuid", "md5", "mime_guess", "base64" ]
 plugin_graphql = []
 backend_poem = ["poem", "anyhow", "mime_guess", "tokio"]
