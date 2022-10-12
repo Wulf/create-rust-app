@@ -7,8 +7,21 @@ use crate::auth::{
 use crate::{Database, Mailer};
 
 use serde::{Deserialize, Serialize};
+use lazy_static::lazy_static;
 
 pub const COOKIE_NAME: &'static str = "refresh_token";
+
+lazy_static! {
+    static ref ARGON_CONFIG: argon2::Config<'static> = argon2::Config {
+        variant: argon2::Variant::Argon2id,
+        version: argon2::Version::Version13,
+        secret: match std::env::var("SECRET_KEY") {
+            Ok(s) => Box::leak(s.into_boxed_str()).as_bytes(),
+            Err(_) => panic!("No SECRET_KEY environment variable set!"),
+        },
+        ..Default::default()
+    };
+}
 
 type Seconds = i64;
 type StatusCode = i32;
@@ -193,16 +206,7 @@ pub fn login(
         return Err((400, "Account has not been activated."));
     }
 
-    let mut verifier = argonautica::Verifier::default();
-    let is_valid = verifier
-        .with_hash(&user.hash_password)
-        .with_password(&item.password)
-        .with_secret_key(match std::env::var("SECRET_KEY") {
-            Ok(s) => s,
-            Err(_) => panic!("No SECRET_KEY environment variable set!"),
-        })
-        .verify()
-        .unwrap();
+    let is_valid = argon2::verify_encoded_ext(&item.password, user.hash_password.as_bytes(), &ARGON_CONFIG.secret, &ARGON_CONFIG.ad).unwrap();
 
     if !is_valid {
         return Err((401, "Invalid credentials."));
@@ -422,15 +426,8 @@ pub fn register(
         }
     }
 
-    let mut hasher = argonautica::Hasher::default();
-    let hash = hasher
-        .with_password(&item.password)
-        .with_secret_key(match std::env::var("SECRET_KEY") {
-            Ok(s) => s,
-            Err(_) => panic!("No SECRET_KEY environment variable set!"),
-        })
-        .hash()
-        .unwrap();
+    let mut salt = generate_salt();
+    let hash = argon2::hash_encoded(&item.password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
 
     let user = User::create(
         &mut db,
@@ -598,30 +595,14 @@ pub fn change_password(
         return Err((400, "Account has not been activated"));
     }
 
-    let mut verifier = argonautica::Verifier::default();
-    let is_old_password_valid = verifier
-        .with_hash(&user.hash_password)
-        .with_password(&item.old_password)
-        .with_secret_key(match std::env::var("SECRET_KEY") {
-            Ok(s) => s,
-            Err(_) => panic!("No SECRET_KEY environment variable set!"),
-        })
-        .verify()
-        .unwrap();
+    let is_old_password_valid = argon2::verify_encoded_ext(&item.old_password, user.hash_password.as_bytes(), &ARGON_CONFIG.secret, &ARGON_CONFIG.ad).unwrap();
 
     if !is_old_password_valid {
         return Err((400, "Invalid credentials"));
     }
 
-    let mut hasher = argonautica::Hasher::default();
-    let new_hash = hasher
-        .with_password(&item.new_password)
-        .with_secret_key(match std::env::var("SECRET_KEY") {
-            Ok(s) => s,
-            Err(_) => panic!("No SECRET_KEY environment variable set!"),
-        })
-        .hash()
-        .unwrap();
+    let mut salt = generate_salt();
+    let new_hash = argon2::hash_encoded(&item.new_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
 
     let updated_user = User::update(
         &mut db,
@@ -685,15 +666,8 @@ pub fn reset_password(
         return Err((400, "Account has not been activated"));
     }
 
-    let mut hasher = argonautica::Hasher::default();
-    let new_hash = hasher
-        .with_password(&item.new_password)
-        .with_secret_key(match std::env::var("SECRET_KEY") {
-            Ok(s) => s,
-            Err(_) => panic!("No SECRET_KEY environment variable set!"),
-        })
-        .hash()
-        .unwrap();
+    let mut salt = generate_salt();
+    let new_hash = argon2::hash_encoded(&item.new_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
 
     let update = User::update(
         &mut db,
@@ -712,4 +686,11 @@ pub fn reset_password(
     mail::auth_password_reset::send(&mailer, &user.email);
 
     Ok(())
+}
+
+pub fn generate_salt() -> [u8; 8] {
+    use rand::Fill;
+    let mut salt = [0; 8];
+    salt.try_fill(&mut rand::thread_rng()).unwrap();
+    salt
 }

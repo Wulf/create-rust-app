@@ -1,5 +1,3 @@
-extern crate argonautica;
-
 use actix_http::StatusCode;
 use actix_web::cookie::{Cookie, SameSite};
 use actix_web::{delete, get, post, web, Error as AWError, Result};
