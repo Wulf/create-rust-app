@@ -206,7 +206,7 @@ pub fn login(
         return Err((400, "Account has not been activated."));
     }
 
-    let is_valid = argon2::verify_encoded_ext(&item.password, user.hash_password.as_bytes(), &ARGON_CONFIG.secret, &ARGON_CONFIG.ad).unwrap();
+    let is_valid = argon2::verify_encoded_ext(&user.hash_password, item.password.as_bytes(), &ARGON_CONFIG.secret, &ARGON_CONFIG.ad).unwrap();
 
     if !is_valid {
         return Err((401, "Invalid credentials."));
@@ -595,7 +595,7 @@ pub fn change_password(
         return Err((400, "Account has not been activated"));
     }
 
-    let is_old_password_valid = argon2::verify_encoded_ext(&item.old_password, user.hash_password.as_bytes(), &ARGON_CONFIG.secret, &ARGON_CONFIG.ad).unwrap();
+    let is_old_password_valid = argon2::verify_encoded_ext(&user.hash_password, item.old_password.as_bytes(), &ARGON_CONFIG.secret, &ARGON_CONFIG.ad).unwrap();
 
     if !is_old_password_valid {
         return Err((400, "Invalid credentials"));
