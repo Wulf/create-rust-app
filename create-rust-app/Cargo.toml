@@ -24,6 +24,13 @@ serde = { version = "1.0.143", features = ["derive"] }
 diesel = { version="2.0.0-rc.1", default-features = false, features = ["uuid", "r2d2", "chrono", "returning_clauses_for_sqlite_3_35"] } # plugin_dev, plugin_auth
 
 ##
+## Database
+##
+
+# sqlite dependencies
+libsqlite3-sys = { version = "0.25", optional = true, features = ["bundled"] }
+
+##
 ## PLUGINS
 ##
 
@@ -65,7 +72,6 @@ actix-web-httpauth = { optional=true, version="0.6.0" }
 derive_more = { optional=true, version="0.99.17" }
 futures = { optional=true, version="0.3.21" }
 env_logger = { optional=true, version= "0.9.0" }
-
 ##
 ## MISC - here, we list deps which are required by multiple features but are not required in all configurations
 ##
@@ -82,5 +88,5 @@ plugin_storage = [ "aws-config", "aws-types", "aws-endpoint", "aws-sdk-s3", "tok
 plugin_graphql = []
 backend_poem = ["poem", "anyhow", "mime_guess"]
 backend_actix-web = ["actix-web", "actix-http", "actix-files", "actix-multipart", "actix-web-httpauth","derive_more", "futures", "env_logger"]
-database_sqlite = ["diesel/sqlite"]
+database_sqlite = ["diesel/sqlite", "libsqlite3-sys/bundled"]
 database_postgres = ["diesel/postgres"]
