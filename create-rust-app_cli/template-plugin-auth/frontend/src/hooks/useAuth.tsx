@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import React, { createContext, MutableRefObject, useCallback, useContext, useEffect, useRef, useState } from 'react'
 
 const MILLISECONDS_UNTIL_EXPIRY_CHECK = 10 * 1000 // check expiry every 10 seconds
 const REMAINING_TOKEN_EXPIRY_TIME_ALLOWED = 60 * 1000 // 1 minute before token should be refreshed
@@ -49,9 +49,7 @@ interface AuthContext {
   session: Session | undefined
   setAccessToken: (accessToken: string | undefined) => void
   setSession: (session: Session | undefined) => void
-
-  isCheckingAuth: boolean
-  setCheckingAuth: (checking: boolean) => void
+  isCheckingAuth: MutableRefObject<boolean>
 }
 
 interface AuthWrapperProps {
@@ -63,7 +61,7 @@ const Context = createContext<AuthContext>(undefined as any)
 export const AuthProvider = (props: AuthWrapperProps) => {
   const [accessToken, setAccessToken] = useState<string | undefined>()
   const [session, setSession] = useState<Session | undefined>()
-  const [isCheckingAuth, setCheckingAuth] = useState<boolean>(false)
+  const isCheckingAuth = useRef<boolean>(false)
 
   return (
       <Context.Provider
@@ -73,7 +71,6 @@ export const AuthProvider = (props: AuthWrapperProps) => {
             setAccessToken,
             setSession,
             isCheckingAuth,
-            setCheckingAuth,
           }}
       >
         {props.children}
@@ -140,9 +137,13 @@ export const useAuth = () => {
 
 export const useAuthCheck = () => {
   const context = useContext(Context)
+  const { isCheckingAuth } = context
 
   const refreshIfNecessary = useCallback(async () => {
-    context.setCheckingAuth(true)
+    if (isCheckingAuth.current) {
+      return
+    }
+    isCheckingAuth.current = true
 
     const isExpiringSoon = () => {
       if (context.session?.expiresOnUTC) {
@@ -183,7 +184,7 @@ export const useAuthCheck = () => {
       // console.log(`${context.accessToken ? 'access token' : ''} ${isExpiringSoon() ? ' is not expiring' : ''}`)
     }
 
-    context.setCheckingAuth(false)
+    isCheckingAuth.current = false
   }, [context.accessToken, context.session])
 
   useEffect(() => {
