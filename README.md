@@ -12,6 +12,7 @@ Set up a modern rust+react web app by running one command.
   - ```cargo install tsync```
 - `diesel_cli`
   - Instructions [here](http://diesel.rs/guides/getting-started#installing-diesel-cli)
+  - Note that for SQLite, if you don't wish to dynamically link `diesel_cli` with your system's `libsqlite3`, you may run `cargo install diesel_cli --no-default-features --features sqlite-bundled`.
 - Stable rust
   - ```rustup install stable``` (nightly is fine too)
 
