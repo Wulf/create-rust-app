@@ -80,12 +80,12 @@ fn add_bins_to_cargo_toml(project_dir: &std::path::PathBuf) -> Result<(), std::i
     let append_to_toml = format!(
         r#"
 [[bin]]
-name = "fullstack"
-path = ".cargo/bin/fullstack.rs"
+name = "run_yarn_fullstack"
+path = ".cargo/bin/run_yarn_fullstack.rs"
 
 [[bin]]
-name = "tsync"
-path = ".cargo/bin/tsync.rs"
+name = "run_yarn_tsync"
+path = ".cargo/bin/run_yarn_tsync.rs"
 
 [[bin]]
 name = "{project_name}"

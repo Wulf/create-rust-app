@@ -1,6 +1,6 @@
 [alias]
-fullstack="run --bin fullstack"
-tsync="run --bin tsync"
+fullstack="run --bin run_yarn_fullstack"
+tsync="run --bin run_yarn_tsync"
 
 [build]
 target-dir=".cargo/.build"
