@@ -1,6 +1,12 @@
 use std::io;
 use std::process::Command;
 
+#[cfg(windows)]
+pub const YARN_COMMAND: &'static str = "yarn.cmd";
+
+#[cfg(not(windows))]
+pub const YARN_COMMAND: &'static str = "yarn";
+
 pub fn main() -> Result<(), io::Error> {
     if !create_rust_app::net::is_port_free(21012) {
         println!("========================================================");
@@ -10,7 +16,7 @@ pub fn main() -> Result<(), io::Error> {
         panic!("Port 21012 is taken but is required for development!")
     }
 
-    Command::new("yarn")
+    Command::new(YARN_COMMAND)
         .arg("fullstack")
         .current_dir("frontend")
         .spawn()
