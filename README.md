@@ -8,13 +8,9 @@ Set up a modern rust+react web app by running one command. [Join us on discord](
 
 # Requirements
 
-- [`tsync`](https://github.com/Wulf/tsync)
-  - ```cargo install tsync```
-- `diesel_cli`
-  - Instructions [here](http://diesel.rs/guides/getting-started#installing-diesel-cli)
-  - Note that for SQLite, if you don't wish to dynamically link `diesel_cli` with your system's `libsqlite3`, you may run `cargo install diesel_cli --no-default-features --features sqlite-bundled`.
-- Stable rust
-  - ```rustup install stable``` (nightly is fine too)
+- [Rust](https://www.rust-lang.org/tools/install)
+- [`diesel_cli`](http://diesel.rs/guides/getting-started#installing-diesel-cli)
+  - For SQLite, if you don't wish to dynamically link `diesel_cli` with your system's `libsqlite3`, you may run `cargo install diesel_cli --no-default-features --features sqlite-bundled`.
     
 # Install
 
@@ -117,12 +113,14 @@ $ cargo dsync
 ````
  
 * Run this commmand to generate diesel model structs and queries in your `backend/models` folder!
+* See dsync docs [here](https://github.com/Wulf/dsync)
 
 ```
 $ cargo tsync
 ```
 
 * Run this command to generate typescript types for your rust code marked with `#[tsync::tsync]`. You'll find the output for this command here: `frontend/src/types/rust.d.ts`.
+* See tsync docs [here](https://github.com/Wulf/tsync)
 
 ```
 $ cd my_project && create-rust-app
