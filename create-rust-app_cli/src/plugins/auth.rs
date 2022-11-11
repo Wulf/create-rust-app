@@ -182,11 +182,11 @@ import { ResetPage } from './containers/ResetPage'"#,
     "#}
             },
             indoc! {r#"
-      DROP TABLE users CASCADE ALL;
-      DROP TABLE user_sessions CASCADE ALL;
-      DROP TABLE user_permissions CASCADE ALL;
-      DROP TABLE role_permissions CASCADE ALL;
-      DROP TABLE user_roles CASCADE ALL;
+      DROP TABLE user_permissions;
+      DROP TABLE role_permissions;
+      DROP TABLE user_roles;
+      DROP TABLE user_sessions;
+      DROP TABLE users;
     "#},
         )?;
 

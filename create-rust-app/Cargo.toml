@@ -1,7 +1,7 @@
 [package]
 name = "create-rust-app"
 description = "Set up a modern rust+react web app by running one command."
-version = "8.0.2"
+version = "8.1.0"
 edition = "2018"
 authors = ["Haris <4259838+Wulf@users.noreply.github.com>"]
 readme = "../README.md"
@@ -48,7 +48,6 @@ aws-config = { optional=true, version="0.8.0" }
 aws-types = { optional=true, version="0.8.0" }
 aws-endpoint = { optional=true, version="0.8.0" }
 aws-sdk-s3 = { optional=true, version="0.8.0" }
-tokio = { optional=true, version = "1", features = ["full"] }
 futures-util = { optional=true, version="0.3.21" }
 http = { optional=true, version="0.2.6" }
 diesel_derives = { optional=true, version="1.4.1" }
@@ -78,6 +77,7 @@ env_logger = { optional=true, version= "0.9.0" }
 
 mime_guess = { optional=true, version="2.0.4" } # backend_poem, plugin_storage
 anyhow = { optional=true, version="1.0.57" } # backend_poem, plugin_auth
+tokio = { optional=true, version = "1", features = ["full"] } # backend_poem, plugin-storage
 
 [features]
 default = ["backend_actix-web", "database_postgres", "plugin_auth", "plugin_container", "plugin_dev", "plugin_graphql", "plugin_storage"]
@@ -86,7 +86,7 @@ plugin_container = []
 plugin_auth = ["anyhow", "argonautica", "jsonwebtoken", "chrono", "tsync"]
 plugin_storage = [ "aws-config", "aws-types", "aws-endpoint", "aws-sdk-s3", "tokio", "futures-util", "http", "diesel_derives", "uuid", "md5", "mime_guess", "base64" ]
 plugin_graphql = []
-backend_poem = ["poem", "anyhow", "mime_guess"]
+backend_poem = ["poem", "anyhow", "mime_guess", "tokio"]
 backend_actix-web = ["actix-web", "actix-http", "actix-files", "actix-multipart", "actix-web-httpauth","derive_more", "futures", "env_logger"]
 database_sqlite = ["diesel/sqlite", "libsqlite3-sys/bundled"]
 database_postgres = ["diesel/postgres"]

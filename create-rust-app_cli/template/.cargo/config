@@ -1,6 +1,7 @@
 [alias]
 fullstack="run --bin fullstack"
 tsync="run --bin tsync"
+dsync="run --bin dsync"
 
 [build]
 target-dir=".cargo/.build"

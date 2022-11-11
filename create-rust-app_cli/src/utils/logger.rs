@@ -1,4 +1,5 @@
 use console::style;
+use crate::BackendDatabase;
 
 pub fn message(msg: &str) {
     println!("[{}] {}", style("create-rust-app").blue(), msg)
@@ -52,7 +53,9 @@ pub fn add_dependency_msg(name: &str) {
     message(&format!("Adding dependency {}", style(name).yellow()));
 }
 
-pub fn project_created_msg(project_dir: std::path::PathBuf) {
+pub fn project_created_msg(install_config: crate::plugins::InstallConfig) {
+    let project_dir = install_config.project_dir;
+
     command_msg("cargo watch --help\t# checking cargo-watch installation");
 
     let is_cargo_watch_installed = match std::process::Command::new("cargo")
@@ -78,23 +81,12 @@ pub fn project_created_msg(project_dir: std::path::PathBuf) {
         Err(_) => false,
     };
 
-    command_msg("tsync --help\t\t# checking tsync installation");
-
-    let is_tsync_cli_installed = match std::process::Command::new("tsync")
-        .arg("--help")
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .status()
-    {
-        Ok(status) => status.success(),
-        Err(_) => false,
-    };
-
     message(&format!(
         "{}",
         style("Congratulations, your project is ready!").underlined()
     ));
 
+    // TODO: update dev server to watch rust and frontend files and execute tsync/dsync calls accordingly
     if !is_cargo_watch_installed {
         message(&format!("• Install cargo-watch (for development)"));
         message(&format!(
@@ -106,16 +98,13 @@ pub fn project_created_msg(project_dir: std::path::PathBuf) {
     if !is_diesel_cli_installed {
         message(&format!("• Install diesel (to manage the database)"));
         message(&format!(
-            "  $ {}",
-            style("cargo install diesel_cli --no-default-features --features \"postgres\"").cyan()
+            "  $ {} \"{}\"",
+            style("cargo install diesel_cli --no-default-features --features").cyan(),
+            match install_config.backend_database {
+                BackendDatabase::Postgres => "postgres",
+                BackendDatabase::Sqlite => "sqlite-bundled"
+            }
         ));
-    }
-
-    if !is_tsync_cli_installed {
-        message(&format!(
-            "• Install tsync (to generate typescript types from rust)"
-        ));
-        message(&format!("  $ {}", style("cargo install tsync").cyan()));
     }
 
     message(&format!("• Begin development!"));

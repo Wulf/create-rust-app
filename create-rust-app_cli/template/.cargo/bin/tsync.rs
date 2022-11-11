@@ -1,19 +1,10 @@
-use std::io;
-use std::process::Command;
 use std::path::PathBuf;
 
-pub fn main() -> Result<(), io::Error> {
+pub fn main() {
     let dir = env!("CARGO_MANIFEST_DIR");
 
-    println!("Running `yarn tsync` in `$project_dir/frontend/`...");
+    let inputs = vec![PathBuf::from_iter([dir, "backend"])];
+    let output = PathBuf::from_iter([dir, "frontend/src/types/rust.d.ts"]);
 
-    Command::new("yarn")
-        .arg("tsync")
-        .current_dir(PathBuf::from_iter([dir, "frontend"]))
-        .spawn()
-        .unwrap()
-        .wait_with_output()
-        .unwrap();
-
-    Ok(())
+    tsync::generate_typescript_defs(inputs, output, false);
 }

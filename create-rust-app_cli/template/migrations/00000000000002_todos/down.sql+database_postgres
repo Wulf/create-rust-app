@@ -1,1 +1,1 @@
-DROP TABLE todos CASCADE ALL;
+DROP TABLE todos;

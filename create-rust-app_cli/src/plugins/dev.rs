@@ -19,6 +19,11 @@ impl Plugin for Dev {
     }
 
     fn install(&self, install_config: InstallConfig) -> Result<()> {
+        if !install_config.plugin_auth {
+            crate::logger::error("The development plugin requires the Auth plugin (temporarily). For details, see: https://github.com/Wulf/create-rust-app/issues/52");
+            std::process::exit(1);
+        }
+
         for filename in Asset::iter() {
             if filename.starts_with("README.md")
                 || filename.contains(".cargo/admin") && !filename.contains(".cargo/admin/dist")

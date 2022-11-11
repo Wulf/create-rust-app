@@ -2,7 +2,7 @@
 
 <a href="https://crates.io/crates/create-rust-app"><img src="https://img.shields.io/crates/v/create-rust-app.svg?style=for-the-badge" height="20" alt="License: MIT OR Apache-2.0" /></a>
 
-Set up a modern rust+react web app by running one command.
+Set up a modern rust+react web app by running one command. [Join us on discord](https://discord.gg/tm6Ey33ZPN).
 
 [create-rust-app.dev](https://create-rust-app.dev)
 
@@ -15,7 +15,7 @@ Set up a modern rust+react web app by running one command.
   - Note that for SQLite, if you don't wish to dynamically link `diesel_cli` with your system's `libsqlite3`, you may run `cargo install diesel_cli --no-default-features --features sqlite-bundled`.
 - Stable rust
   - ```rustup install stable``` (nightly is fine too)
-
+    
 # Install
 
 ```sh
@@ -47,6 +47,7 @@ $ create-rust-app <project_name>
   - Rust backend
     - One of the following frameworks: `actix-web`, `poem` or let us know which one you want to use!
     - Database migrations (using diesel.rs)
+      - Generate diesel structs and types by running `cargo dsync` in your project (see codegen section below).
     - Sending mail
     - PostgreSQL, SQLite 3.35+ support
     - ViteJS (blazing fast frontend compile speeds)
@@ -56,7 +57,7 @@ $ create-rust-app <project_name>
     - Automatically route to your single page application(s)
       - Use `create_rust_app::render_single_page_application("/app","your_spa.html")`
   - React frontend (or install your own framework!)
-    - Typescript, with backend type definition generation (via `tsync`)
+    - Typescript, with backend type definition generation (run `cargo tsync` in your project folder; see codegen section below)
     - Routing (via `react-router-dom`)
     - Typed `react-query` hooks generation (`$ cd my_project && create-rust-app`, then select "Generate react-query hooks")
 
@@ -110,6 +111,19 @@ $ create-rust-app <project_name>
 
 
 ### 2. Code-gen to reduce boilerplate
+
+````
+$ cargo dsync
+````
+ 
+* Run this commmand to generate diesel model structs and queries in your `backend/models` folder!
+
+```
+$ cargo tsync
+```
+
+* Run this command to generate typescript types for your rust code marked with `#[tsync::tsync]`. You'll find the output for this command here: `frontend/src/types/rust.d.ts`.
+
 ```
 $ cd my_project && create-rust-app
 ```
@@ -123,8 +137,11 @@ $ cd my_project && create-rust-app
 
 [![Gif](docs/create-rust-app-v2.gif)](https://github.com/Wulf/create-rust-app/blob/main/docs/create-rust-app-v2.mp4)
 
+* This video is a little outdated
+
 # Contributing
 
 Questions and comments are welcome in the issues section! 
 
 If you're experiencing slow compilation time, make sure there isn't any bloat in the template files (look for `node_modules` or typescript / parcel caches and delete them).
+Moreover, you can try using the [mold](https://github.com/rui314/mold) linker which may also improve compilation times.

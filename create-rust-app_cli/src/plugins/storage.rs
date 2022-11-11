@@ -122,8 +122,8 @@ CREATE TABLE attachments(
 "#}
             },
             indoc! {r#"
-DROP TABLE attachments CASCADE ALL;
-DROP TABLE attachment_blobs CASCADE ALL;
+DROP TABLE attachment_blobs;
+DROP TABLE attachments;
 "#},
         )?;
 
