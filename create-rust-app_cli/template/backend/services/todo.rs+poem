@@ -5,19 +5,24 @@ use poem::{
     web::{Data, Json, Path, Query},
     IntoResponse, Result, Route,
 };
-
 use create_rust_app::Database;
+use crate::models::todos::{Todo, TodoForm};
 
-use crate::models::{todo, todo::{TodoChangeset, PaginationParams}};
+#[tsync::tsync]
+#[derive(serde::Deserialize)]
+pub struct PaginationParams {
+    pub page: i64,
+    pub page_size: i64,
+}
 
 #[handler]
 async fn index(
     db: Data<&Database>,
     Query(pagination): Query<PaginationParams>,
 ) -> Result<impl IntoResponse> {
-    let mut db = db.pool.get().unwrap();
+    let mut con = db.get_connection();
 
-    let result = todo::read_all(&mut db, &pagination)
+    let result = Todo::paginate(&mut con, pagination.page, pagination.page_size)
         .map(|items| Json(items))
         .map_err(InternalServerError)?;
 
@@ -26,9 +31,9 @@ async fn index(
 
 #[handler]
 async fn read(db: Data<&Database>, Path(item_id): Path<i32>) -> Result<impl IntoResponse> {
-    let mut db = db.pool.get().unwrap();
+    let mut con = db.get_connection();
 
-    let result = todo::read(&mut db, item_id)
+    let result = Todo::read(&mut con, item_id)
         .map(|item| Json(item))
         .map_err(NotFound)?;
 
@@ -38,11 +43,11 @@ async fn read(db: Data<&Database>, Path(item_id): Path<i32>) -> Result<impl Into
 #[handler]
 async fn create(
     db: Data<&Database>,
-    Json(item): Json<TodoChangeset>,
+    Json(item): Json<TodoForm>,
 ) -> Result<impl IntoResponse> {
-    let mut db = db.pool.get().unwrap();
+    let mut con = db.get_connection();
 
-    let result = todo::create(&mut db, &item)
+    let result = Todo::create(&mut con, &item)
         .map(|item| Json(item))
         .map_err(InternalServerError)?;
 
@@ -53,11 +58,11 @@ async fn create(
 async fn update(
     db: Data<&Database>,
     Path(item_id): Path<i32>,
-    Json(item): Json<TodoChangeset>,
+    Json(item): Json<TodoForm>,
 ) -> Result<impl IntoResponse> {
-    let mut db = db.pool.get().unwrap();
+    let mut con = db.get_connection();
 
-    let result = todo::update(&mut db, item_id, &item)
+    let result = Todo::update(&mut con, item_id, &item)
         .map(|item| Json(item))
         .map_err(InternalServerError)?;
 
@@ -66,9 +71,9 @@ async fn update(
 
 #[handler]
 async fn destroy(db: Data<&Database>, Path(item_id): Path<i32>) -> Result<impl IntoResponse> {
-    let mut db = db.pool.get().unwrap();
+    let mut con = db.get_connection();
 
-    let result = todo::delete(&mut db, item_id)
+    let result = Todo::delete(&mut con, item_id)
         .map(|amount| {
             if amount > 0 {
                 StatusCode::OK

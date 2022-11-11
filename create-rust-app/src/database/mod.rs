@@ -27,4 +27,8 @@ impl Database {
             pool: database_pool,
         }
     }
+
+    pub fn get_connection(&self) -> Connection {
+        self.pool.get().unwrap()
+    }
 }

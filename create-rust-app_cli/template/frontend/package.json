@@ -11,12 +11,11 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "yarn tsync && vite",
+    "start": "yarn vite",
     "build": "vite build",
     "preview": "vite preview",
     "fullstack": "yarn install && yarn concurrently --prefix-colors cyan,magenta --kill-others -n backend,frontend \"cargo --color=always watch -x run -w backend\" \"yarn start\"",
-    "test": "npx playwright test ./tests",
-    "tsync": "tsync -i ../backend -o ./src/types/rust.d.ts"
+    "test": "npx playwright test ./tests"
   },
   "eslintConfig": {
     "extends": [

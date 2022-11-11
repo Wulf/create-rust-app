@@ -4,16 +4,17 @@ This project was bootstrapped with [Create Rust App](https://github.com/wulf/cre
 
 ## Requirements
 
-- rustup, (Archlinux: `pacman -S rustup`)
-- Rust stable, (bash: `rustup toolchain install stable`)
-- Diesel CLI (after rust is installed: `cargo install diesel_cli`)
+- [stable Rust](https://www.rust-lang.org/tools/install)
+- Diesel CLI 
+  - if using postgres, `cargo install diesel_cli --no-default-features --features postgres`
+  - if using sqlite, `cargo install diesel_cli --no-default-features --features sqlite-bundled`
+- cargo-watch to recompile on change:
+  - `cargo install cargo-watch` (allows running `cargo watch -x run -i frontend/` for continuous compilation; see "available scripts")
 
-- Other helpful tools
+## Notes
 
-  - `cargo install cargo-edit` (makes it easy to add deps with `cargo add`)
-  - `cargo install cargo-watch` (allows running `cargo watch -x run -i frontend/` for continuous compilation)
-
-- `.env` file (use `.env.example` for reference)
+- In development, the `.env` file is read (use `.env.example` for reference)
+- In production, environment variables are sourced directly
 
 ## Available Scripts
 

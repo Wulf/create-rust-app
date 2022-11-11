@@ -1,4 +1,4 @@
-use http::{StatusCode, Uri};
+use poem::http::{StatusCode, Uri};
 use poem::middleware::{AddData, AddDataEndpoint};
 use poem::web::Data;
 use poem::{handler, Body, EndpointExt, IntoResponse, Response, Route};

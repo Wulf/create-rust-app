@@ -41,7 +41,7 @@ struct Asset;
 //     version.to_string()
 // }
 fn get_current_cra_lib_version() -> String {
-    "8.0.2".to_string()
+    "8".to_string()
 }
 
 fn add_bins_to_cargo_toml(project_dir: &std::path::PathBuf) -> Result<(), std::io::Error> {
@@ -86,6 +86,10 @@ path = ".cargo/bin/fullstack.rs"
 [[bin]]
 name = "tsync"
 path = ".cargo/bin/tsync.rs"
+
+[[bin]]
+name = "dsync"
+path = ".cargo/bin/dsync.rs"
 
 [[bin]]
 name = "{project_name}"
@@ -344,7 +348,9 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         "chrono",
         r#"chrono = { version = "0.4.19", features = ["serde"] }"#,
     )?;
-    add_dependency(&project_dir, "tsync", r#"tsync = "1.2.1""#)?;
+    // todo: move these deps to the helper crate (./create-rust-app/Cargo.toml) behind feature flags
+    add_dependency(&project_dir, "tsync", r#"tsync = "1""#)?;
+    add_dependency(&project_dir, "dsync", r#"dsync = "0""#)?;
     add_dependency(
         &project_dir,
         "diesel",
@@ -416,6 +422,37 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         let contents = contents.replace("postgres://postgres:postgres@localhost/database", "dev.sqlite");
         std::fs::write(env_example_file, contents.clone())?;
         std::fs::write(env_file, contents.clone())?;
+    }
+
+    /*
+        Initial code gen (dsync, tsync)
+    */
+    logger::command_msg("cargo dsync");
+
+    let cargo_dsync = std::process::Command::new("cargo")
+        .current_dir(&project_dir)
+        .arg("dsync")
+        .stdout(std::process::Stdio::null())
+        .status()
+        .expect("failed to execute process");
+
+    if !cargo_dsync.success() {
+        logger::error("failed to execute process");
+        std::process::exit(1);
+    }
+
+    logger::command_msg("cargo tsync");
+
+    let cargo_tsync = std::process::Command::new("cargo")
+        .current_dir(&project_dir)
+        .arg("tsync")
+        .stdout(std::process::Stdio::null())
+        .status()
+        .expect("failed to execute process");
+
+    if !cargo_tsync.success() {
+        logger::error("failed to execute process");
+        std::process::exit(1);
     }
 
     /*
