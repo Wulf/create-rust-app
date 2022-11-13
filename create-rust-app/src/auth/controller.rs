@@ -426,7 +426,7 @@ pub fn register(
         }
     }
 
-    let mut salt = generate_salt();
+    let salt = generate_salt();
     let hash = argon2::hash_encoded(&item.password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
 
     let user = User::create(
@@ -601,7 +601,7 @@ pub fn change_password(
         return Err((400, "Invalid credentials"));
     }
 
-    let mut salt = generate_salt();
+    let salt = generate_salt();
     let new_hash = argon2::hash_encoded(&item.new_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
 
     let updated_user = User::update(
@@ -666,7 +666,7 @@ pub fn reset_password(
         return Err((400, "Account has not been activated"));
     }
 
-    let mut salt = generate_salt();
+    let salt = generate_salt();
     let new_hash = argon2::hash_encoded(&item.new_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
 
     let update = User::update(
@@ -688,9 +688,9 @@ pub fn reset_password(
     Ok(())
 }
 
-pub fn generate_salt() -> [u8; 8] {
+pub fn generate_salt() -> [u8; 16] {
     use rand::Fill;
-    let mut salt = [0; 8];
+    let mut salt = [0; 16];
     salt.try_fill(&mut rand::thread_rng()).unwrap();
     salt
 }
