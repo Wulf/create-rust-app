@@ -1,7 +1,7 @@
-use lettre::smtp::authentication::Credentials;
-use lettre::stub::StubTransport;
-use lettre::{SendableEmail, SmtpClient, Transport};
-use lettre_email::EmailBuilder;
+use lettre::message::{Message, MultiPart};
+use lettre::transport::smtp::authentication::Credentials;
+use lettre::transport::stub::StubTransport;
+use lettre::{SmtpTransport, Transport};
 
 #[derive(Clone)]
 pub struct Mailer {
@@ -61,26 +61,26 @@ impl Mailer {
     }
 
     pub fn send(&self, to: &str, subject: &str, text: &str, html: &str) {
-        let email: SendableEmail = EmailBuilder::new()
-            .to(to)
-            .from(self.from_address.as_ref())
+        let email = Message::builder()
+            .to(to.parse().unwrap())
+            .from(self.from_address.parse().unwrap())
             .subject(subject)
-            .text(text)
-            .html(html)
-            .build()
-            .unwrap()
-            .into();
+            .multipart(MultiPart::alternative_plain_html(
+                String::from(text),
+                String::from(html),
+            ))
+            .unwrap();
 
         if self.actually_send {
-            let mut mailer = SmtpClient::new_simple(self.smtp_server.as_str())
+            let mailer = SmtpTransport::relay(&self.smtp_server)
                 .unwrap()
                 .credentials(Credentials::new(
                     self.smtp_username.to_string(),
                     self.smtp_password.to_string(),
                 ))
-                .transport();
+                .build();
 
-            let result = mailer.send(email);
+            let result = mailer.send(&email);
             println!(
                 r#"====================
 Sent email {:#?}
@@ -93,8 +93,8 @@ message:
                 result, to, self.from_address, text
             );
         } else {
-            let mut mailer = StubTransport::new_positive();
-            let result = mailer.send(email);
+            let mailer = StubTransport::new_ok();
+            let result = mailer.send(&email);
             println!(
                 r#"====================
 Sent email {:#?}
