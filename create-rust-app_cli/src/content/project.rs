@@ -427,33 +427,33 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
     /*
         Initial code gen (dsync, tsync)
     */
-    logger::command_msg("cargo dsync");
-
-    let cargo_dsync = std::process::Command::new("cargo")
-        .current_dir(&project_dir)
-        .arg("dsync")
-        .stdout(std::process::Stdio::null())
-        .status()
-        .expect("failed to execute process");
-
-    if !cargo_dsync.success() {
-        logger::error("failed to execute process");
-        std::process::exit(1);
-    }
-
-    logger::command_msg("cargo tsync");
-
-    let cargo_tsync = std::process::Command::new("cargo")
-        .current_dir(&project_dir)
-        .arg("tsync")
-        .stdout(std::process::Stdio::null())
-        .status()
-        .expect("failed to execute process");
-
-    if !cargo_tsync.success() {
-        logger::error("failed to execute process");
-        std::process::exit(1);
-    }
+    // logger::command_msg("cargo dsync");
+    //
+    // let cargo_dsync = std::process::Command::new("cargo")
+    //     .current_dir(&project_dir)
+    //     .arg("dsync")
+    //     .stdout(std::process::Stdio::null())
+    //     .status()
+    //     .expect("failed to execute process");
+    //
+    // if !cargo_dsync.success() {
+    //     logger::error("failed to execute process");
+    //     std::process::exit(1);
+    // }
+    //
+    // logger::command_msg("cargo tsync");
+    //
+    // let cargo_tsync = std::process::Command::new("cargo")
+    //     .current_dir(&project_dir)
+    //     .arg("tsync")
+    //     .stdout(std::process::Stdio::null())
+    //     .status()
+    //     .expect("failed to execute process");
+    //
+    // if !cargo_tsync.success() {
+    //     logger::error("failed to execute process");
+    //     std::process::exit(1);
+    // }
 
     /*
         Finalize; create the initial commit.

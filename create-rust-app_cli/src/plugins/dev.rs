@@ -53,12 +53,9 @@ impl Plugin for Dev {
     "react-query": "^3.21.0""#,
         )?;
 
-        fs::replace(
-            "frontend/src/App.tsx",
-            "const App = () => {",
-            r#"if (process.env.NODE_ENV === 'development') import('./setupDevelopment')
-    
-const App = () => {"#,
+        fs::append(
+            "frontend/src/dev.tsx",
+            "\nimport './setupDevelopment'"
         )?;
 
         match install_config.backend_framework {

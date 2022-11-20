@@ -15,7 +15,7 @@ struct Asset;
 
 impl Plugin for GraphQL {
     fn name(&self) -> &'static str {
-        "Storage"
+        "GraphQL"
     }
 
     fn install(&self, install_config: InstallConfig) -> Result<()> {
