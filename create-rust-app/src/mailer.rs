@@ -4,7 +4,7 @@ use lettre::transport::stub::StubTransport;
 use lettre::{SmtpTransport, Transport};
 
 #[derive(Clone)]
-/// struct used to handle sending emails from
+/// struct used to handle sending emails
 pub struct Mailer {
     /// the email address emails should be sent from
     /// 

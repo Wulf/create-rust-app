@@ -20,7 +20,7 @@ pub struct LogImpl<E>(E);
 impl<E: Endpoint> Endpoint for LogImpl<E> {
     type Output = Response;
 
-    /// TODO: documentation
+    /// Logs requests recieved by the server, as well as the associated responses
     async fn call(&self, req: Request) -> Result<Self::Output> {
         println!(">  REQUEST: {}", req.uri().path());
         let res = self.0.call(req).await;
