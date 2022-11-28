@@ -238,6 +238,9 @@ pub fn login(
         if device_string.len() > 256 {
             return Err((400, "'device' cannot be longer than 256 characters."));
         }
+        else {
+            device = Some(device_string.to_owned());
+        }
     }
 
     let user = User::find_by_email(&mut db, item.email.clone());
