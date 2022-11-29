@@ -14,6 +14,12 @@ pub struct Database {
     pub pool: Pool,
 }
 
+impl Default for Database {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Database {
     pub fn new() -> Database {
         let database_url =

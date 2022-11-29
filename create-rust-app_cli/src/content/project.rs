@@ -164,10 +164,7 @@ pub fn remove_non_framework_files(
     Ok(())
 }
 
-pub fn remove_non_database_files(
-    project_dir: &PathBuf,
-    database: BackendDatabase,
-) -> Result<()> {
+pub fn remove_non_database_files(project_dir: &PathBuf, database: BackendDatabase) -> Result<()> {
     /* Choose framework-specific files */
     for entry in WalkDir::new(project_dir) {
         let entry = entry.unwrap();
@@ -180,7 +177,7 @@ pub fn remove_non_database_files(
                 logger::remove_file_msg(&format!("{:#?}", &file));
                 std::fs::remove_file(file)?;
             };
-            if database == BackendDatabase::Postgres{
+            if database == BackendDatabase::Postgres {
                 let dest = file.with_extension(
                     file.extension()
                         .unwrap()
@@ -354,10 +351,13 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
     add_dependency(
         &project_dir,
         "diesel",
-        &format!(r#"diesel = {{ version="2.0.0-rc.1", default-features = false, features = ["{db}", "r2d2", "chrono"] }}"#, db = match database {
-            BackendDatabase::Postgres => "postgres",
-            BackendDatabase::Sqlite => "sqlite",
-        }),
+        &format!(
+            r#"diesel = {{ version="2.0.0-rc.1", default-features = false, features = ["{db}", "r2d2", "chrono"] }}"#,
+            db = match database {
+                BackendDatabase::Postgres => "postgres",
+                BackendDatabase::Sqlite => "sqlite",
+            }
+        ),
     )?;
     add_dependency(
         &project_dir,
@@ -419,7 +419,10 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         env_example_file.push(".env.example");
         env_file.push(".env");
         let contents = std::fs::read_to_string(&env_example_file)?;
-        let contents = contents.replace("postgres://postgres:postgres@localhost/database", "dev.sqlite");
+        let contents = contents.replace(
+            "postgres://postgres:postgres@localhost/database",
+            "dev.sqlite",
+        );
         std::fs::write(env_example_file, contents.clone())?;
         std::fs::write(env_file, contents.clone())?;
     }

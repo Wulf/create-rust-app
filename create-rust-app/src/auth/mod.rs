@@ -27,9 +27,9 @@ type ID = i32;
 
 #[tsync::tsync]
 #[cfg(not(feature = "database_sqlite"))]
-type UTC = chrono::DateTime<chrono::Utc>;
+type Utc = chrono::DateTime<chrono::Utc>;
 #[cfg(feature = "database_sqlite")]
-type UTC = chrono::NaiveDateTime;
+type Utc = chrono::NaiveDateTime;
 
 #[tsync::tsync]
 #[derive(Deserialize)]
@@ -47,9 +47,9 @@ impl PaginationParams {
 pub struct UserSessionJson {
     pub id: ID,
     pub device: Option<String>,
-    pub created_at: UTC,
+    pub created_at: Utc,
     #[cfg(not(feature = "database_sqlite"))]
-    pub updated_at: UTC,
+    pub updated_at: Utc,
 }
 
 #[tsync::tsync]

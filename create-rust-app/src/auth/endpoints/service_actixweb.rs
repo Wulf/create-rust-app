@@ -79,7 +79,7 @@ async fn login(db: Data<Database>, Json(item): Json<LoginInput>) -> Result<HttpR
     match result {
         Ok((access_token, refresh_token)) => Ok(HttpResponse::build(StatusCode::OK)
             .cookie(
-                Cookie::build(COOKIE_NAME, refresh_token.clone())
+                Cookie::build(COOKIE_NAME, refresh_token)
                     .secure(true)
                     .http_only(true)
                     .same_site(SameSite::Strict)
@@ -241,7 +241,7 @@ async fn reset_password(
 }
 
 pub fn endpoints(scope: actix_web::Scope) -> actix_web::Scope {
-    return scope
+    scope
         .service(sessions)
         .service(destroy_session)
         .service(destroy_sessions)
@@ -253,5 +253,5 @@ pub fn endpoints(scope: actix_web::Scope) -> actix_web::Scope {
         .service(activate)
         .service(forgot_password)
         .service(change_password)
-        .service(reset_password);
+        .service(reset_password)
 }

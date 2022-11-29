@@ -30,5 +30,5 @@ Please visit this link to reset your password:
         link = link
     );
 
-    mailer.send(to_email, &subject, &text, &html);
+    mailer.send(to_email, subject, &text, &html);
 }

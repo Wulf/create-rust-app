@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::auth::{UTC, schema::*};
+use crate::auth::{schema::*, Utc};
 use crate::database::Connection;
 use crate::diesel::*;
 
@@ -13,7 +13,7 @@ pub struct RolePermission {
     -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
     pub role: String,
     pub permission: String,
-    pub created_at: UTC,
+    pub created_at: Utc,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]
@@ -44,9 +44,7 @@ impl RolePermission {
     ) -> QueryResult<usize> {
         use crate::auth::schema::role_permissions::dsl::*;
 
-        insert_into(role_permissions)
-            .values(items)
-            .execute(db)
+        insert_into(role_permissions).values(items).execute(db)
     }
 
     #[cfg(not(feature = "database_sqlite"))]
@@ -92,7 +90,7 @@ impl RolePermission {
         diesel::delete(
             role_permissions.filter(role.eq(item_role).and(permission.eq(item_permission))),
         )
-            .execute(db)
+        .execute(db)
     }
 
     pub fn delete_many(
@@ -107,7 +105,7 @@ impl RolePermission {
                 .filter(role.eq(item_role))
                 .filter(permission.eq_any(item_permissions)),
         )
-            .execute(db)
+        .execute(db)
     }
 
     pub fn delete_all(db: &mut Connection, item_role: &str) -> QueryResult<usize> {

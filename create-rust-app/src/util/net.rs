@@ -1,10 +1,9 @@
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddrV4, SocketAddrV6, TcpListener, ToSocketAddrs};
 
 fn test_bind<A: ToSocketAddrs>(addr: A) -> bool {
-    match TcpListener::bind(addr).map(|t| t.local_addr().is_ok()) {
-        Ok(result) => result,
-        Err(_) => false,
-    }
+    TcpListener::bind(addr)
+        .map(|t| t.local_addr().is_ok())
+        .unwrap_or(false)
 }
 
 pub fn is_port_free(port: u16) -> bool {

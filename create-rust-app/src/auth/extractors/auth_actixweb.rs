@@ -23,7 +23,7 @@ pub struct Auth {
 impl Auth {
     pub fn has_permission(&self, permission: String) -> bool {
         self.permissions.contains(&Permission {
-            permission: permission.to_string(),
+            permission,
             from_role: String::new(),
         })
     }
@@ -37,7 +37,7 @@ impl Auth {
     }
 
     pub fn has_role(&self, permission: String) -> bool {
-        self.roles.contains(&permission.to_string())
+        self.roles.contains(&permission)
     }
 
     pub fn has_all_roles(&self, roles: Vec<String>) -> bool {
@@ -116,10 +116,10 @@ impl FromRequest for Auth {
             HashSet::from_iter(access_token.claims.permissions.iter().cloned());
         let roles: HashSet<String> = HashSet::from_iter(access_token.claims.roles.iter().cloned());
 
-        return ready(Ok(Auth {
+        ready(Ok(Auth {
             user_id,
             roles,
             permissions,
-        }));
+        }))
     }
 }

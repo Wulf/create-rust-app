@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use crate::Connection;
 use crate::diesel::*;
-use crate::storage::{ID, schema, schema::*, UTC};
+use crate::storage::{schema, schema::*, Utc, ID};
+use crate::Connection;
 
 #[derive(
-Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Identifiable, AsChangeset,
+    Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Identifiable, AsChangeset,
 )]
 #[diesel(table_name = attachment_blobs)]
 pub struct AttachmentBlob {
@@ -18,7 +18,7 @@ pub struct AttachmentBlob {
     pub checksum: String,
     pub service_name: String,
 
-    pub created_at: UTC,
+    pub created_at: Utc,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]
