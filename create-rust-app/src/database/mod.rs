@@ -10,11 +10,13 @@ pub type Pool = r2d2::Pool<ConnectionManager<DbCon>>;
 pub type Connection = PooledConnection<ConnectionManager<DbCon>>;
 
 #[derive(Clone)]
+/// wrapper function for a database pool
 pub struct Database {
     pub pool: Pool,
 }
 
 impl Database {
+    /// create a new [`Database`]
     pub fn new() -> Database {
         let database_url =
             std::env::var("DATABASE_URL").expect("DATABASE_URL environment variable expected.");
@@ -28,6 +30,7 @@ impl Database {
         }
     }
 
+    /// get a [`Connection`] to a database
     pub fn get_connection(&self) -> Connection {
         self.pool.get().unwrap()
     }
