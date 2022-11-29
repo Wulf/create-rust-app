@@ -31,7 +31,7 @@ impl Role {
         let assigned = UserRole::create(
             db,
             &UserRoleChangeset {
-                user_id: user_id,
+                user_id,
                 role: role.to_string(),
             },
         );
@@ -44,10 +44,7 @@ impl Role {
             db,
             roles
                 .into_iter()
-                .map(|r| UserRoleChangeset {
-                    user_id: user_id,
-                    role: r,
-                })
+                .map(|r| UserRoleChangeset { user_id, role: r })
                 .collect::<Vec<_>>(),
         );
 
@@ -179,7 +176,7 @@ impl Permission {
     }
 
     pub fn revoke_from_role(db: &mut Connection, role: String, permission: String) -> Result<bool> {
-        let deleted = RolePermission::delete(db, role, permission.to_string());
+        let deleted = RolePermission::delete(db, role, permission);
 
         Ok(deleted.is_ok())
     }

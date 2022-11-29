@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::diesel::*;
-use crate::storage::{schema, schema::*, ID, UTC};
+use crate::storage::{schema, schema::*, Utc, ID};
 use crate::Connection;
 
 #[derive(
@@ -18,7 +18,7 @@ pub struct AttachmentBlob {
     pub checksum: String,
     pub service_name: String,
 
-    pub created_at: UTC,
+    pub created_at: Utc,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]

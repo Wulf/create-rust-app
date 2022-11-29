@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::auth::schema::*;
 use crate::diesel::*;
 use crate::{
-    auth::{user::User, ID, UTC},
+    auth::{user::User, Utc, ID},
     database::Connection,
 };
 
@@ -19,7 +19,7 @@ pub struct UserPermission {
     -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
     pub user_id: ID,
     pub permission: String,
-    pub created_at: UTC,
+    pub created_at: Utc,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]

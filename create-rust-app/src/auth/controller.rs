@@ -9,7 +9,7 @@ use crate::{Database, Mailer};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
-pub const COOKIE_NAME: &'static str = "refresh_token";
+pub const COOKIE_NAME: &str = "refresh_token";
 
 lazy_static! {
     static ref ARGON_CONFIG: argon2::Config<'static> = argon2::Config {
@@ -92,7 +92,7 @@ pub fn get_sessions(
 ) -> Result<UserSessionResponse, (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
-    let sessions = UserSession::read_all(&mut db, &info, auth.user_id);
+    let sessions = UserSession::read_all(&mut db, info, auth.user_id);
 
     if sessions.is_err() {
         return Err((500, "Could not fetch sessions."));
@@ -211,8 +211,8 @@ pub fn login(
     let is_valid = argon2::verify_encoded_ext(
         &user.hash_password,
         item.password.as_bytes(),
-        &ARGON_CONFIG.secret,
-        &ARGON_CONFIG.ad,
+        ARGON_CONFIG.secret,
+        ARGON_CONFIG.ad,
     )
     .unwrap();
 
@@ -330,7 +330,7 @@ pub fn refresh(
     let refresh_token_str = refresh_token_str.unwrap();
 
     let refresh_token = decode::<RefreshTokenClaims>(
-        &refresh_token_str,
+        refresh_token_str,
         &DecodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
         &Validation::default(),
     );
@@ -425,8 +425,7 @@ pub fn register(
 
     let user = User::find_by_email(&mut db, (&item.email).to_string());
 
-    if user.is_ok() {
-        let user = user.unwrap();
+    if let Ok(user) = user {
         if !user.activated {
             User::delete(&mut db, user.id).unwrap();
         } else {
@@ -435,7 +434,7 @@ pub fn register(
     }
 
     let salt = generate_salt();
-    let hash = argon2::hash_encoded(&item.password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
+    let hash = argon2::hash_encoded(item.password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
 
     let user = User::create(
         &mut db,
@@ -461,7 +460,7 @@ pub fn register(
     .unwrap();
 
     mail::auth_register::send(
-        &mailer,
+        mailer,
         &user.email,
         &format!(
             "http://localhost:3000/activate?token={token}",
@@ -526,7 +525,7 @@ pub fn activate(
         return Err((500, "Could not activate user."));
     }
 
-    mail::auth_activated::send(&mailer, &user.email);
+    mail::auth_activated::send(mailer, &user.email);
 
     Ok(())
 }
@@ -541,9 +540,7 @@ pub fn forgot_password(
 
     let user_result = User::find_by_email(&mut db, item.email.clone());
 
-    if user_result.is_ok() {
-        let user = user_result.unwrap();
-
+    if let Ok(user) = user_result {
         // if !user.activated {
         //   return Ok(HttpResponse::build(400).body(" has not been activate"))
         // }
@@ -565,10 +562,10 @@ pub fn forgot_password(
             "http://localhost:3000/reset?token={reset_token}",
             reset_token = reset_token
         );
-        mail::auth_recover_existent_account::send(&mailer, &user.email, link);
+        mail::auth_recover_existent_account::send(mailer, &user.email, link);
     } else {
-        let link = &format!("http://localhost:300/register");
-        mail::auth_recover_nonexistent_account::send(&mailer, &item.email, link);
+        let link = &"http://localhost:300/register".to_string();
+        mail::auth_recover_nonexistent_account::send(mailer, &item.email, link);
     }
 
     Ok(())
@@ -581,7 +578,7 @@ pub fn change_password(
     auth: &Auth,
     mailer: &Mailer,
 ) -> Result<(), (StatusCode, Message)> {
-    if item.old_password.len() == 0 || item.new_password.len() == 0 {
+    if item.old_password.is_empty() || item.new_password.is_empty() {
         return Err((400, "Missing password"));
     }
 
@@ -606,8 +603,8 @@ pub fn change_password(
     let is_old_password_valid = argon2::verify_encoded_ext(
         &user.hash_password,
         item.old_password.as_bytes(),
-        &ARGON_CONFIG.secret,
-        &ARGON_CONFIG.ad,
+        ARGON_CONFIG.secret,
+        ARGON_CONFIG.ad,
     )
     .unwrap();
 
@@ -617,7 +614,7 @@ pub fn change_password(
 
     let salt = generate_salt();
     let new_hash =
-        argon2::hash_encoded(&item.new_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
+        argon2::hash_encoded(item.new_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
 
     let updated_user = User::update(
         &mut db,
@@ -633,7 +630,7 @@ pub fn change_password(
         return Err((500, "Could not update password"));
     }
 
-    mail::auth_password_changed::send(&mailer, &user.email);
+    mail::auth_password_changed::send(mailer, &user.email);
 
     Ok(())
 }
@@ -649,7 +646,7 @@ pub fn reset_password(
 ) -> Result<(), (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
-    if item.new_password.len() == 0 {
+    if item.new_password.is_empty() {
         return Err((400, "Missing password"));
     }
 
@@ -683,7 +680,7 @@ pub fn reset_password(
 
     let salt = generate_salt();
     let new_hash =
-        argon2::hash_encoded(&item.new_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
+        argon2::hash_encoded(item.new_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
 
     let update = User::update(
         &mut db,
@@ -699,7 +696,7 @@ pub fn reset_password(
         return Err((500, "Could not update password"));
     }
 
-    mail::auth_password_reset::send(&mailer, &user.email);
+    mail::auth_password_reset::send(mailer, &user.email);
 
     Ok(())
 }

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::auth::{schema::*, UTC};
+use crate::auth::{schema::*, Utc};
 use crate::database::Connection;
 use crate::diesel::*;
 
@@ -13,7 +13,7 @@ pub struct RolePermission {
     -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
     pub role: String,
     pub permission: String,
-    pub created_at: UTC,
+    pub created_at: Utc,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]

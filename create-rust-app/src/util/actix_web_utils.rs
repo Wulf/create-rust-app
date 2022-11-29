@@ -10,8 +10,8 @@ use tera::Context;
 pub fn render_single_page_application(route: &str, view: &str) -> Scope {
     use actix_web::web::Data;
 
-    let route = route.strip_prefix("/").unwrap_or(route);
-    let view = view.strip_prefix("/").unwrap_or(view);
+    let route = route.strip_prefix('/').unwrap_or(route);
+    let view = view.strip_prefix('/').unwrap_or(view);
 
     actix_web::web::scope(&format!("/{}{{tail:(/.*)?}}", route))
         .app_data(Data::new(SinglePageApplication {
@@ -21,7 +21,7 @@ pub fn render_single_page_application(route: &str, view: &str) -> Scope {
 }
 
 async fn render_spa_handler(
-    req: HttpRequest,
+    _req: HttpRequest,
     spa_info: web::Data<SinglePageApplication>,
 ) -> HttpResponse {
     let content = TEMPLATES
