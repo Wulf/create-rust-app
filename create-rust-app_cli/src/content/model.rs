@@ -30,11 +30,11 @@ fn config(resource_name: &str) -> ModelConfig {
     let file_name = model_name.to_snake_case();
     let table_name = model_name.to_table_case();
 
-    return ModelConfig {
-        model_name: model_name,
-        file_name: file_name,
-        table_name: table_name,
-    };
+    ModelConfig {
+        model_name,
+        file_name,
+        table_name,
+    }
 }
 
 fn generate(resource_name: &str) -> Model {
@@ -118,7 +118,7 @@ fn generate(resource_name: &str) -> Model {
         .replace("$TABLE_NAME", config.table_name.as_str());
 
     Model {
-        config: config,
+        config,
         file_contents: contents,
     }
 }

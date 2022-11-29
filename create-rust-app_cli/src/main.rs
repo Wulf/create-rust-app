@@ -15,13 +15,13 @@ use content::project;
 use dialoguer::{theme::ColorfulTheme, Input, MultiSelect, Select};
 use utils::{fs, logger};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BackendFramework {
     ActixWeb,
     Poem,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BackendDatabase {
     Postgres,
     Sqlite,
@@ -67,13 +67,10 @@ fn main() -> Result<()> {
         current_dir = PathBuf::from(unknown_opts.target.unwrap());
 
         if current_dir.exists() {
-            logger::error(
-                &format!(
-                    "Cannot create a project: {:#?} already exists.",
-                    &current_dir
-                )
-                .to_string(),
-            );
+            logger::error(&format!(
+                "Cannot create a project: {:#?} already exists.",
+                &current_dir
+            ));
             return Ok(());
         }
     }
@@ -122,7 +119,7 @@ fn create_project() -> anyhow::Result<()> {
 
     let project_name = create_opts.target;
 
-    if project_name.len() == 0 {
+    if project_name.is_empty() {
         logger::error("Please provide a project name");
 
         return Ok(());
@@ -145,11 +142,11 @@ fn create_project() -> anyhow::Result<()> {
         .defaults(&[true, true, true, true, true])
         .interact()?;
 
-    let add_plugin_auth = chosen.iter().position(|x| *x == 0).is_some();
-    let add_plugin_container = chosen.iter().position(|x| *x == 1).is_some();
-    let add_plugin_dev = chosen.iter().position(|x| *x == 2).is_some();
-    let add_plugin_storage = chosen.iter().position(|x| *x == 3).is_some();
-    let add_plugin_graphql = chosen.iter().position(|x| *x == 4).is_some();
+    let add_plugin_auth = chosen.iter().any(|x| *x == 0);
+    let add_plugin_container = chosen.iter().any(|x| *x == 1);
+    let add_plugin_dev = chosen.iter().any(|x| *x == 2);
+    let add_plugin_storage = chosen.iter().any(|x| *x == 3);
+    let add_plugin_graphql = chosen.iter().any(|x| *x == 4);
 
     let mut features: Vec<String> = vec![];
     if add_plugin_dev {
@@ -189,7 +186,7 @@ fn create_project() -> anyhow::Result<()> {
     project_dir.push(project_name);
     // !
     std::env::set_current_dir(project_dir.clone())
-        .expect(&format!("Unable to change into {:#?}", project_dir.clone()));
+        .unwrap_or_else(|_| panic!("Unable to change into {:#?}", project_dir.clone()));
 
     //
     // Note: we're in the project dir from here on out
@@ -304,7 +301,7 @@ fn configure_project() -> Result<()> {
                         .default("".into())
                         .interact_text()?;
 
-                    if resource_name.len() == 0 {
+                    if resource_name.is_empty() {
                         return Ok(());
                     }
 
