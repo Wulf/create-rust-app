@@ -43,8 +43,8 @@ impl Auth {
     }
 
     /// does the user with the id [`self.user_id`](`ID`) have the given `role`
-    pub fn has_role(&self, permission: String) -> bool {
-        self.roles.contains(&permission.to_string())
+    pub fn has_role(&self, role: String) -> bool {
+        self.roles.contains(&role.to_string())
     }
 
     /// does the user with the id [`self.user_id`](`ID`) have all of the given `roles`
@@ -70,7 +70,7 @@ impl ResponseError for AuthError {
     fn error_response(&self) -> HttpResponse {
         // HttpResponse::Unauthorized().json(self.reason.as_str())
         // println!("error_response");
-        HttpResponse::build(StatusCode::UNAUTHORIZED).body(
+        HttpResponse::build(self.status_code()).body(
             json!({
               "message": self.reason.as_str()
             })
