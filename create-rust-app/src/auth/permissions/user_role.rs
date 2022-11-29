@@ -67,7 +67,7 @@ impl UserRole {
             .get_results::<UserRole>(db)
     }
 
-    /// Read from [`db`](`Connection`), querying for an entry in the user_roles table that has 
+    /// Read from [`db`](`Connection`), querying for an entry in the user_roles table that has
     /// (`item_user_id`,`item_role`) as it's primary keys
     pub fn read(db: &mut Connection, item_user_id: ID, item_role: String) -> QueryResult<Self> {
         use crate::auth::schema::user_roles::dsl::*;
@@ -88,7 +88,7 @@ impl UserRole {
             .load::<UserRole>(db)
     }
 
-    /// Delete the entry in [`db`](`Connection`)'s user_roles table that has 
+    /// Delete the entry in [`db`](`Connection`)'s user_roles table that has
     /// (`item_user_id`,`item_role`) as it's primary keys
     pub fn delete(db: &mut Connection, item_user_id: ID, item_role: String) -> QueryResult<usize> {
         use crate::auth::schema::user_roles::dsl::*;
@@ -97,7 +97,7 @@ impl UserRole {
             .execute(db)
     }
 
-    /// Delete every entry in [`db`](`Connection`)'s user_roles table that has 
+    /// Delete every entry in [`db`](`Connection`)'s user_roles table that has
     /// `item_user_id`, and an element of`item_roles` as it's primary keys
     pub fn delete_many(
         db: &mut Connection,

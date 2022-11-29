@@ -1,21 +1,21 @@
 
-    /// Create an entry in [`db`](`Connection`)'s `users` table using the data in [`item`](`UserChangeset`)
-    
-/// Read from [`db`](`Connection`), querying for an entry in the `users` 
-    /// who's primary key matches [`item_id`](`ID`)
-    
-/// Queries [`db`](`Connection`)'s `users` table for an entry 
-    /// with an email that matches the given `item_email`
-    
+/// Create an entry in [`db`](`Connection`)'s `users` table using the data in [`item`](`UserChangeset`)
+
+/// Read from [`db`](`Connection`), querying for an entry in the `users`
+/// who's primary key matches [`item_id`](`ID`)
+
+/// Queries [`db`](`Connection`)'s `users` table for an entry
+/// with an email that matches the given `item_email`
+
 /// Read from [`db`](`Connection`), return entries of the `users` table,
-    /// paginated according to [`pagination`](`PaginationParams`)
-    
+/// paginated according to [`pagination`](`PaginationParams`)
+
 /// Update the entry in [`db`](`Connection`)'s `users` table who's primary key matches
-    /// [`item_id`](`ID`), with the data in [`item`](`UserChangeset`)
-    
-/// Delete the entry in [`db`](`Connection`)'s `users` table who's 
-    /// primary key matches [`item_id`](`ID`)
-    use super::schema::*;
+/// [`item_id`](`ID`), with the data in [`item`](`UserChangeset`)
+
+/// Delete the entry in [`db`](`Connection`)'s `users` table who's
+/// primary key matches [`item_id`](`ID`)
+use super::schema::*;
 use crate::diesel::*;
 
 use super::{PaginationParams, ID, UTC};
@@ -65,7 +65,7 @@ impl User {
         insert_into(users).values(item).get_result::<User>(db)
     }
 
-    /// Read from [`db`](`Connection`), querying for an entry in the `users` 
+    /// Read from [`db`](`Connection`), querying for an entry in the `users`
     /// who's primary key matches [`item_id`](`ID`)
     pub fn read(db: &mut Connection, item_id: ID) -> QueryResult<Self> {
         use super::schema::users::dsl::*;
@@ -73,7 +73,7 @@ impl User {
         users.filter(id.eq(item_id)).first::<User>(db)
     }
 
-    /// Queries [`db`](`Connection`)'s `users` table for an entry 
+    /// Queries [`db`](`Connection`)'s `users` table for an entry
     /// with an email that matches the given `item_email`
     pub fn find_by_email(db: &mut Connection, item_email: String) -> QueryResult<Self> {
         use super::schema::users::dsl::*;
@@ -106,7 +106,7 @@ impl User {
             .get_result(db)
     }
 
-    /// Delete the entry in [`db`](`Connection`)'s `users` table who's 
+    /// Delete the entry in [`db`](`Connection`)'s `users` table who's
     /// primary key matches [`item_id`](`ID`)
     pub fn delete(db: &mut Connection, item_id: ID) -> QueryResult<usize> {
         use super::schema::users::dsl::*;
