@@ -6,8 +6,8 @@ use crate::auth::{
 };
 use crate::{Database, Mailer};
 
-use serde::{Deserialize, Serialize};
 use lazy_static::lazy_static;
+use serde::{Deserialize, Serialize};
 
 pub const COOKIE_NAME: &'static str = "refresh_token";
 
@@ -191,8 +191,7 @@ pub fn login(
         let device_string = item.device.as_ref().unwrap();
         if device_string.len() > 256 {
             return Err((400, "'device' cannot be longer than 256 characters."));
-        }
-        else {
+        } else {
             device = Some(device_string.to_owned());
         }
     }
@@ -209,7 +208,13 @@ pub fn login(
         return Err((400, "Account has not been activated."));
     }
 
-    let is_valid = argon2::verify_encoded_ext(&user.hash_password, item.password.as_bytes(), &ARGON_CONFIG.secret, &ARGON_CONFIG.ad).unwrap();
+    let is_valid = argon2::verify_encoded_ext(
+        &user.hash_password,
+        item.password.as_bytes(),
+        &ARGON_CONFIG.secret,
+        &ARGON_CONFIG.ad,
+    )
+    .unwrap();
 
     if !is_valid {
         return Err((401, "Invalid credentials."));
@@ -598,14 +603,21 @@ pub fn change_password(
         return Err((400, "Account has not been activated"));
     }
 
-    let is_old_password_valid = argon2::verify_encoded_ext(&user.hash_password, item.old_password.as_bytes(), &ARGON_CONFIG.secret, &ARGON_CONFIG.ad).unwrap();
+    let is_old_password_valid = argon2::verify_encoded_ext(
+        &user.hash_password,
+        item.old_password.as_bytes(),
+        &ARGON_CONFIG.secret,
+        &ARGON_CONFIG.ad,
+    )
+    .unwrap();
 
     if !is_old_password_valid {
         return Err((400, "Invalid credentials"));
     }
 
     let salt = generate_salt();
-    let new_hash = argon2::hash_encoded(&item.new_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
+    let new_hash =
+        argon2::hash_encoded(&item.new_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
 
     let updated_user = User::update(
         &mut db,
@@ -670,7 +682,8 @@ pub fn reset_password(
     }
 
     let salt = generate_salt();
-    let new_hash = argon2::hash_encoded(&item.new_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
+    let new_hash =
+        argon2::hash_encoded(&item.new_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
 
     let update = User::update(
         &mut db,

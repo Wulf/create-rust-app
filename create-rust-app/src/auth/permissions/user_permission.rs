@@ -43,19 +43,17 @@ impl UserPermission {
             .get_result::<UserPermission>(db)
     }
 
-    #[cfg(feature="database_sqlite")]
+    #[cfg(feature = "database_sqlite")]
     pub fn create_many(
         db: &mut Connection,
         items: Vec<UserPermissionChangeset>,
     ) -> QueryResult<usize> {
         use crate::auth::schema::user_permissions::dsl::*;
 
-        insert_into(user_permissions)
-            .values(items)
-            .execute(db)
+        insert_into(user_permissions).values(items).execute(db)
     }
 
-    #[cfg(not(feature="database_sqlite"))]
+    #[cfg(not(feature = "database_sqlite"))]
     pub fn create_many(
         db: &mut Connection,
         items: Vec<UserPermissionChangeset>,

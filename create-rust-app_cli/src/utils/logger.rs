@@ -1,5 +1,5 @@
-use console::style;
 use crate::BackendDatabase;
+use console::style;
 
 pub fn message(msg: &str) {
     println!("[{}] {}", style("create-rust-app").blue(), msg)
@@ -102,7 +102,7 @@ pub fn project_created_msg(install_config: crate::plugins::InstallConfig) {
             style("cargo install diesel_cli --no-default-features --features").cyan(),
             match install_config.backend_database {
                 BackendDatabase::Postgres => "postgres",
-                BackendDatabase::Sqlite => "sqlite-bundled"
+                BackendDatabase::Sqlite => "sqlite-bundled",
             }
         ));
     }

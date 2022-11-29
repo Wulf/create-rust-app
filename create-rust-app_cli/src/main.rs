@@ -129,7 +129,9 @@ fn create_project() -> anyhow::Result<()> {
     }
 
     logger::message("Please select plugins for your new project:");
-    logger::message("Use UP/DOWN arrows to navigate, SPACE to enable/disable a plugin, and ENTER to confirm.");
+    logger::message(
+        "Use UP/DOWN arrows to navigate, SPACE to enable/disable a plugin, and ENTER to confirm.",
+    );
 
     let items = vec![
         "Authentication Plugin: local email-based authentication",
