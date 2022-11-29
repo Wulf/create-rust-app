@@ -33,12 +33,12 @@ type Utc = chrono::NaiveDateTime;
 
 #[tsync::tsync]
 #[derive(Deserialize)]
-/// Rust struct that provides the information needed to allow 
+/// Rust struct that provides the information needed to allow
 /// pagination of results for requests that have a lot of results
-/// 
-/// often times, GET requests to a REST API will have a lot of 
+///
+/// often times, GET requests to a REST API will have a lot of
 /// results to return, pagination allows the server to break up
-/// those results into smaller chunks that can be more easily 
+/// those results into smaller chunks that can be more easily
 /// sent to, and used by, the client
 pub struct PaginationParams {
     pub page: i64,
@@ -51,7 +51,7 @@ impl PaginationParams {
 
 #[tsync::tsync]
 #[derive(Debug, Serialize, Deserialize, Clone)]
-/// Rust struct representation of a entry from the databases user_session table 
+/// Rust struct representation of a entry from the databases user_session table
 /// serialized into Json
 pub struct UserSessionJson {
     pub id: ID,
@@ -63,7 +63,7 @@ pub struct UserSessionJson {
 
 #[tsync::tsync]
 #[derive(Debug, Serialize, Deserialize, Clone)]
-/// Rust struct representation of the 
+/// Rust struct representation of the
 /// backends JSON response to a GET request at the /sessions endpoint
 pub struct UserSessionResponse {
     pub sessions: Vec<UserSessionJson>,

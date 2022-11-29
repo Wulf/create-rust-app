@@ -65,7 +65,7 @@ impl RolePermission {
             .get_results::<RolePermission>(db)
     }
 
-    /// Read from [`db`](`Connection`), querying for an entry in the role_permissions table that has 
+    /// Read from [`db`](`Connection`), querying for an entry in the role_permissions table that has
     /// (`item_role`,`item_permission`) as it's primary keys
     pub fn read(
         db: &mut Connection,
@@ -90,7 +90,7 @@ impl RolePermission {
             .load::<RolePermission>(db)
     }
 
-    /// Delete the entry in the database's role_permissions table that has 
+    /// Delete the entry in the database's role_permissions table that has
     /// (`item_role`,`item_permission`) as it's primary keys
     pub fn delete(
         db: &mut Connection,
@@ -105,7 +105,7 @@ impl RolePermission {
         .execute(db)
     }
 
-    /// Delete every entry in the database's role_permissions table that has 
+    /// Delete every entry in the database's role_permissions table that has
     /// `item_role`, and an element of`item_permissions` as it's primary keys
     pub fn delete_many(
         db: &mut Connection,
@@ -122,7 +122,7 @@ impl RolePermission {
         .execute(db)
     }
 
-    /// Delete the entry in the database's role_permissions table that has 
+    /// Delete the entry in the database's role_permissions table that has
     /// `item_role` as one of it's primary keys
     pub fn delete_all(db: &mut Connection, item_role: &str) -> QueryResult<usize> {
         use crate::auth::schema::role_permissions::dsl::*;

@@ -1,6 +1,6 @@
 use poem::{async_trait, Endpoint, IntoResponse, Middleware, Request, Response, Result};
 
-/// Logger middleware that provides similar functionality as [`actix_web::middleware::Logger`] 
+/// Logger middleware that provides similar functionality as [`actix_web::middleware::Logger`]
 /// for the poem backend
 pub struct Logger;
 

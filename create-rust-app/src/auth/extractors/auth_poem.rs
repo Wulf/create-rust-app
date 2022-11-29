@@ -12,7 +12,7 @@ use std::iter::FromIterator;
 
 #[derive(Debug, Clone)]
 /// roles and permissions available to a User
-/// 
+///
 /// use to control what users are and are not allowed to do
 pub struct Auth {
     pub user_id: ID,

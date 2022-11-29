@@ -25,13 +25,13 @@ fn error_response(status_code: i32, message: &'static str) -> Error {
 
 #[handler]
 /// handler for GET requests at the .../sessions endpoint,
-/// 
+///
 /// requires auth
-/// 
+///
 /// request should be a query that contains [`PaginationParams`]
-/// 
+///
 /// see [`controller::get_sessions`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -53,13 +53,13 @@ async fn sessions(
 
 #[handler]
 /// handler for DELETE requests at the .../sessions enpoint
-/// 
+///
 /// requires auth
-/// 
+///
 /// deletes all current sessions belonging to the user
-/// 
+///
 /// see [`controller::destroy_sessions`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -77,12 +77,12 @@ async fn destroy_sessions(db: Data<&Database>, auth: Auth) -> Result<impl IntoRe
 
 #[handler]
 /// handler for DELETE requests at the .../sessions/{id} endpoint.
-/// 
+///
 /// requires auth
-/// 
+///
 /// see [`controller::destroy_session`]
-/// 
-/// 
+///
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -106,11 +106,11 @@ async fn destroy_session(
 
 #[handler]
 /// handler for POST requests at the .../login endpoint
-/// 
+///
 /// request must have the `Content-Type: application/json` header, and a Json payload that can be deserialized into [`LoginInput`]
-/// 
+///
 /// see [`controller::login`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -147,9 +147,9 @@ async fn login(
 
 #[handler]
 /// handler for POST requests to the .../logout endpount
-/// 
+///
 /// see [`controller::logout']
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -179,9 +179,9 @@ async fn logout(db: Data<&Database>, cookie_jar: &CookieJar) -> Result<impl Into
 
 #[handler]
 /// handler for POST requests to the .../refresh endpoint
-/// 
+///
 /// see [`controller::refresh`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -214,11 +214,11 @@ async fn refresh(db: Data<&Database>, cookie_jar: &CookieJar) -> Result<impl Int
 
 #[handler]
 /// handler for POST requests to the .../register endpoint
-/// 
+///
 /// request must have the `Content-Type: application/json` header, and a Json payload that can be deserialized into [`RegisterInput`]
-/// 
+///
 /// see [`controller::register`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -242,9 +242,9 @@ async fn register(
 
 #[handler]
 /// handler for GET requests to the .../activate endpoint
-/// 
+///
 /// see [`controller:: activate`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -272,11 +272,11 @@ async fn activate(
 
 #[handler]
 /// handler for POST requests to the .../forgot endpoint
-/// 
+///
 /// request must have the `Content-Type: application/json` header, and a Json payload that can be deserialized into [`ForgotInput`]
-/// 
+///
 /// see [`controller::forgot_password`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -299,13 +299,13 @@ async fn forgot_password(
 
 #[handler]
 /// handler for POST requests to the .../change endpoint
-/// 
+///
 /// requires auth
-/// 
+///
 /// request must have the `Content-Type: application/json` header, and a Json payload that can be deserialized into [`ChangeInput`]
-/// 
+///
 /// see [`controller::change_password`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -335,11 +335,11 @@ async fn change_password(
 
 #[handler]
 /// handler for POST requests to the .../reset endpoint
-/// 
+///
 /// request must have the `Content-Type: application/json` header, and a Json payload that can be deserialized into [`ResetInput`]
-/// 
+///
 /// see [`controller::reset_password`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -366,11 +366,11 @@ async fn reset_password(
 
 #[handler]
 /// handler for POST requests to the .../check endpoint
-/// 
+///
 /// requires auth, but doesn't match it to a user
-/// 
+///
 /// see [`controller::check`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
