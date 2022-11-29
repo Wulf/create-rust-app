@@ -179,7 +179,7 @@ import { ResetPage } from './containers/ResetPage'"#,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (role, permission)
       );
-    "#}
+    "#},
             },
             indoc! {r#"
       DROP TABLE user_permissions;

@@ -119,7 +119,7 @@ CREATE TABLE attachments(
 
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-"#}
+"#},
             },
             indoc! {r#"
 DROP TABLE attachment_blobs;

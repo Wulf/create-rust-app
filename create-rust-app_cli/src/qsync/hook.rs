@@ -1,3 +1,5 @@
+use std::fmt::Write as _;
+
 use super::params::is_primitive_type;
 use super::processor::HttpVerb;
 
@@ -50,30 +52,31 @@ impl Hook {
         let mut hook_args = String::new();
 
         for (index, arg) in self.path_params.iter().enumerate() {
-            hook_args.push_str(&format!("{}: {}", arg.hook_arg_name, arg.hook_arg_type));
+            let _ = write!(hook_args, "{}: {}", arg.hook_arg_name, arg.hook_arg_type);
             if index != self.path_params.len() - 1 {
                 hook_args.push_str(", ");
             }
         }
 
-        if self.path_params.len() > 0 && self.query_params.len() > 0 {
+        if !self.path_params.is_empty() && !self.query_params.is_empty() {
             hook_args.push_str(", ");
         }
 
         for (index, arg) in self.query_params.iter().enumerate() {
-            hook_args.push_str(&format!("{}: {}", arg.hook_arg_name, arg.hook_arg_type));
+            let _ = write!(hook_args, "{}: {}", arg.hook_arg_name, arg.hook_arg_type);
             if index != self.query_params.len() - 1 {
                 hook_args.push_str(", ");
             }
         }
 
-        if (self.path_params.len() > 0 || self.query_params.len() > 0) && self.body_params.len() > 0
+        if (!self.path_params.is_empty() || !self.query_params.is_empty())
+            && !self.body_params.is_empty()
         {
             hook_args.push_str(", ");
         }
 
         for (index, arg) in self.body_params.iter().enumerate() {
-            hook_args.push_str(&format!("{}: {}", arg.hook_arg_name, arg.hook_arg_type));
+            let _ = write!(hook_args, "{}: {}", arg.hook_arg_name, arg.hook_arg_type);
             if index != self.body_params.len() - 1 {
                 hook_args.push_str(", ");
             }
@@ -95,7 +98,7 @@ impl Hook {
             variables.push_str("  const queryClient = useQueryClient()\n");
         }
 
-        if self.query_params.len() > 0 {
+        if !self.query_params.is_empty() {
             variables.push_str("  const queryParams: Record<string, any> = Object.assign({}, ");
             let query_param_iter = self.query_params.iter();
             for (index, param) in query_param_iter.clone().enumerate() {
@@ -122,7 +125,7 @@ impl Hook {
             variables.push_str(")\n");
         }
 
-        if self.path_params.len() > 0 {
+        if !self.path_params.is_empty() {
             variables.push_str("  const pathParams = Object.assign({}, ");
             let path_param_iter = self.path_params.iter();
             for (index, param) in path_param_iter.clone().enumerate() {
@@ -140,7 +143,7 @@ impl Hook {
             variables.push_str(")\n");
         }
 
-        if self.body_params.len() > 0 {
+        if !self.body_params.is_empty() {
             variables.push_str("  const bodyParams = Object.assign({}, ");
             let body_param_iter = self.body_params.iter();
             for (index, param) in body_param_iter.clone().enumerate() {
@@ -185,7 +188,7 @@ impl Hook {
             }
         }
 
-        if self.path_params.len() > 0 && self.query_params.len() > 0 {
+        if !self.path_params.is_empty() && !self.query_params.is_empty() {
             query_key.push_str(", ");
         }
 
@@ -199,7 +202,8 @@ impl Hook {
             }
         }
 
-        if (self.path_params.len() > 0 || self.query_params.len() > 0) && self.body_params.len() > 0
+        if (!self.path_params.is_empty() || !self.query_params.is_empty())
+            && !self.body_params.is_empty()
         {
             query_key.push_str(", ");
         }
@@ -214,15 +218,17 @@ impl Hook {
             }
         }
 
-        if query_key.len() > 0 {
+        if !query_key.is_empty() {
             query_key.insert_str(0, ", ")
         }
         query_key.insert_str(0, &format!("{:?}", self.query_key_base));
 
         query_key
     }
+}
 
-    pub fn to_string(&self) -> String {
+impl ToString for Hook {
+    fn to_string(&self) -> String {
         if self.is_mutation {
             format!(
                 r#"export const {hook_name} = (params: {{{hook_args}}}) => {{
@@ -244,24 +250,23 @@ impl Hook {
                 } else {
                     ""
                 },
-                query_body = if self.body_params.len() > 0 {
+                query_body = if !self.body_params.is_empty() {
                     "body: JSON.stringify(bodyParams),\n"
                 } else {
                     ""
                 },
-                query_string = if self.query_params.len() > 0 {
+                query_string = if !self.query_params.is_empty() {
                     "?${new URLSearchParams(queryParams).toString()}"
                 } else {
                     ""
                 },
-                endpoint_url = self.endpoint_url.replace("{", "${pathParams."),
+                endpoint_url = self.endpoint_url.replace('{', "${pathParams."),
                 endpoint_verb = &format!("{:?}", self.endpoint_verb),
                 hook_name = self.hook_name,
                 hook_args = self.build_args_string(),
                 return_type = self.return_type.trim_matches('"'),
                 query_key = self.build_query_key()
             )
-            .to_string()
         } else {
             format!(
                 r#"export const {hook_name} = ({hook_args}) => {{
@@ -281,24 +286,23 @@ impl Hook {
                 } else {
                     ""
                 },
-                query_body = if self.body_params.len() > 0 {
+                query_body = if !self.body_params.is_empty() {
                     "body: JSON.stringify(bodyParams),\n"
                 } else {
                     ""
                 },
-                query_string = if self.query_params.len() > 0 {
+                query_string = if !self.query_params.is_empty() {
                     "?${new URLSearchParams(queryParams).toString()}"
                 } else {
                     ""
                 },
-                endpoint_url = self.endpoint_url.replace("{", "${pathParams."),
+                endpoint_url = self.endpoint_url.replace('{', "${pathParams."),
                 endpoint_verb = &format!("{:?}", self.endpoint_verb),
                 hook_name = self.hook_name,
                 hook_args = self.build_args_string(),
                 return_type = self.return_type.trim_matches('"'),
                 query_key = self.build_query_key()
             )
-            .to_string()
         }
     }
 }

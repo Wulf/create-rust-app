@@ -1,7 +1,7 @@
 use crate::{
     auth::Auth,
     dev::controller,
-    dev::controller::{HealthCheckResponse, MyQueryResult, MySqlQuery},
+    dev::controller::{HealthCheckResponse, MySqlQuery},
     Database,
 };
 use actix_web::{
@@ -15,7 +15,7 @@ use std::ops::Deref;
 async fn query_db(db: Data<Database>, body: Json<MySqlQuery>) -> HttpResponse {
     match controller::query_db(&db, body.deref()) {
         Ok(result) => HttpResponse::Ok().body(result),
-        Err(t) => HttpResponse::InternalServerError().finish(),
+        Err(_) => HttpResponse::InternalServerError().finish(),
     }
 }
 

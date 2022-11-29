@@ -1,15 +1,15 @@
-use diesel::result::{DatabaseErrorKind, Error};
+use diesel::result::Error;
 use diesel::QueryResult;
-use md5;
-use mime_guess;
+//use md5;
+//use mime_guess;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+//use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::diesel::*;
 use crate::storage::attachment_blob::AttachmentBlobChangeset;
-use crate::storage::{schema, AttachmentBlob, ID, UTC};
-use crate::{Connection, Pool};
+use crate::storage::{schema, AttachmentBlob, Utc, ID};
+use crate::Connection;
 
 use super::{schema::*, Storage};
 
@@ -25,7 +25,7 @@ pub struct Attachment {
     pub record_id: ID,
     pub blob_id: ID,
 
-    pub created_at: UTC,
+    pub created_at: Utc,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]
@@ -44,6 +44,7 @@ pub struct AttachmentData {
 
 impl Attachment {
     /// in actix_web we don't need to support send+sync handlers, so we can use the &mut Connection directly.
+    #[allow(clippy::too_many_arguments)]
     #[cfg(feature = "backend_actix-web")]
     pub async fn attach(
         db: &mut Connection,
@@ -72,7 +73,7 @@ impl Attachment {
             if existing.is_ok() {
                 // one already exists, we need to delete it
                 if overwrite_existing {
-                    Attachment::detach(db, &storage, existing.unwrap().id).await.map_err(|err| {
+                    Attachment::detach(db, storage, existing.unwrap().id).await.map_err(|_| {
                         format!("Could not detach the existing attachment for '{name}' attachment on '{record_type}'", name=name.clone(), record_type=record_type.clone())
                     })?;
                 } else {
@@ -91,7 +92,7 @@ impl Attachment {
                     key: key.clone(),
                     checksum: checksum.clone(),
                     content_type: content_type.clone(),
-                    file_name: data.file_name.clone().unwrap_or(String::new()),
+                    file_name: data.file_name.clone().unwrap_or_default(),
                 },
             )?;
 
@@ -113,7 +114,7 @@ impl Attachment {
             .upload(
                 key.clone(),
                 data.data,
-                content_type.clone().unwrap_or("".to_string()),
+                content_type.clone().unwrap_or_else(|| "".to_string()),
                 checksum.clone(),
             )
             .await
@@ -122,9 +123,7 @@ impl Attachment {
         if upload_result.is_err() {
             // attempt to delete the attachment
             // if it fails, it fails
-            Attachment::detach(db, storage, attached.id)
-                .await
-                .map_err(|err| err.to_string())?;
+            Attachment::detach(db, storage, attached.id).await?;
         }
 
         upload_result

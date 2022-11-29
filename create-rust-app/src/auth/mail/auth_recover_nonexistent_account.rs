@@ -28,5 +28,5 @@ If this was intentional, you can register for a new account using the link below
         link = link
     );
 
-    mailer.send(to_email, &subject, &text, &html);
+    mailer.send(to_email, subject, &text, &html);
 }

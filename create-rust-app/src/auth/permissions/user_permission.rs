@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use crate::auth::schema::*;
 use crate::diesel::*;
 use crate::{
-    auth::{user::User, ID, UTC},
+    auth::{user::User, Utc, ID},
     database::Connection,
 };
 
@@ -20,7 +20,7 @@ pub struct UserPermission {
     -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=- */
     pub user_id: ID,
     pub permission: String,
-    pub created_at: UTC,
+    pub created_at: Utc,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]
@@ -47,7 +47,7 @@ impl UserPermission {
             .get_result::<UserPermission>(db)
     }
 
-    #[cfg(feature="database_sqlite")]
+    #[cfg(feature = "database_sqlite")]
     /// Create an entry in the database's user_permissions table for each [element](`UserPermissionChangeset`) in `items`
     pub fn create_many(
         db: &mut Connection,
@@ -55,12 +55,10 @@ impl UserPermission {
     ) -> QueryResult<usize> {
         use crate::auth::schema::user_permissions::dsl::*;
 
-        insert_into(user_permissions)
-            .values(items)
-            .execute(db)
+        insert_into(user_permissions).values(items).execute(db)
     }
 
-    #[cfg(not(feature="database_sqlite"))]
+    #[cfg(not(feature = "database_sqlite"))]
     /// Create an entry in the database's user_permissions table for each [element](`UserPermissionChangeset`) in `items`
     pub fn create_many(
         db: &mut Connection,

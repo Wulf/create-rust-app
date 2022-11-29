@@ -21,13 +21,15 @@ pub struct HealthCheckResponse {
 }
 
 /// /db/query
-pub fn query_db(db: &Database, body: &MySqlQuery) -> Result<String, ()> {
+pub fn query_db(db: &Database, body: &MySqlQuery) -> Result<String, String> {
     let q = format!("SELECT json_agg(q) as json FROM ({}) q;", body.query);
     let mut db = db.pool.get().unwrap();
 
-    let rows = sql_query(q.as_str()).get_result::<MyQueryResult>(&mut db);
+    let rows = sql_query(q.as_str())
+        .get_result::<MyQueryResult>(&mut db)
+        .map_err(|e| e.to_string());
     if rows.is_err() {
-        return Err(());
+        return Err(rows.err().unwrap());
     }
 
     let result = rows.unwrap().json;
@@ -87,6 +89,4 @@ pub fn migrate_db(db: &Database) -> bool {
 }
 
 /// /health
-pub fn health() -> () {
-    ()
-}
+pub fn health() {}

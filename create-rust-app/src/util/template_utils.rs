@@ -26,14 +26,15 @@ lazy_static! {
     };
 }
 
-pub const DEFAULT_TEMPLATE: &'static str = "index.html";
+pub const DEFAULT_TEMPLATE: &str = "index.html";
 pub fn to_template_name(request_path: &str) -> &'_ str {
-    let request_path = request_path.strip_prefix("/").unwrap();
-    return if request_path.eq("") {
+    let request_path = request_path.strip_prefix('/').unwrap();
+
+    if request_path.eq("") {
         DEFAULT_TEMPLATE
     } else {
         request_path
-    };
+    }
 }
 
 /// This implements the {{ bundle(name="index.tsx") }} function for our templates
@@ -42,7 +43,7 @@ impl tera::Function for InjectBundle {
     fn call(&self, args: &HashMap<String, serde_json::Value>) -> tera::Result<serde_json::Value> {
         match args.get("name") {
             Some(val) => {
-                return match tera::from_value::<String>(val.clone()) {
+                match tera::from_value::<String>(val.clone()) {
                     Ok(bundle_name) => {
                         let inject: String;
 
@@ -103,7 +104,7 @@ impl tera::Function for InjectBundle {
                         Ok(tera::to_value(inject).unwrap())
                     }
                     Err(_) => panic!("No bundle named '{:#?}'", val),
-                };
+                }
             }
             None => Err("oops".into()),
         }
@@ -114,6 +115,7 @@ impl tera::Function for InjectBundle {
     }
 }
 
+#[allow(dead_code, non_snake_case)]
 #[derive(serde::Deserialize)]
 pub struct ViteManifestEntry {
     // Script content to load for this entry

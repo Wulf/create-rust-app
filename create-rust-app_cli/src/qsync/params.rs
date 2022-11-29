@@ -1,27 +1,26 @@
 pub fn is_primitive_type(ty: String) -> bool {
-    match ty.as_str() {
-        "i8" => true,
-        "u8" => true,
-        "i16" => true,
-        "u16" => true,
-        "i32" => true,
-        "u32" => true,
-        "i64" => true,
-        "u64" => true,
-        "i128" => true,
-        "u128" => true,
-        "isize" => true,
-        "usize" => true,
-        "f32" => true,
-        "f64" => true,
-        "bool" => true,
-        "char" => true,
-        "str" => true,
-        "String" => true,
-        "NaiveDateTime" => true,
-        "DateTime" => true,
-        _ => false,
-    }
+    matches!(
+        ty.as_str(),
+        "i8" | "u8"
+            | "i16"
+            | "u16"
+            | "i32"
+            | "u32"
+            | "i64"
+            | "u64"
+            | "i128"
+            | "u128"
+            | "isize"
+            | "usize"
+            | "f32"
+            | "f64"
+            | "bool"
+            | "char"
+            | "str"
+            | "String"
+            | "NaiveDateTime"
+            | "DateTime"
+    )
 }
 
 // TODO: leverage TSYNC
