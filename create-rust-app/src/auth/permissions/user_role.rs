@@ -13,6 +13,7 @@ use crate::{
     Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Associations, AsChangeset,
 )]
 #[diesel(table_name = user_roles, belongs_to(User))]
+/// Rust struct modeling an entry in the user_roles table
 pub struct UserRole {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -24,6 +25,7 @@ pub struct UserRole {
 
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]
 #[diesel(table_name = user_roles)]
+/// Rust struct modeling mutable data in an entry in the user_roles table
 pub struct UserRoleChangeset {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -35,6 +37,7 @@ pub struct UserRoleChangeset {
 }
 
 impl UserRole {
+    /// Create an entry in the database's user_roles table that has the data stored in [`item`](`UserRoleChangeset`)
     pub fn create(db: &mut Connection, item: &UserRoleChangeset) -> QueryResult<Self> {
         use crate::auth::schema::user_roles::dsl::*;
 
@@ -44,6 +47,7 @@ impl UserRole {
     }
 
     #[cfg(feature = "database_sqlite")]
+    /// Create an entry in the database's user_roles table for each [element](`UserRoleChangeset`) in `items`
     pub fn create_many(db: &mut Connection, items: Vec<UserRoleChangeset>) -> QueryResult<usize> {
         use crate::auth::schema::user_roles::dsl::*;
 
@@ -51,6 +55,7 @@ impl UserRole {
     }
 
     #[cfg(not(feature = "database_sqlite"))]
+    /// Create an entry in the database's user_roles table for each [element](`UserRoleChangeset`) in `items`
     pub fn create_many(
         db: &mut Connection,
         items: Vec<UserRoleChangeset>,
@@ -62,6 +67,8 @@ impl UserRole {
             .get_results::<UserRole>(db)
     }
 
+    /// Read from [`db`](`Connection`), querying for an entry in the user_roles table that has 
+    /// (`item_user_id`,`item_role`) as it's primary keys
     pub fn read(db: &mut Connection, item_user_id: ID, item_role: String) -> QueryResult<Self> {
         use crate::auth::schema::user_roles::dsl::*;
 
@@ -70,6 +77,8 @@ impl UserRole {
             .first::<UserRole>(db)
     }
 
+    /// Read from [`db`](`Connection`), querying for every entry in the user_roles table that has
+    /// `item_user_id` as one of its primary keys
     pub fn read_all(db: &mut Connection, item_user_id: ID) -> QueryResult<Vec<Self>> {
         use crate::auth::schema::user_roles::dsl::*;
 
@@ -79,6 +88,8 @@ impl UserRole {
             .load::<UserRole>(db)
     }
 
+    /// Delete the entry in the database's user_roles table that has 
+    /// (`item_user_id`,`item_role`) as it's primary keys
     pub fn delete(db: &mut Connection, item_user_id: ID, item_role: String) -> QueryResult<usize> {
         use crate::auth::schema::user_roles::dsl::*;
 
@@ -86,6 +97,8 @@ impl UserRole {
             .execute(db)
     }
 
+    /// Delete every entry in the database's user_roles table that has 
+    /// `item_user_id`, and an element of`item_roles` as it's primary keys
     pub fn delete_many(
         db: &mut Connection,
         item_user_id: ID,

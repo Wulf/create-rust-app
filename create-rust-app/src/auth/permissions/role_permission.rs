@@ -7,6 +7,7 @@ use crate::diesel::*;
 #[tsync::tsync]
 #[derive(Debug, Serialize, Deserialize, Clone, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = role_permissions)]
+/// Rust struct modeling an entry in the role_permissions table
 pub struct RolePermission {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -18,6 +19,7 @@ pub struct RolePermission {
 
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]
 #[diesel(table_name = role_permissions)]
+/// Rust struct modeling mutable data in an entry in the role_permissions table
 pub struct RolePermissionChangeset {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -28,7 +30,9 @@ pub struct RolePermissionChangeset {
     pub permission: String,
 }
 
+/// CRUD functions for [`RolePermission`]
 impl RolePermission {
+    /// Create an entry in the database's role_permissions table that has the data stored in [`item`](`RolePermissionChangeset`)
     pub fn create(db: &mut Connection, item: &RolePermissionChangeset) -> QueryResult<Self> {
         use crate::auth::schema::role_permissions::dsl::*;
 
@@ -38,6 +42,7 @@ impl RolePermission {
     }
 
     #[cfg(feature = "database_sqlite")]
+    /// Create an entry in the database's role_permissions table for each [element](`RolePermissionChangeset`) in `items`
     pub fn create_many(
         db: &mut Connection,
         items: Vec<RolePermissionChangeset>,
@@ -48,6 +53,7 @@ impl RolePermission {
     }
 
     #[cfg(not(feature = "database_sqlite"))]
+    /// Create an entry in the database's role_permissions table for each [element](`RolePermissionChangeset`) in `items`
     pub fn create_many(
         db: &mut Connection,
         items: Vec<RolePermissionChangeset>,
@@ -59,6 +65,8 @@ impl RolePermission {
             .get_results::<RolePermission>(db)
     }
 
+    /// Read from [`db`](`Connection`), querying for an entry in the role_permissions table that has 
+    /// (`item_role`,`item_permission`) as it's primary keys
     pub fn read(
         db: &mut Connection,
         item_role: String,
@@ -71,6 +79,8 @@ impl RolePermission {
             .first::<RolePermission>(db)
     }
 
+    /// Read from [`db`](`Connection`), querying for every entry in the role_permissions table that has
+    /// `item_role` as one of its primary keys
     pub fn read_all(db: &mut Connection, item_role: String) -> QueryResult<Vec<Self>> {
         use crate::auth::schema::role_permissions::dsl::*;
 
@@ -80,6 +90,8 @@ impl RolePermission {
             .load::<RolePermission>(db)
     }
 
+    /// Delete the entry in the database's role_permissions table that has 
+    /// (`item_role`,`item_permission`) as it's primary keys
     pub fn delete(
         db: &mut Connection,
         item_role: String,
@@ -93,6 +105,8 @@ impl RolePermission {
         .execute(db)
     }
 
+    /// Delete every entry in the database's role_permissions table that has 
+    /// `item_role`, and an element of`item_permissions` as it's primary keys
     pub fn delete_many(
         db: &mut Connection,
         item_role: String,
@@ -108,6 +122,8 @@ impl RolePermission {
         .execute(db)
     }
 
+    /// Delete the entry in the database's role_permissions table that has 
+    /// `item_role` as one of it's primary keys
     pub fn delete_all(db: &mut Connection, item_role: &str) -> QueryResult<usize> {
         use crate::auth::schema::role_permissions::dsl::*;
 
