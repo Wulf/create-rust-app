@@ -13,6 +13,7 @@ use crate::{
     Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Associations, AsChangeset,
 )]
 #[diesel(table_name=user_permissions,belongs_to(User))]
+/// Rust struct modeling an entry in the user_permissions table
 pub struct UserPermission {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -24,6 +25,7 @@ pub struct UserPermission {
 
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]
 #[diesel(table_name=user_permissions)]
+/// Rust struct modeling mutable data in an entry in the user_permissions table
 pub struct UserPermissionChangeset {
     /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     Add columns here in the same order as the schema
@@ -34,7 +36,9 @@ pub struct UserPermissionChangeset {
     pub permission: String,
 }
 
+/// CRUD functions for [`UserPermission`]
 impl UserPermission {
+    /// Create an entry in the database's user_permissions table that has the data stored in [`item`](`UserPermissionChangeset`)
     pub fn create(db: &mut Connection, item: &UserPermissionChangeset) -> QueryResult<Self> {
         use crate::auth::schema::user_permissions::dsl::*;
 
@@ -44,6 +48,7 @@ impl UserPermission {
     }
 
     #[cfg(feature="database_sqlite")]
+    /// Create an entry in the database's user_permissions table for each [element](`UserPermissionChangeset`) in `items`
     pub fn create_many(
         db: &mut Connection,
         items: Vec<UserPermissionChangeset>,
@@ -56,6 +61,7 @@ impl UserPermission {
     }
 
     #[cfg(not(feature="database_sqlite"))]
+    /// Create an entry in the database's user_permissions table for each [element](`UserPermissionChangeset`) in `items`
     pub fn create_many(
         db: &mut Connection,
         items: Vec<UserPermissionChangeset>,
@@ -67,6 +73,8 @@ impl UserPermission {
             .get_result::<UserPermission>(db)
     }
 
+    /// Read from [`db`](`Connection`), querying for an entry in the user_permissions table that has 
+    /// (`item_user_id`,`item_permission`) as it's primary keys
     pub fn read(
         db: &mut Connection,
         item_user_id: ID,
@@ -79,6 +87,8 @@ impl UserPermission {
             .first::<UserPermission>(db)
     }
 
+    /// Read from [`db`](`Connection`), querying for every entry in the user_permissions table that has
+    /// `item_user_id` as one of its primary keys
     pub fn read_all(db: &mut Connection, item_user_id: ID) -> QueryResult<Vec<Self>> {
         use crate::auth::schema::user_permissions::dsl::*;
 
@@ -88,6 +98,8 @@ impl UserPermission {
             .load::<UserPermission>(db)
     }
 
+    /// Delete the entry in the database's user_permissions table that has 
+    /// (`item_user_id`,`item_permission`) as it's primary keys
     pub fn delete(
         db: &mut Connection,
         item_user_id: ID,
@@ -101,6 +113,8 @@ impl UserPermission {
         .execute(db)
     }
 
+    /// Delete every entry in the database's user_permissions table that has 
+    /// `item_user_id`, and an element of`item_permissions` as it's primary keys
     pub fn delete_many(
         db: &mut Connection,
         item_user_id: ID,
@@ -116,6 +130,8 @@ impl UserPermission {
         .execute(db)
     }
 
+    /// Delete the entry in the database's user_permissions table that has 
+    /// `item_user_id` as one of it's primary keys
     pub fn delete_all(db: &mut Connection, item_user_id: ID) -> QueryResult<usize> {
         use crate::auth::schema::user_permissions::dsl::*;
 
