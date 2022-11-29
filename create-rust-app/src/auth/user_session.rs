@@ -50,6 +50,7 @@ pub struct UserSessionChangeset {
 }
 
 impl UserSession {
+    /// Create an entry in [`db`](`Connection`)'s `user_sessions` table using the data in [`item`](`UserSessionChangeset`)
     pub fn create(db: &mut Connection, item: &UserSessionChangeset) -> QueryResult<Self> {
         use super::schema::user_sessions::dsl::*;
 
@@ -58,6 +59,8 @@ impl UserSession {
             .get_result::<UserSession>(db)
     }
 
+    /// Read from [`db`](`Connection`), querying for an entry in the `user_sessions` 
+    /// who's primary key matches [`item_id`](`ID`)
     pub fn read(db: &mut Connection, item_id: ID) -> QueryResult<Self> {
         use super::schema::user_sessions::dsl::*;
 
@@ -66,6 +69,8 @@ impl UserSession {
             .first::<UserSession>(db)
     }
 
+    /// Query [`db`](`Connection`)'s `user_sessions` table for an entry 
+    /// who's `refresh_token` matches the given `item_refresh_token`
     pub fn find_by_refresh_token(
         db: &mut Connection,
         item_refresh_token: &str,
@@ -77,6 +82,8 @@ impl UserSession {
             .first::<UserSession>(db)
     }
 
+    /// Read from [`db`](`Connection`), return entries of the `user_sessions` table,
+    /// paginated according to [`pagination`](`PaginationParams`)
     pub fn read_all(
         db: &mut Connection,
         pagination: &PaginationParams,
@@ -95,6 +102,8 @@ impl UserSession {
             .load::<UserSession>(db)
     }
 
+    /// Query [`db`](`Connection`) for all entries in the `user_sessions` table
+    /// who's `user_id` matches the given [`item_user_id`]
     pub fn count_all(db: &mut Connection, item_user_id: ID) -> QueryResult<i64> {
         use super::schema::user_sessions::dsl::*;
 
@@ -104,6 +113,8 @@ impl UserSession {
             .get_result(db)
     }
 
+    /// Update the entry in [`db`](`Connection`)'s `user_sessions` table who's primary key matches
+    /// [`item_id`](`ID`), with the data in [`item`](`UserSessionChangeset`)
     pub fn update(
         db: &mut Connection,
         item_id: ID,
@@ -116,12 +127,16 @@ impl UserSession {
             .get_result(db)
     }
 
+    /// Delete the entry in [`db`](`Connection`)'s `user_sessions` table who's 
+    /// primary key matches [`item_id`](`ID`)
     pub fn delete(db: &mut Connection, item_id: ID) -> QueryResult<usize> {
         use super::schema::user_sessions::dsl::*;
 
         diesel::delete(user_sessions.filter(id.eq(item_id))).execute(db)
     }
 
+    /// Delete all entries in [`db`](`Connection`)'s `user_sessions` table who's 
+    /// 'user_id' matches [`item_user_id`](`ID`)
     pub fn delete_all_for_user(db: &mut Connection, item_user_id: ID) -> QueryResult<usize> {
         use super::schema::user_sessions::dsl::*;
 
