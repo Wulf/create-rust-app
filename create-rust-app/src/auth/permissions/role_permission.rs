@@ -32,7 +32,7 @@ pub struct RolePermissionChangeset {
 
 /// CRUD functions for [`RolePermission`]
 impl RolePermission {
-    /// Create an entry in the database's role_permissions table that has the data stored in [`item`](`RolePermissionChangeset`)
+    /// Create an entry in [`db`](`Connection`)'s role_permissions table that has the data stored in [`item`](`RolePermissionChangeset`)
     pub fn create(db: &mut Connection, item: &RolePermissionChangeset) -> QueryResult<Self> {
         use crate::auth::schema::role_permissions::dsl::*;
 
@@ -42,7 +42,7 @@ impl RolePermission {
     }
 
     #[cfg(feature = "database_sqlite")]
-    /// Create an entry in the database's role_permissions table for each [element](`RolePermissionChangeset`) in `items`
+    /// Create an entry in [`db`](`Connection`)'s role_permissions table for each [element](`RolePermissionChangeset`) in `items`
     pub fn create_many(
         db: &mut Connection,
         items: Vec<RolePermissionChangeset>,
@@ -55,7 +55,7 @@ impl RolePermission {
     }
 
     #[cfg(not(feature = "database_sqlite"))]
-    /// Create an entry in the database's role_permissions table for each [element](`RolePermissionChangeset`) in `items`
+    /// Create an entry in [`db`](`Connection`)'s role_permissions table for each [element](`RolePermissionChangeset`) in `items`
     pub fn create_many(
         db: &mut Connection,
         items: Vec<RolePermissionChangeset>,
@@ -92,7 +92,7 @@ impl RolePermission {
             .load::<RolePermission>(db)
     }
 
-    /// Delete the entry in the database's role_permissions table that has 
+    /// Delete the entry in [`db`](`Connection`)'s role_permissions table that has 
     /// (`item_role`,`item_permission`) as it's primary keys
     pub fn delete(
         db: &mut Connection,
@@ -107,7 +107,7 @@ impl RolePermission {
             .execute(db)
     }
 
-    /// Delete every entry in the database's role_permissions table that has 
+    /// Delete every entry in [`db`](`Connection`)'s role_permissions table that has 
     /// `item_role`, and an element of`item_permissions` as it's primary keys
     pub fn delete_many(
         db: &mut Connection,
@@ -124,7 +124,7 @@ impl RolePermission {
             .execute(db)
     }
 
-    /// Delete the entry in the database's role_permissions table that has 
+    /// Delete the entry in [`db`](`Connection`)'s role_permissions table that has 
     /// `item_role` as one of it's primary keys
     pub fn delete_all(db: &mut Connection, item_role: &str) -> QueryResult<usize> {
         use crate::auth::schema::role_permissions::dsl::*;
