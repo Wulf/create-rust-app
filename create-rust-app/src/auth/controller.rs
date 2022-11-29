@@ -28,7 +28,7 @@ type StatusCode = i32;
 type Message = &'static str;
 
 #[derive(Deserialize, Serialize)]
-/// Rust struct representing the Json body of 
+/// Rust struct representing the Json body of
 /// POST requests to the .../login endpoint
 pub struct LoginInput {
     email: String,
@@ -46,7 +46,7 @@ pub struct RefreshTokenClaims {
 }
 
 #[derive(Serialize, Deserialize)]
-/// Rust struct representing the Json body of 
+/// Rust struct representing the Json body of
 /// POST requests to the .../register endpoint
 pub struct RegisterInput {
     email: String,
@@ -62,14 +62,14 @@ pub struct RegistrationClaims {
 }
 
 #[derive(Serialize, Deserialize)]
-/// Rust struct representing the Json body of 
+/// Rust struct representing the Json body of
 /// GET requests to the .../activate endpoint
 pub struct ActivationInput {
     activation_token: String,
 }
 
 #[derive(Serialize, Deserialize)]
-/// Rust struct representing the Json body of 
+/// Rust struct representing the Json body of
 /// POST requests to the /forgot endpoint
 pub struct ForgotInput {
     email: String,
@@ -84,7 +84,7 @@ pub struct ResetTokenClaims {
 }
 
 #[derive(Serialize, Deserialize)]
-/// Rust struct representing the Json body of 
+/// Rust struct representing the Json body of
 /// POST requests to the /change endpoint
 pub struct ChangeInput {
     old_password: String,
@@ -92,7 +92,7 @@ pub struct ChangeInput {
 }
 
 #[derive(Serialize, Deserialize)]
-/// Rust struct representing the Json body of 
+/// Rust struct representing the Json body of
 /// POST requests to the /reset endpoint
 pub struct ResetInput {
     reset_token: String,
@@ -100,14 +100,14 @@ pub struct ResetInput {
 }
 
 /// /sessions
-/// 
-/// queries [`db`](`Database`) for all sessions owned by the User 
+///
+/// queries [`db`](`Database`) for all sessions owned by the User
 /// associated with [`auth`](`Auth`)
-/// 
+///
 /// breaks up the results of that query as defined by [`info`](`PaginationParams`)
-/// 
-/// 
-/// # Returns [`Result`] 
+///
+///
+/// # Returns [`Result`]
 /// - Ok([`UserSessionResponse`])
 ///     - the results of the query paginated according to [`info`](`PaginationParams`)
 /// - Err([`StatusCode`], [`Message`])
@@ -161,11 +161,11 @@ pub fn get_sessions(
 }
 
 /// /sessions/{id}
-/// 
+///
 /// deletes the entry in the `user_session` with the specified [`item_id`](`ID`) from
 /// [`db`](`Database`) if it's owned by the User associated with [`auth`](`Auth`)
-/// 
-/// # Returns [`Result`] 
+///
+/// # Returns [`Result`]
 /// - Ok(`()`)
 /// - Err([`StatusCode`], [`Message`])
 pub fn destroy_session(
@@ -195,11 +195,11 @@ pub fn destroy_session(
 }
 
 /// /sessions
-/// 
+///
 /// destroys all entries in the `user_session` table in [`db`](`Database`) owned
 /// by the User associated with [`auth`](`Auth`)
-/// 
-/// # Returns [`Result`] 
+///
+/// # Returns [`Result`]
 /// - Ok(`()`)
 /// - Err([`StatusCode`], [`Message`])
 pub fn destroy_sessions(db: &Database, auth: &Auth) -> Result<(), (StatusCode, Message)> {
@@ -216,12 +216,12 @@ type AccessToken = String;
 type RefreshToken = String;
 
 /// /login
-/// 
-/// creates a user session for the user associated with [`item`](`LoginInput`) 
+///
+/// creates a user session for the user associated with [`item`](`LoginInput`)
 /// in the request body (have the `content-type` header set to `application/json` and content that can be deserialized into [`LoginInput`])
-/// 
+///
 /// # Returns [`Result`]
-/// - Ok([`AccessToken`], [`RefreshToken`]) 
+/// - Ok([`AccessToken`], [`RefreshToken`])
 ///     - an access token that should be sent to the user in the response body,
 ///     - a reset token that should be sent as a secure, http-only, and same_site=strict cookie.
 /// - Err([`StatusCode`], [`Message`])
@@ -325,8 +325,8 @@ pub fn login(
 
 /// /logout
 /// If this is successful, delete the cookie storing the refresh token
-/// 
-/// # Returns [`Result`] 
+///
+/// # Returns [`Result`]
 /// - Ok(`()`)
 /// - Err([`StatusCode`], [`Message`])
 pub fn logout(db: &Database, refresh_token: Option<&'_ str>) -> Result<(), (StatusCode, Message)> {
@@ -356,11 +356,11 @@ pub fn logout(db: &Database, refresh_token: Option<&'_ str>) -> Result<(), (Stat
 }
 
 /// /refresh
-/// 
+///
 /// refreshes the user session associated with the clients refresh_token cookie
-/// 
+///
 /// # Returns [`Result`]
-/// - Ok([`AccessToken`], [`RefreshToken`]) 
+/// - Ok([`AccessToken`], [`RefreshToken`])
 ///     - an access token that should be sent to the user in the response body,
 ///     - a reset token that should be sent as a secure, http-only, and same_site=strict cookie.
 /// - Err([`StatusCode`], [`Message`])
@@ -463,14 +463,14 @@ pub fn refresh(
 }
 
 /// /register
-/// 
+///
 /// creates a new User with the information in [`item`](`RegisterInput`)
-/// 
+///
 /// sends an email, using [`mailer`](`Mailer`), to the email address in [`item`](`RegisterInput`)
 /// that contains a unique link that allows the recipient to activate the account associated with
 /// that email address
-/// 
-/// # Returns [`Result`] 
+///
+/// # Returns [`Result`]
 /// - Ok(`()`)
 /// - Err([`StatusCode`], [`Message`])
 pub fn register(
@@ -530,10 +530,10 @@ pub fn register(
 }
 
 /// /activate
-/// 
-/// activates the account associated with the token in [`item`](`ActivationInput`) 
-/// 
-/// # Returns [`Result`] 
+///
+/// activates the account associated with the token in [`item`](`ActivationInput`)
+///
+/// # Returns [`Result`]
 /// - Ok(`()`)
 /// - Err([`StatusCode`], [`Message`])
 pub fn activate(
@@ -597,13 +597,13 @@ pub fn activate(
 /// /forgot
 /// sends an email to the email in the ['ForgotInput'] Json in the request body
 /// that will allow the user associated with that email to change their password
-/// 
+///
 /// sends an email, using [`mailer`](`Mailer`), to the email address in [`item`](`RegisterInput`)
-/// that contains a unique link that allows the recipient to reset the password 
+/// that contains a unique link that allows the recipient to reset the password
 /// of the account associated with that email address (or create a new account if there is
 /// no accound accosiated with the email address)
-/// 
-/// # Returns [`Result`] 
+///
+/// # Returns [`Result`]
 /// - Ok(`()`)
 /// - Err([`StatusCode`], [`Message`])
 pub fn forgot_password(
@@ -649,11 +649,11 @@ pub fn forgot_password(
 }
 
 /// /change
-/// 
+///
 /// change the password of the User associated with [`auth`](`Auth`)
 /// from [`item.old_password`](`ChangeInput`) to [`item.new_password`](`ChangeInput`)
-/// 
-/// # Returns [`Result`] 
+///
+/// # Returns [`Result`]
 /// - Ok(`()`)
 /// - Err([`StatusCode`], [`Message`])
 pub fn change_password(
@@ -713,17 +713,17 @@ pub fn change_password(
 }
 
 /// /check
-/// 
+///
 /// just a lifeline function, clients can post to this endpoint to check
 /// if the auth service is running
 pub fn check(_: &Auth) {}
 
 /// reset
-/// 
+///
 /// changes the password of the user associated with [`item.reset_token`](`ResetInput`)
 /// to [`item.new_password`](`ResetInput`)
-/// 
-/// # Returns [`Result`] 
+///
+/// # Returns [`Result`]
 /// - Ok(`()`)
 /// - Err([`StatusCode`], [`Message`])
 pub fn reset_password(

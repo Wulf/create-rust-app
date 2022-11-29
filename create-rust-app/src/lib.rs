@@ -39,19 +39,19 @@ pub use mailer::Mailer;
 // extern crate diesel_migrations;
 
 #[derive(Clone)]
-/// 
+///
 pub struct AppData {
     /// wrapper for SMTP mailing server accessed by chosen web framework
-    /// 
+    ///
     /// see [`Mailer`]
     pub mailer: Mailer,
     /// db agnostic wrapper for databases accessed by chosen web framework
-    /// 
+    ///
     /// see [`Database`]
     pub database: Database,
     #[cfg(feature = "plugin_storage")]
     /// wrapper for Amazon S3 cloud file storage service accessed by chosen web framework
-    /// 
+    ///
     /// see [`Storage`]
     pub storage: storage::Storage,
 }
@@ -59,7 +59,7 @@ pub struct AppData {
 /// ensures required environment variables are present,
 ///  
 /// initialize a [`Mailer`], [`Database`], and [`Storage`] (is `Storage` plugin was enabled ("plugin_storage" feature enabled))
-/// 
+///
 /// and wraps them in a [`AppData`] struct that is then returned
 pub fn setup() -> AppData {
     // Only load dotenv in development

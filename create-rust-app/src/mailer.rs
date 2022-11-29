@@ -7,34 +7,34 @@ use lettre::{SmtpTransport, Transport};
 /// struct used to handle sending emails
 pub struct Mailer {
     /// the email address emails should be sent from
-    /// 
+    ///
     /// set by the `SMTP_FROM_ADDRESS` environment variable
     pub from_address: String,
     /// the smtp server to connect to for purposes of sending emails
-    /// 
+    ///
     /// set by the `SMTP_SERVER` environment variable
     pub smtp_server: String,
     /// username used to log into `SMTP_SERVER`
-    /// 
+    ///
     /// set by the `SMTP_USERNAME` environment variable
     pub smtp_username: String,
     /// the password used to log into `SMTP_SERVER`
-    /// 
+    ///
     /// set by the `SMTP_PASSWORD' environment variable
     pub smtp_password: String,
     /// whether or not emails should actually be sent when requested
-    /// 
+    ///
     /// it may be useful to set this to false in some devolopment environments
     /// while setting it to true in production
-    /// 
+    ///
     /// set by the `SEND_MAIL` environment variable
     pub actually_send: bool,
 }
 
 impl Mailer {
     /// using information stored in the `SMTP_FROM_ADDRESS`, `SMTP_SERVER`, `SMTP_USERNAME`, `SMTP_PASSWORD`, and `SEND_MAIL`
-    /// environment variables to connect to a remote SMTP server, 
-    /// 
+    /// environment variables to connect to a remote SMTP server,
+    ///
     /// allows webservers to send emails to users for purposes
     /// like marketing, user authentification, etc.
     pub fn new() -> Mailer {
@@ -59,8 +59,8 @@ impl Mailer {
     }
 
     /// checks that the required environment variables are set
-    /// 
-    /// prints messages denoting which, if any, of the required 
+    ///
+    /// prints messages denoting which, if any, of the required
     /// environment variables were not set
     pub fn check_environment_variables() {
         if std::env::var("SMTP_FROM_ADDRESS").is_err() {
@@ -89,10 +89,10 @@ impl Mailer {
     }
 
     /// send an email with the specifified content and subject to the specified user
-    /// 
-    /// will only send an email if the `SEND_MAIL` environment variable was set to true when 
+    ///
+    /// will only send an email if the `SEND_MAIL` environment variable was set to true when
     /// this mailer was initialized.
-    /// 
+    ///
     /// # Arguments
     /// * `to` - a string slice that holds the email address of the intended recipient
     /// * `subject` - subject field of the email

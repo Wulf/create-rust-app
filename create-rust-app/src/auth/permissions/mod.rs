@@ -28,7 +28,7 @@ struct RoleQueryRow {
 
 impl Role {
     /// assign `role` to the User whose id is [`user_id`](`ID`)
-    /// 
+    ///
     /// Returns true if successful
     pub fn assign(db: &mut Connection, user_id: ID, role: &str) -> Result<bool> {
         let assigned = UserRole::create(
@@ -43,7 +43,7 @@ impl Role {
     }
 
     /// assigns every role in `roles` to the User whose id is [`user_id`](`ID`)
-    /// 
+    ///
     /// returns true if successful
     pub fn assign_many(db: &mut Connection, user_id: ID, roles: Vec<String>) -> Result<bool> {
         let assigned = UserRole::create_many(
@@ -61,7 +61,7 @@ impl Role {
     }
 
     /// unassigns `role` from the User whose id is [`user_id`](`ID`)
-    /// 
+    ///
     /// returns true if successful
     pub fn unassign(db: &mut Connection, user_id: ID, role: &str) -> Result<bool> {
         let unassigned = UserRole::delete(db, user_id, role.to_string());
@@ -70,7 +70,7 @@ impl Role {
     }
 
     /// unassigns every role in `roles` from the User whose id is [`user_id`](`ID`)
-    /// 
+    ///
     /// returns true if successful
     pub fn unassign_many(db: &mut Connection, user_id: ID, roles: Vec<String>) -> Result<bool> {
         let unassigned = UserRole::delete_many(db, user_id, roles);
@@ -126,7 +126,7 @@ impl Permission {
     // }
 
     /// grants `permission` to the User whose id is [`user_id`](`ID`)
-    /// 
+    ///
     /// returns true if successful
     pub fn grant_to_user(db: &mut Connection, user_id: ID, permission: &str) -> Result<bool> {
         let granted = UserPermission::create(
@@ -141,7 +141,7 @@ impl Permission {
     }
 
     /// grant `permission` to `role`
-    /// 
+    ///
     /// returns true if successful
     pub fn grant_to_role(db: &mut Connection, role: &str, permission: &str) -> Result<bool> {
         let granted = RolePermission::create(
@@ -156,7 +156,7 @@ impl Permission {
     }
 
     /// grants every permission in `permissions` to `role`
-    /// 
+    ///
     /// returns true if successful
     pub fn grant_many_to_role(
         db: &mut Connection,
@@ -178,7 +178,7 @@ impl Permission {
     }
 
     /// grants every permission in `permissions` to `role`
-    /// 
+    ///
     /// returns true if successful
     pub fn grant_many_to_user(
         db: &mut Connection,
@@ -200,7 +200,7 @@ impl Permission {
     }
 
     /// revokes `permission` from the User whose id is [`user_id`](`ID`)
-    /// 
+    ///
     /// returns true if successful
     pub fn revoke_from_user(db: &mut Connection, user_id: ID, permission: &str) -> Result<bool> {
         let deleted = UserPermission::delete(db, user_id, permission.to_string());
@@ -209,7 +209,7 @@ impl Permission {
     }
 
     /// revokes `permission` from `role`
-    /// 
+    ///
     /// returns true if successful
     pub fn revoke_from_role(db: &mut Connection, role: String, permission: String) -> Result<bool> {
         let deleted = RolePermission::delete(db, role, permission.to_string());
@@ -218,7 +218,7 @@ impl Permission {
     }
 
     /// revokes every permission in `permissions` from the User whose id is [`user_id`](`ID`)
-    /// 
+    ///
     /// returns true if successful
     pub fn revoke_many_from_user(
         db: &mut Connection,
@@ -231,7 +231,7 @@ impl Permission {
     }
 
     /// revokes every permission in `permissions` from `role`
-    /// 
+    ///
     /// returns true if successful
     pub fn revoke_many_from_role(
         db: &mut Connection,
@@ -244,7 +244,7 @@ impl Permission {
     }
 
     /// revokes every permission granted to `role`
-    /// 
+    ///
     /// returns true if successful
     pub fn revoke_all_from_role(db: &mut Connection, role: &str) -> Result<bool> {
         let deleted = RolePermission::delete_all(db, role);
@@ -253,7 +253,7 @@ impl Permission {
     }
 
     /// revokes every permission granted to the User whose id is [`user_id`](`ID`)
-    /// 
+    ///
     /// returns true if successful
     pub fn revoke_all_from_user(db: &mut Connection, user_id: i32) -> Result<bool> {
         let deleted = UserPermission::delete_all(db, user_id);

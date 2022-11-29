@@ -20,13 +20,13 @@ use crate::Mailer;
 
 #[get("/sessions")]
 /// handler for GET requests at the .../sessions endpoint,
-/// 
+///
 /// requires auth
-/// 
+///
 /// request should be a query that contains [`PaginationParams`]
-/// 
+///
 /// see [`controller::get_sessions`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -53,12 +53,12 @@ async fn sessions(
 
 #[delete("/sessions/{id}")]
 /// handler for DELETE requests at the .../sessions/{id} endpoint.
-/// 
+///
 /// requires auth
-/// 
+///
 /// see [`controller::destroy_session`]
-/// 
-/// 
+///
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -88,13 +88,13 @@ async fn destroy_session(
 
 #[delete("/sessions")]
 /// handler for DELETE requests at the .../sessions enpoint
-/// 
+///
 /// requires auth
-/// 
+///
 /// deletes all current sessions belonging to the user
-/// 
+///
 /// see [`controller::destroy_sessions`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -117,11 +117,11 @@ async fn destroy_sessions(db: Data<Database>, auth: Auth) -> Result<HttpResponse
 
 #[post("/login")]
 /// handler for POST requests at the .../login endpoint
-/// 
+///
 /// request must have the `Content-Type: application/json` header, and a Json payload that can be deserialized into [`LoginInput`]
-/// 
+///
 /// see [`controller::login`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -154,9 +154,9 @@ async fn login(db: Data<Database>, Json(item): Json<LoginInput>) -> Result<HttpR
 
 #[post("/logout")]
 /// handler for POST requests to the .../logout endpount
-/// 
+///
 /// see [`controller::logout']
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -189,9 +189,9 @@ async fn logout(db: Data<Database>, req: HttpRequest) -> Result<HttpResponse, AW
 
 #[post("/refresh")]
 /// handler for POST requests to the .../refresh endpoint
-/// 
+///
 /// see [`controller::refresh`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -227,11 +227,11 @@ async fn refresh(db: Data<Database>, req: HttpRequest) -> Result<HttpResponse, A
 
 #[post("/register")]
 /// handler for POST requests to the .../register endpoint
-/// 
+///
 /// request must have the `Content-Type: application/json` header, and a Json payload that can be deserialized into [`RegisterInput`]
-/// 
+///
 /// see [`controller::register`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -257,9 +257,9 @@ async fn register(
 
 #[get("/activate")]
 /// handler for GET requests to the .../activate endpoint
-/// 
+///
 /// see [`controller:: activate`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -287,11 +287,11 @@ async fn activate(
 
 #[post("/forgot")]
 /// handler for POST requests to the .../forgot endpoint
-/// 
+///
 /// request must have the `Content-Type: application/json` header, and a Json payload that can be deserialized into [`ForgotInput`]
-/// 
+///
 /// see [`controller::forgot_password`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -316,13 +316,13 @@ async fn forgot_password(
 
 #[post("/change")]
 /// handler for POST requests to the .../change endpoint
-/// 
+///
 /// requires auth
-/// 
+///
 /// request must have the `Content-Type: application/json` header, and a Json payload that can be deserialized into [`ChangeInput`]
-/// 
+///
 /// see [`controller::change_password`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -354,11 +354,11 @@ async fn change_password(
 
 #[post("/check")]
 /// handler for POST requests to the .../check endpoint
-/// 
+///
 /// requires auth, but doesn't match it to a user
-/// 
+///
 /// see [`controller::check`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
@@ -370,11 +370,11 @@ async fn check(auth: Auth) -> HttpResponse {
 
 #[post("/reset")]
 /// handler for POST requests to the .../reset endpoint
-/// 
+///
 /// request must have the `Content-Type: application/json` header, and a Json payload that can be deserialized into [`ResetInput`]
-/// 
+///
 /// see [`controller::reset_password`]
-/// 
+///
 /// # Responses
 /// | StatusCode | content |
 /// |:------------|---------|
