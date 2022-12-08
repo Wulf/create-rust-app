@@ -3,11 +3,14 @@ use std::collections::HashMap;
 use tera::Tera;
 
 #[derive(Clone)]
+/// structure to represent the view (singular) of a single page application
 pub struct SinglePageApplication {
     pub view_name: String,
 }
 
 lazy_static! {
+    /// all the Templates (html files) included in backend/views/..., uses Tera to bundle the frontend into the template
+    /// TODO: ensure this is accurate documentation
     pub static ref TEMPLATES: Tera = {
         let mut tera = match Tera::new("backend/views/**/*.html") {
             Ok(t) => t,
@@ -26,7 +29,9 @@ lazy_static! {
     };
 }
 
+/// default html template for the webapp
 pub const DEFAULT_TEMPLATE: &'static str = "index.html";
+/// given a http request path, get the associated html TEMPLATE
 pub fn to_template_name(request_path: &str) -> &'_ str {
     let request_path = request_path.strip_prefix("/").unwrap();
     return if request_path.eq("") {
@@ -116,19 +121,19 @@ impl tera::Function for InjectBundle {
 
 #[derive(serde::Deserialize)]
 pub struct ViteManifestEntry {
-    // Script content to load for this entry
+    /// Script content to load for this entry
     file: String,
 
-    // Script content to lazy-load for this entry
+    /// Script content to lazy-load for this entry
     dynamicImports: Option<Vec<String>>, // using `import(..)`
 
-    // Style content to load for this entry
+    /// Style content to load for this entry
     css: Option<Vec<String>>, // using import '*.css'
 
-    // If true, eager-load this content
+    /// If true, eager-load this content
     isEntry: Option<bool>,
 
-    // If true, lazy-load this content
+    /// If true, lazy-load this content
     isDynamicEntry: Option<bool>, // src: String, /* => not necessary :) */
                                   // assets: Option<Vec<String>>, /* => these will be served by the server! */
 }

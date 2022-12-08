@@ -27,11 +27,19 @@ pub fn render_single_page_application(view: &str) -> AddDataEndpoint<Route, Sing
 #[handler]
 async fn render_spa_handler(spa_info: Data<&SinglePageApplication>) -> impl IntoResponse {
     let content = TEMPLATES
-        .render(spa_info.view_name.as_str(), &Context::new())
-        .unwrap();
+    .render(spa_info.view_name.as_str(), &Context::new())
+    .unwrap();
     template_response(content)
 }
 
+/// takes a request to, say, www.you_webapp.com/foo/bar and looks in the ./backend/views folder
+/// for a html file/template at the matching path (in this case, ./foo/bar.html),
+/// defaults to index.html
+/// 
+/// then, your frontend (all the css files, scripts, etc. in your frontend's vite manifest (at ./frontend/dist/manifest.json))
+/// will be compiled and injected into the template wherever `{{ bundle(name="index.tsx") }}` is (the `index.tsx` can be any .tsx file in ./frontend/bundles)
+/// 
+/// then, that compiled html is sent to the client
 #[handler]
 pub async fn render_views(uri: &Uri) -> impl IntoResponse {
     let path = uri.path();
