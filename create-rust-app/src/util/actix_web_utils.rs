@@ -30,7 +30,7 @@ async fn render_spa_handler(
     template_response(content)
 }
 
-/// takes a request to say, www.you_webapp.com/foo/bar and looks in the ./backend/views folder
+/// takes a request to, say, www.you_webapp.com/foo/bar and looks in the ./backend/views folder
 /// for a html file/template at the matching path (in this case, ./foo/bar.html),
 /// defaults to index.html
 /// 
@@ -39,7 +39,7 @@ async fn render_spa_handler(
 /// 
 /// then, that compiled html is sent to the client
 /// 
-/// TODO: that is what should be happening, but in the generated code there is no ./frontend/dist/manifest.json which should cause errors but doesn't
+/// NOTE the frontend/dist/manifest.json file referenced is generated in the frontend when it compiles
 pub async fn render_views(req: HttpRequest) -> HttpResponse {
     let path = req.path();
 

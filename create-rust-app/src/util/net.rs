@@ -8,8 +8,7 @@ fn test_bind<A: ToSocketAddrs>(addr: A) -> bool {
     }
 }
 
-/// is the given port free 
-/// TODO: free on what server?
+/// is the given port free on this machine
 pub fn is_port_free(port: u16) -> bool {
     let ipv4 = SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, port);
     let ipv6 = SocketAddrV6::new(Ipv6Addr::UNSPECIFIED, port, 0, 0);
