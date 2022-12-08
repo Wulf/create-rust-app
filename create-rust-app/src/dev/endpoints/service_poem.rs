@@ -1,4 +1,3 @@
-use argonautica::config::Version::_0x10;
 use poem::{
     get, handler,
     http::StatusCode,
