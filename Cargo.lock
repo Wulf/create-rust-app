@@ -1118,7 +1118,7 @@ dependencies = [
  "chrono",
  "derive_more",
  "diesel",
- "diesel_derives 1.4.1",
+ "diesel_derives",
  "diesel_migrations",
  "dotenv",
  "env_logger",
@@ -1239,23 +1239,12 @@ dependencies = [
  "bitflags",
  "byteorder",
  "chrono",
- "diesel_derives 2.0.1",
+ "diesel_derives",
  "itoa",
  "libsqlite3-sys",
  "pq-sys",
  "r2d2",
  "uuid",
-]
-
-[[package]]
-name = "diesel_derives"
-version = "1.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45f5098f628d02a7a0f68ddba586fb61e80edec3bdc1be3b921f4ceec60858d3"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
