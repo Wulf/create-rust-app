@@ -381,7 +381,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
 
         logger::add_file_msg(filename.as_ref());
         std::fs::create_dir_all(directory_path)?;
-        std::fs::write(file_path, file_contents)?;
+        std::fs::write(file_path, file_contents.data)?;
     }
 
     remove_non_framework_files(&project_dir, framework)?;
