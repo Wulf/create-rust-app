@@ -51,7 +51,7 @@ aws-sdk-s3 = { optional=true, version="0.8.0" }
 futures-util = { optional=true, version="0.3.25" }
 http = { optional=true, version="0.2.6" }
 diesel_derives = { optional=true, version="1.4.1" }
-uuid = { optional=true, version="0.8.2", features=["v4", "serde"] }
+uuid = { optional=true, version="1.2.2", features=["v4", "serde"] }
 md5 = { optional=true, version="0.7.0" }
 base64 = { optional=true, version="0.13.0" }
 
