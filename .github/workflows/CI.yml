@@ -1,6 +1,11 @@
 name: Rust Continuous Integration
 on:
   workflow_dispatch:
+  push:
+    paths: 
+      - "**.rs"
+      - "Cargo.lock"
+      - "Cargo.toml"
   pull_request:
     paths: 
       - "**.rs"
