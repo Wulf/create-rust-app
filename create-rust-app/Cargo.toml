@@ -69,7 +69,7 @@ actix-http = { optional=true, version="3.0.4" }
 actix-web = { optional=true, version="4.2.1" }
 actix-web-httpauth = { optional=true, version="0.8.0" }
 derive_more = { optional=true, version="0.99.17" }
-futures = { optional=true, version="0.3.21" }
+futures = { optional=true, version="0.3.25" }
 env_logger = { optional=true, version= "0.9.0" }
 ##
 ## MISC - here, we list deps which are required by multiple features but are not required in all configurations
