@@ -24,6 +24,12 @@ updates:
     schedule:
       interval: "daily"
       
+  # Maintain dependencies for Yarn
+  - package-ecosystem: "npm"
+    directory: "./docs"
+    schedule:
+      interval: "daily"
+      
   # Keep submodules updated
   - package-ecosystem: "gitsubmodule"
     directory: "./"
