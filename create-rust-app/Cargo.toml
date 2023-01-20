@@ -44,7 +44,7 @@ chrono = { optional=true, version = "0.4.23", features = ["serde"] }
 diesel_migrations = { optional=true, version="2.0.0" }
 
 # plugin_storage
-aws-config = { optional=true, version="0.8.0" }
+aws-config = { optional=true, version="0.14.0" }
 aws-types = { optional=true, version="0.8.0" }
 aws-endpoint = { optional=true, version="0.14.0" }
 aws-sdk-s3 = { optional=true, version="0.8.0" }
