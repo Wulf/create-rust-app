@@ -26,7 +26,7 @@ tsync = "1"
 update-informer = "0.6.0"
 
 # for qsync exclusively
-regex = "1.5.4"
+regex = "1.7.1"
 syn = { version = "1.0.75", features = ["full", "extra-traits", "parsing"] }
 walkdir = "2.3.2"
 
