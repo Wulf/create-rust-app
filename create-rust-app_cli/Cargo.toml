@@ -13,7 +13,7 @@ default-run = "create-rust-app"
 
 [dependencies]
 Inflector = "0.11.4"
-anyhow = "1.0.40"
+anyhow = "1.0.68"
 console = "0.15.5"
 dialoguer = "0.8.0"
 indoc = "1.0.3"
