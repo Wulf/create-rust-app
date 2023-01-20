@@ -20,7 +20,7 @@ updates:
 
   # Maintain dependencies for Yarn
   - package-ecosystem: "npm"
-    directory: "./"
+    directory: "./create-rust-app_cli/template/frontend"
     schedule:
       interval: "daily"
       
