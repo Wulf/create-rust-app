@@ -15,7 +15,7 @@ categories = ["command-line-utilities", "development-tools", "web-programming", 
 ## COMMON / DEFAULT - required dependencies
 ##
 dotenv = "0.15.0"
-serde_json = "1.0.83"
+serde_json = "1.0.91"
 lettre = "0.10.1"
 tera = { version="1.17.0" }
 lazy_static = { version="1.4.0" }
