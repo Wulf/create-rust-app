@@ -19,7 +19,7 @@ dialoguer = "0.10.3"
 indoc = "1.0.8"
 rust-embed = "6.4.2"
 structopt = "0.3.26"
-toml = "0.5.10"
+toml = "0.5.11"
 tsync = "1"
 
 # check cli version
