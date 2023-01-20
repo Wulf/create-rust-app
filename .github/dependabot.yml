@@ -20,7 +20,7 @@ updates:
 
   # Maintain dependencies for Yarn
   - package-ecosystem: "npm"
-    directory: "./frontend"
+    directory: "./"
     schedule:
       interval: "daily"
       
