@@ -53,10 +53,7 @@ impl Plugin for Dev {
     "react-query": "^3.21.0""#,
         )?;
 
-        fs::append(
-            "frontend/src/dev.tsx",
-            "\nimport './setupDevelopment'"
-        )?;
+        fs::append("frontend/src/dev.tsx", "\nimport './setupDevelopment'")?;
 
         match install_config.backend_framework {
             BackendFramework::ActixWeb => {

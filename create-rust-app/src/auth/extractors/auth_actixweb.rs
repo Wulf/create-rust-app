@@ -27,7 +27,7 @@ impl Auth {
     /// does the user with the id [`self.user_id`](`ID`) have the given `permission`
     pub fn has_permission(&self, permission: String) -> bool {
         self.permissions.contains(&Permission {
-            permission: permission.to_string(),
+            permission,
             from_role: String::new(),
         })
     }
@@ -44,7 +44,7 @@ impl Auth {
 
     /// does the user with the id [`self.user_id`](`ID`) have the given `role`
     pub fn has_role(&self, role: String) -> bool {
-        self.roles.contains(&role.to_string())
+        self.roles.contains(&role)
     }
 
     /// does the user with the id [`self.user_id`](`ID`) have all of the given `roles`
@@ -129,10 +129,10 @@ impl FromRequest for Auth {
             HashSet::from_iter(access_token.claims.permissions.iter().cloned());
         let roles: HashSet<String> = HashSet::from_iter(access_token.claims.roles.iter().cloned());
 
-        return ready(Ok(Auth {
+        ready(Ok(Auth {
             user_id,
             roles,
             permissions,
-        }));
+        }))
     }
 }

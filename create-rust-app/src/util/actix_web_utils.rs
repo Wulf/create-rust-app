@@ -10,8 +10,8 @@ use tera::Context;
 pub fn render_single_page_application(route: &str, view: &str) -> Scope {
     use actix_web::web::Data;
 
-    let route = route.strip_prefix("/").unwrap_or(route);
-    let view = view.strip_prefix("/").unwrap_or(view);
+    let route = route.strip_prefix('/').unwrap_or(route);
+    let view = view.strip_prefix('/').unwrap_or(view);
 
     actix_web::web::scope(&format!("/{}{{tail:(/.*)?}}", route))
         .app_data(Data::new(SinglePageApplication {
@@ -21,7 +21,7 @@ pub fn render_single_page_application(route: &str, view: &str) -> Scope {
 }
 
 async fn render_spa_handler(
-    req: HttpRequest,
+    _req: HttpRequest,
     spa_info: web::Data<SinglePageApplication>,
 ) -> HttpResponse {
     let content = TEMPLATES
@@ -33,12 +33,12 @@ async fn render_spa_handler(
 /// takes a request to, say, www.you_webapp.com/foo/bar and looks in the ./backend/views folder
 /// for a html file/template at the matching path (in this case, ./foo/bar.html),
 /// defaults to index.html
-/// 
+///
 /// then, your frontend (all the css files, scripts, etc. in your frontend's vite manifest (at ./frontend/dist/manifest.json))
 /// will be compiled and injected into the template wherever `{{ bundle(name="index.tsx") }}` is (the `index.tsx` can be any .tsx file in ./frontend/bundles)
-/// 
+///
 /// then, that compiled html is sent to the client
-/// 
+///
 /// NOTE the frontend/dist/manifest.json file referenced is generated in the frontend when it compiles
 pub async fn render_views(req: HttpRequest) -> HttpResponse {
     let path = req.path();
@@ -53,7 +53,7 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
     // try and render from your ./backend/views
     let mut content_result = TEMPLATES.render(template_path, &Context::new());
 
-    // if that fails, then 
+    // if that fails, then
     //  if in debug mode look for views in ./frontend/... or ./frontend/public/...
     //  else default to ./backend/views/index.html
     if content_result.is_err() {
