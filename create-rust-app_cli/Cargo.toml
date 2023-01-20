@@ -23,7 +23,7 @@ toml = "0.5.8"
 tsync = "1"
 
 # check cli version
-update-informer = "0.5.0"
+update-informer = "0.6.0"
 
 # for qsync exclusively
 regex = "1.5.4"
