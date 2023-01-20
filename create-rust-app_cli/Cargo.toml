@@ -14,7 +14,7 @@ default-run = "create-rust-app"
 [dependencies]
 Inflector = "0.11.4"
 anyhow = "1.0.40"
-console = "0.14.1"
+console = "0.15.5"
 dialoguer = "0.8.0"
 indoc = "1.0.3"
 rust-embed = "5.9.0"

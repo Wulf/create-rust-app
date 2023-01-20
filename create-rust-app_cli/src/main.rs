@@ -10,9 +10,8 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 use crate::project::CreationOptions;
-use console::Term;
 use content::project;
-use dialoguer::{theme::ColorfulTheme, Input, MultiSelect, Select};
+use dialoguer::{console::Term, theme::ColorfulTheme, Input, MultiSelect, Select};
 use utils::{fs, logger};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
