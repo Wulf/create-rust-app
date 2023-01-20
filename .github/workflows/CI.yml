@@ -26,7 +26,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - uses: actions/cache@v3.0.11
+      - uses: actions/cache@v3.2.3
         with:
           path: |
             ./.cargo/.build
@@ -49,7 +49,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - uses: actions/cache@v3.0.11
+      - uses: actions/cache@v3.2.3
         with:
           path: |
             ./.cargo/.build
@@ -73,7 +73,7 @@ jobs:
           toolchain: stable
           override: true
       - run: rustup component add clippy
-      - uses: actions/cache@v3.0.11
+      - uses: actions/cache@v3.2.3
         with:
           path: |
             ./.cargo/.build
@@ -97,7 +97,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - uses: actions/cache@v3.0.11
+      - uses: actions/cache@v3.2.3
         with:
           path: |
             ./.cargo/.build
