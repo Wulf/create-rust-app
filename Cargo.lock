@@ -217,7 +217,7 @@ dependencies = [
  "serde_urlencoded",
  "smallvec",
  "socket2",
- "time 0.3.6",
+ "time",
  "url",
 ]
 
@@ -590,7 +590,7 @@ dependencies = [
  "percent-encoding",
  "regex",
  "ring",
- "time 0.3.6",
+ "time",
  "tracing",
 ]
 
@@ -608,7 +608,7 @@ dependencies = [
  "percent-encoding",
  "regex",
  "ring",
- "time 0.3.6",
+ "time",
  "tracing",
 ]
 
@@ -793,7 +793,7 @@ dependencies = [
  "itoa",
  "num-integer",
  "ryu",
- "time 0.3.6",
+ "time",
 ]
 
 [[package]]
@@ -805,7 +805,7 @@ dependencies = [
  "itoa",
  "num-integer",
  "ryu",
- "time 0.3.6",
+ "time",
 ]
 
 [[package]]
@@ -1011,12 +1011,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16b0a3d9ed01224b22057780a37bb8c5dbfe1be8ba48678e7bf57ec4b385411f"
 dependencies = [
  "iana-time-zone",
- "js-sys",
  "num-integer",
  "num-traits",
  "serde",
- "time 0.1.43",
- "wasm-bindgen",
  "winapi",
 ]
 
@@ -1120,7 +1117,7 @@ dependencies = [
  "rand",
  "sha2",
  "subtle",
- "time 0.3.6",
+ "time",
  "version_check",
 ]
 
@@ -2538,7 +2535,7 @@ dependencies = [
  "serde_urlencoded",
  "smallvec",
  "thiserror",
- "time 0.3.6",
+ "time",
  "tokio",
  "tokio-stream",
  "tokio-util 0.7.0",
@@ -3049,7 +3046,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "thiserror",
- "time 0.3.6",
+ "time",
 ]
 
 [[package]]
@@ -3223,16 +3220,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5516c27b78311c50bf42c071425c560ac799b11c30b31f87e3081965fe5e0180"
 dependencies = [
  "once_cell",
-]
-
-[[package]]
-name = "time"
-version = "0.1.43"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca8a50ef2360fbd1eeb0ecd46795a87a19024eb4b53c5dc916ca1fd95fe62438"
-dependencies = [
- "libc",
- "winapi",
 ]
 
 [[package]]
