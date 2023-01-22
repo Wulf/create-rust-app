@@ -39,7 +39,7 @@ impl Plugin for Dev {
 
             add_file_msg(filename.as_ref());
             std::fs::create_dir_all(directory_path)?;
-            std::fs::write(file_path, file_contents)?;
+            std::fs::write(file_path, file_contents.data)?;
         }
 
         // TODO: Fix these appends/prepends by prepending the filepath with project_dir
@@ -53,10 +53,7 @@ impl Plugin for Dev {
     "react-query": "^3.21.0""#,
         )?;
 
-        fs::append(
-            "frontend/src/dev.tsx",
-            "\nimport './setupDevelopment'"
-        )?;
+        fs::append("frontend/src/dev.tsx", "\nimport './setupDevelopment'")?;
 
         match install_config.backend_framework {
             BackendFramework::ActixWeb => {

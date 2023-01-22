@@ -126,7 +126,7 @@ pub fn remove_non_framework_files(
         let entry = entry.unwrap();
 
         let file = entry.path();
-        let path = file.clone().to_str().unwrap().to_string();
+        let path = file.to_str().unwrap().to_string();
 
         if path.ends_with("+actix_web") {
             if framework != BackendFramework::ActixWeb {
@@ -164,23 +164,20 @@ pub fn remove_non_framework_files(
     Ok(())
 }
 
-pub fn remove_non_database_files(
-    project_dir: &PathBuf,
-    database: BackendDatabase,
-) -> Result<()> {
+pub fn remove_non_database_files(project_dir: &PathBuf, database: BackendDatabase) -> Result<()> {
     /* Choose framework-specific files */
     for entry in WalkDir::new(project_dir) {
         let entry = entry.unwrap();
 
         let file = entry.path();
-        let path = file.clone().to_str().unwrap().to_string();
+        let path = file.to_str().unwrap().to_string();
 
         if path.ends_with("+database_postgres") {
             if database != BackendDatabase::Postgres {
                 logger::remove_file_msg(&format!("{:#?}", &file));
                 std::fs::remove_file(file)?;
             };
-            if database == BackendDatabase::Postgres{
+            if database == BackendDatabase::Postgres {
                 let dest = file.with_extension(
                     file.extension()
                         .unwrap()
@@ -276,14 +273,14 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
 
     // cleanup: remove src/main.rs
     logger::command_msg("rm src/main.rs");
-    let mut main_file = PathBuf::from(project_dir.clone());
+    let mut main_file = project_dir.clone();
     main_file.push("src");
     main_file.push("main.rs");
     std::fs::remove_file(main_file)?;
 
     // cleanup: remove src/
     logger::command_msg("rmdir src/main.rs");
-    let mut src_folder = PathBuf::from(project_dir.clone());
+    let mut src_folder = project_dir.clone();
     src_folder.push("src");
     std::fs::remove_dir(src_folder)?;
 
@@ -354,10 +351,13 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
     add_dependency(
         &project_dir,
         "diesel",
-        &format!(r#"diesel = {{ version="2.0.0-rc.1", default-features = false, features = ["{db}", "r2d2", "chrono"] }}"#, db = match database {
-            BackendDatabase::Postgres => "postgres",
-            BackendDatabase::Sqlite => "sqlite",
-        }),
+        &format!(
+            r#"diesel = {{ version="2.0.0-rc.1", default-features = false, features = ["{db}", "r2d2", "chrono"] }}"#,
+            db = match database {
+                BackendDatabase::Postgres => "postgres",
+                BackendDatabase::Sqlite => "sqlite",
+            }
+        ),
     )?;
     add_dependency(
         &project_dir,
@@ -381,7 +381,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
 
         logger::add_file_msg(filename.as_ref());
         std::fs::create_dir_all(directory_path)?;
-        std::fs::write(file_path, file_contents)?;
+        std::fs::write(file_path, file_contents.data)?;
     }
 
     remove_non_framework_files(&project_dir, framework)?;
@@ -419,9 +419,12 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         env_example_file.push(".env.example");
         env_file.push(".env");
         let contents = std::fs::read_to_string(&env_example_file)?;
-        let contents = contents.replace("postgres://postgres:postgres@localhost/database", "dev.sqlite");
+        let contents = contents.replace(
+            "postgres://postgres:postgres@localhost/database",
+            "dev.sqlite",
+        );
         std::fs::write(env_example_file, contents.clone())?;
-        std::fs::write(env_file, contents.clone())?;
+        std::fs::write(env_file, contents)?;
     }
 
     /*
@@ -493,7 +496,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
 
             logger::command_msg(&format!("git config user.name {:#?}", &input));
 
-            if input.len() > 0
+            if !input.is_empty()
                 && git::set_config(&project_dir, "user.name", &input)
                 && git::check_config(&project_dir, "user.name")
             {
@@ -522,7 +525,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
 
             logger::command_msg(&format!("git config user.email {:#?}", &input));
 
-            if input.len() > 0
+            if !input.is_empty()
                 && git::set_config(&project_dir, "user.email", &input)
                 && git::check_config(&project_dir, "user.email")
             {

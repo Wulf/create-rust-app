@@ -11,7 +11,7 @@ use structopt::StructOpt;
 
 pub use processor::process;
 
-const DESCRIPTION: &'static str = env!("CARGO_PKG_DESCRIPTION");
+const DESCRIPTION: &str = env!("CARGO_PKG_DESCRIPTION");
 
 #[allow(dead_code)]
 #[derive(Debug, StructOpt, Clone)]

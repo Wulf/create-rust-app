@@ -15,6 +15,12 @@ pub struct Database {
     pub pool: Pool,
 }
 
+impl Default for Database {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Database {
     /// create a new [`Database`]
     pub fn new() -> Database {
