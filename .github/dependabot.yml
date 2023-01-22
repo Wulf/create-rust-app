@@ -1,0 +1,37 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+
+  # Maintain dependencies for Cargo
+  - package-ecosystem: "cargo" # See documentation for possible values
+    directory: "./" # Location of package manifests
+    schedule:
+      interval: "daily"
+      
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "./"
+    schedule:
+      interval: "daily"
+
+  # Maintain dependencies for Yarn
+  - package-ecosystem: "npm"
+    directory: "./create-rust-app_cli/template/frontend"
+    schedule:
+      interval: "daily"
+      
+  # Maintain dependencies for Yarn
+  - package-ecosystem: "npm"
+    directory: "./docs"
+    schedule:
+      interval: "daily"
+      
+  # Keep submodules updated
+  - package-ecosystem: "gitsubmodule"
+    directory: "./"
+    schedule:
+      interval: "daily"

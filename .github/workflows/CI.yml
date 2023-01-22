@@ -1,0 +1,134 @@
+name: Rust Continuous Integration
+on:
+  workflow_dispatch:
+  push:
+    branches: 
+      - "main"
+    paths: 
+      - "**.rs"
+      - "Cargo.lock"
+      - "Cargo.toml"
+  pull_request:
+    paths: 
+      - "**.rs"
+      - "Cargo.lock"
+      - "Cargo.toml"
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: true
+  
+concurrency:
+  group:  CI-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and Initialize profile.dev Cache
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.3
+        with:
+          path: |
+            ./.cargo/.build
+            ./target
+            ~/.cargo
+          key: ${{ runner.os }}-cargo-dev-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: build
+
+  check:
+    name: Check
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.3
+        with:
+          path: |
+            ./.cargo/.build
+            ./target
+            ~/.cargo
+          key: ${{ runner.os }}-cargo-dev-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: check
+
+  clippy:
+    name: Clippy
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - run: rustup component add clippy
+      - uses: actions/cache@v3.2.3
+        with:
+          path: |
+            ./.cargo/.build
+            ./target
+            ~/.cargo
+          key: ${{ runner.os }}-cargo-dev-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: clippy
+          args: -- -D warnings
+
+  # things that use the cargo-test cache
+  test:
+    name: Test Suite and Initialize profile.test Cache
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.3
+        with:
+          path: |
+            ./.cargo/.build
+            ./target
+            ~/.cargo
+          key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: test
+  
+  
+  # Things that don't need a cache
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - run: rustup component add rustfmt
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: fmt
+          args: --all -- --check
