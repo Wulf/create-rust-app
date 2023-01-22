@@ -100,8 +100,14 @@ impl FromRequest for Auth {
 
         let access_token_str = auth_header_opt.unwrap().to_str().unwrap_or("");
 
+        if !access_token_str.starts_with("Bearer ") { 
+            return ready(Err(AuthError {
+                reason: "Invalid authorization header".to_string(),
+            }));
+        }
+
         let access_token = decode::<AccessTokenClaims>(
-            access_token_str,
+            access_token_str.trim_start_matches("Bearer "),
             &DecodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
             &Validation::default(),
         );

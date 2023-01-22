@@ -240,7 +240,7 @@ impl Hook {
 }}"#,
                 variables = self.build_vars_string(),
                 authorization_header = if self.uses_auth {
-                    "'Authorization': `${auth.accessToken}`,\n              "
+                    "'Authorization': `Bearer ${auth.accessToken}`,\n              "
                 } else {
                     ""
                 },
@@ -277,7 +277,7 @@ impl Hook {
 }}"#,
                 variables = self.build_vars_string(),
                 authorization_header = if self.uses_auth {
-                    "'Authorization': `${auth.accessToken}`,\n              "
+                    "'Authorization': `Bearer ${auth.accessToken}`,\n              "
                 } else {
                     ""
                 },
