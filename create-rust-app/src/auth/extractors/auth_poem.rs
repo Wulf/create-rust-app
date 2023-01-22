@@ -78,7 +78,7 @@ impl<'a> FromRequest<'a> for Auth {
         }
 
         let access_token = decode::<AccessTokenClaims>(
-            access_token_str,
+            access_token_str.trim_start_matches("Bearer "),
             &DecodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
             &Validation::default(),
         );
