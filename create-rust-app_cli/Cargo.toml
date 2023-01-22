@@ -13,20 +13,20 @@ default-run = "create-rust-app"
 
 [dependencies]
 Inflector = "0.11.4"
-anyhow = "1.0.40"
-console = "0.14.1"
-dialoguer = "0.8.0"
-indoc = "1.0.3"
-rust-embed = "5.9.0"
-structopt = "0.3.22"
-toml = "0.5.8"
+anyhow = "1.0.68"
+console = "0.15.5"
+dialoguer = "0.10.3"
+indoc = "1.0.8"
+rust-embed = "6.4.2"
+structopt = "0.3.26"
+toml = "0.5.11"
 tsync = "1"
 
 # check cli version
-update-informer = "0.5.0"
+update-informer = "0.6.0"
 
 # for qsync exclusively
-regex = "1.5.4"
+regex = "1.7.1"
 syn = { version = "1.0.75", features = ["full", "extra-traits", "parsing"] }
 walkdir = "2.3.2"
 
