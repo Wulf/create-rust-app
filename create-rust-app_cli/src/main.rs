@@ -10,18 +10,17 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 use crate::project::CreationOptions;
-use console::Term;
 use content::project;
-use dialoguer::{theme::ColorfulTheme, Input, MultiSelect, Select};
+use dialoguer::{console::Term, theme::ColorfulTheme, Input, MultiSelect, Select};
 use utils::{fs, logger};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BackendFramework {
     ActixWeb,
     Poem,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BackendDatabase {
     Postgres,
     Sqlite,
@@ -67,13 +66,10 @@ fn main() -> Result<()> {
         current_dir = PathBuf::from(unknown_opts.target.unwrap());
 
         if current_dir.exists() {
-            logger::error(
-                &format!(
-                    "Cannot create a project: {:#?} already exists.",
-                    &current_dir
-                )
-                .to_string(),
-            );
+            logger::error(&format!(
+                "Cannot create a project: {:#?} already exists.",
+                &current_dir
+            ));
             return Ok(());
         }
     }
@@ -122,7 +118,7 @@ fn create_project() -> anyhow::Result<()> {
 
     let project_name = create_opts.target;
 
-    if project_name.len() == 0 {
+    if project_name.is_empty() {
         logger::error("Please provide a project name");
 
         return Ok(());
@@ -145,11 +141,11 @@ fn create_project() -> anyhow::Result<()> {
         .defaults(&[true, true, true, true, true])
         .interact()?;
 
-    let add_plugin_auth = chosen.iter().position(|x| *x == 0).is_some();
-    let add_plugin_container = chosen.iter().position(|x| *x == 1).is_some();
-    let add_plugin_dev = chosen.iter().position(|x| *x == 2).is_some();
-    let add_plugin_storage = chosen.iter().position(|x| *x == 3).is_some();
-    let add_plugin_graphql = chosen.iter().position(|x| *x == 4).is_some();
+    let add_plugin_auth = chosen.iter().any(|x| *x == 0);
+    let add_plugin_container = chosen.iter().any(|x| *x == 1);
+    let add_plugin_dev = chosen.iter().any(|x| *x == 2);
+    let add_plugin_storage = chosen.iter().any(|x| *x == 3);
+    let add_plugin_graphql = chosen.iter().any(|x| *x == 4);
 
     let mut features: Vec<String> = vec![];
     if add_plugin_dev {
@@ -189,7 +185,7 @@ fn create_project() -> anyhow::Result<()> {
     project_dir.push(project_name);
     // !
     std::env::set_current_dir(project_dir.clone())
-        .expect(&format!("Unable to change into {:#?}", project_dir.clone()));
+        .unwrap_or_else(|_| panic!("Unable to change into {:#?}", project_dir.clone()));
 
     //
     // Note: we're in the project dir from here on out
@@ -271,69 +267,62 @@ fn configure_project() -> Result<()> {
             .interact_on_opt(&Term::stderr())?
     };
 
-    match selection {
-        Some(index) => {
-            match index {
-                0 => {
-                    logger::message("Which backend framework are you using?");
-                    logger::message(
-                        "Use UP/DOWN arrows to navigate and SPACE or ENTER to confirm.",
-                    );
-                    let items = vec!["actix_web", "poem"];
-                    let selection = Select::with_theme(&ColorfulTheme::default())
-                        .items(&items)
-                        .default(0)
-                        .interact_on_opt(&Term::stderr())?;
+    if let Some(index) = selection {
+        match index {
+            0 => {
+                logger::message("Which backend framework are you using?");
+                logger::message("Use UP/DOWN arrows to navigate and SPACE or ENTER to confirm.");
+                let items = vec!["actix_web", "poem"];
+                let selection = Select::with_theme(&ColorfulTheme::default())
+                    .items(&items)
+                    .default(0)
+                    .interact_on_opt(&Term::stderr())?;
 
-                    match selection {
-                        Some(0) => BackendFramework::ActixWeb,
-                        Some(1) => panic!("Fatal: this feature is not yet implemented for `poem`"),
-                        _ => panic!("Fatal: Unknown backend framework specified."),
-                    };
+                match selection {
+                    Some(0) => BackendFramework::ActixWeb,
+                    Some(1) => panic!("Fatal: this feature is not yet implemented for `poem`"),
+                    _ => panic!("Fatal: Unknown backend framework specified."),
+                };
 
-                    qsync::process(
-                        vec![PathBuf::from("backend/services")],
-                        PathBuf::from("frontend/src/api.generated.ts"),
-                        false,
-                    );
+                qsync::process(
+                    vec![PathBuf::from("backend/services")],
+                    PathBuf::from("frontend/src/api.generated.ts"),
+                    false,
+                );
+            }
+            1 => {
+                // Add resource
+                let resource_name: String = Input::new()
+                    .with_prompt("Resource name")
+                    .default("".into())
+                    .interact_text()?;
+
+                if resource_name.is_empty() {
+                    return Ok(());
                 }
-                1 => {
-                    // Add resource
-                    let resource_name: String = Input::new()
-                        .with_prompt("Resource name")
-                        .default("".into())
-                        .interact_text()?;
 
-                    if resource_name.len() == 0 {
-                        return Ok(());
-                    }
+                logger::message("Which backend framework are you using?");
+                logger::message("Use UP/DOWN arrows to navigate and SPACE or ENTER to confirm.");
+                let items = vec!["actix_web", "poem"];
+                let selection = Select::with_theme(&ColorfulTheme::default())
+                    .items(&items)
+                    .default(0)
+                    .interact_on_opt(&Term::stderr())?;
 
-                    logger::message("Which backend framework are you using?");
-                    logger::message(
-                        "Use UP/DOWN arrows to navigate and SPACE or ENTER to confirm.",
-                    );
-                    let items = vec!["actix_web", "poem"];
-                    let selection = Select::with_theme(&ColorfulTheme::default())
-                        .items(&items)
-                        .default(0)
-                        .interact_on_opt(&Term::stderr())?;
-
-                    let backend_framework: BackendFramework = match selection {
-                        Some(0) => BackendFramework::ActixWeb,
-                        Some(1) => BackendFramework::Poem,
-                        _ => panic!("Fatal: Unknown backend framework specified."),
-                    };
-                    project::create_resource(backend_framework, resource_name.as_ref())?;
-                    std::process::exit(0);
-                }
-                2 => return Ok(()),
-                _ => {
-                    logger::error("Not implemented");
-                    std::process::exit(1);
-                }
+                let backend_framework: BackendFramework = match selection {
+                    Some(0) => BackendFramework::ActixWeb,
+                    Some(1) => BackendFramework::Poem,
+                    _ => panic!("Fatal: Unknown backend framework specified."),
+                };
+                project::create_resource(backend_framework, resource_name.as_ref())?;
+                std::process::exit(0);
+            }
+            2 => return Ok(()),
+            _ => {
+                logger::error("Not implemented");
+                std::process::exit(1);
             }
         }
-        None => {}
     }
 
     Ok(())

@@ -35,7 +35,7 @@ pub trait Plugin {
 
         let output = std::str::from_utf8(&output.stdout).unwrap();
 
-        if output.len() > 0 {
+        if !output.is_empty() {
             logger::error(
                 "Please stash and remove any changes (staged, unstaged, and untracked files)",
             );
@@ -94,7 +94,7 @@ pub fn install(plugin: impl Plugin, install_config: InstallConfig) -> Result<()>
 
     plugin.before_install()?;
     plugin.install(install_config.clone())?;
-    plugin.after_install(install_config.clone())?;
+    plugin.after_install(install_config)?;
 
     Ok(())
 }

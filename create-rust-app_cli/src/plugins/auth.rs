@@ -28,7 +28,7 @@ impl Plugin for Auth {
 
             add_file_msg(filename.as_ref());
             std::fs::create_dir_all(directory_path)?;
-            std::fs::write(file_path, file_contents)?;
+            std::fs::write(file_path, file_contents.data)?;
         }
 
         // ===============================
@@ -179,7 +179,7 @@ import { ResetPage } from './containers/ResetPage'"#,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (role, permission)
       );
-    "#}
+    "#},
             },
             indoc! {r#"
       DROP TABLE user_permissions;

@@ -24,7 +24,7 @@ struct QsyncAttributeProps {
 
 fn has_qsync_attribute(
     _is_debug: bool,
-    attributes: &Vec<syn::Attribute>,
+    attributes: &[syn::Attribute],
 ) -> Option<QsyncAttributeProps> {
     let mut qsync_props = QsyncAttributeProps {
         is_mutation: false,
@@ -40,9 +40,7 @@ fn has_qsync_attribute(
 
     for attr in attributes.iter() {
         let last_segment = attr.path.segments.last();
-        if last_segment.is_some() {
-            let last_segment = last_segment.unwrap();
-
+        if let Some(last_segment) = last_segment {
             // if last_segment
             //     .clone()
             //     .ident
@@ -122,19 +120,18 @@ mod processor_tests {
 
 #[derive(Debug)]
 pub enum HttpVerb {
-    GET,
-    POST,
-    PUT,
-    DELETE,
-    UNKNOWN,
+    Get,
+    Post,
+    Put,
+    Delete,
+    Unknown,
 }
-
 enum ParamType {
-    AUTH,
-    QUERY,
-    BODY,
-    PATH,
-    UNKNOWN,
+    Auth,
+    Query,
+    Body,
+    Path,
+    Unknown,
 }
 
 struct InputType {
@@ -147,22 +144,12 @@ fn get_api_fn_input_param_type(pat_type: PatType, type_path: TypePath) -> InputT
     let mut arg_name: String = "unknown".to_string();
     let mut arg_type: String = "any".to_string();
 
-    match *pat_type.pat {
-        Pat::TupleStruct(tuple_struct) => {
-            let ident_elem = tuple_struct.pat.elems.last();
-            if ident_elem.is_some() {
-                let ident_elem = ident_elem.unwrap().clone();
-
-                match ident_elem {
-                    Pat::Ident(ident) => {
-                        let ident = ident.ident;
-                        arg_name = ident.to_string();
-                    }
-                    _ => { /* failed to capture identifier for hook argument */ }
-                }
-            }
+    if let Pat::TupleStruct(tuple_struct) = *pat_type.pat {
+        let ident_elem = tuple_struct.pat.elems.last();
+        if let Some(Pat::Ident(ident)) = ident_elem {
+            let ident = ident.ident.clone();
+            arg_name = ident.to_string();
         }
-        _ => { /* failed to determine name of arg */ }
     }
 
     let segments: syn::punctuated::Punctuated<syn::PathSegment, syn::token::Colon2> =
@@ -170,37 +157,32 @@ fn get_api_fn_input_param_type(pat_type: PatType, type_path: TypePath) -> InputT
 
     let last_segment = segments.last();
 
-    if last_segment.is_some() {
-        let last_segment = last_segment.unwrap();
-
+    if let Some(last_segment) = last_segment {
         let param_type = match last_segment.clone().ident.to_string().as_str() {
-            "Path" => ParamType::PATH,
-            "Json" => ParamType::BODY,
-            "Form" => ParamType::BODY,
-            "Query" => ParamType::QUERY,
-            "Auth" => ParamType::AUTH,
-            _ => ParamType::UNKNOWN,
+            "Path" => ParamType::Path,
+            "Json" => ParamType::Body,
+            "Form" => ParamType::Body,
+            "Query" => ParamType::Query,
+            "Auth" => ParamType::Auth,
+            _ => ParamType::Unknown,
         };
 
-        match last_segment.clone().arguments {
-            PathArguments::AngleBracketed(angled) => {
-                for arg in angled.args {
-                    arg_type = generic_to_typsecript_type(&arg);
-                }
+        if let PathArguments::AngleBracketed(angled) = last_segment.clone().arguments {
+            for arg in angled.args {
+                arg_type = generic_to_typsecript_type(&arg);
             }
-            _ => { /* could not find type for param */ }
         }
 
         InputType {
-            param_type: param_type,
-            arg_name: arg_name.to_string(),
-            arg_type: arg_type.to_string(),
+            param_type,
+            arg_name,
+            arg_type,
         }
     } else {
         InputType {
-            param_type: ParamType::UNKNOWN,
-            arg_name: arg_name.to_string(),
-            arg_type: arg_type.to_string(),
+            param_type: ParamType::Unknown,
+            arg_name,
+            arg_type,
         }
     }
 }
@@ -214,8 +196,8 @@ fn extract_path_params_from_hook_endpoint_url(hook: &mut Hook) {
     for path_param_text in re.find_iter(hook.endpoint_url.as_str()) {
         let path_param_text = path_param_text
             .as_str()
-            .trim_start_matches("{")
-            .trim_end_matches("}")
+            .trim_start_matches('{')
+            .trim_end_matches('}')
             .to_string();
         hook.path_params.push(HookPathParam {
             hook_arg_name: path_param_text,
@@ -225,43 +207,37 @@ fn extract_path_params_from_hook_endpoint_url(hook: &mut Hook) {
 }
 
 fn extract_endpoint_information(
-    input_path: &PathBuf,
+    input_path: &Path,
     attributes: &Vec<syn::Attribute>,
     hook: &mut Hook,
 ) {
-    let mut verb = HttpVerb::UNKNOWN;
+    let mut verb = HttpVerb::Unknown;
     let mut path = "".to_string();
 
     for attr in attributes {
         let last_segment = attr.path.segments.last();
-        if last_segment.is_some() {
-            let potential_verb = last_segment.unwrap().ident.to_string();
+        if let Some(potential_verb) = last_segment {
+            let potential_verb = potential_verb.ident.to_string();
 
             if potential_verb.eq_ignore_ascii_case("get") {
-                verb = HttpVerb::GET;
+                verb = HttpVerb::Get;
             } else if potential_verb.eq_ignore_ascii_case("post") {
-                verb = HttpVerb::POST;
+                verb = HttpVerb::Post;
             } else if potential_verb.eq_ignore_ascii_case("put") {
-                verb = HttpVerb::PUT;
+                verb = HttpVerb::Put;
             } else if potential_verb.eq_ignore_ascii_case("delete") {
-                verb = HttpVerb::DELETE;
+                verb = HttpVerb::Delete;
             }
         }
 
-        if !matches!(verb, HttpVerb::UNKNOWN) {
+        if !matches!(verb, HttpVerb::Unknown) {
             for token in attr.clone().tokens {
-                match token {
-                    syn::__private::quote::__private::TokenTree::Group(g) => {
-                        for x in g.stream() {
-                            match x {
-                                syn::__private::quote::__private::TokenTree::Literal(lit) => {
-                                    path = lit.to_string();
-                                }
-                                _ => {}
-                            }
+                if let syn::__private::quote::__private::TokenTree::Group(g) = token {
+                    for x in g.stream() {
+                        if let syn::__private::quote::__private::TokenTree::Literal(lit) = x {
+                            path = lit.to_string();
                         }
                     }
-                    _ => {}
                 }
             }
         }
@@ -272,13 +248,13 @@ fn extract_endpoint_information(
         .unwrap_or_default()
         .to_str()
         .unwrap_or_default()
-        .trim_end_matches("/");
+        .trim_end_matches('/');
 
     // the part extracted from the attribute, for example: `#[post("/{id}"]`
     let handler_path = path
         .trim_matches('"')
         .trim_start_matches('/')
-        .trim_end_matches("/");
+        .trim_end_matches('/');
     let handler_path = if !handler_path.is_empty() {
         "/".to_string() + handler_path
     } else {
@@ -298,7 +274,7 @@ struct BuildState /*<'a>*/ {
     pub is_debug: bool,
 }
 
-fn generate_hook_name(input_path: &PathBuf, fn_name: String) -> String {
+fn generate_hook_name(input_path: &Path, fn_name: String) -> String {
     let mut s: Vec<String> = vec![];
 
     let mut copy = false;
@@ -320,7 +296,7 @@ fn generate_hook_name(input_path: &PathBuf, fn_name: String) -> String {
     two.join("")
 }
 
-fn generate_query_key_base(input_path: &PathBuf) -> String {
+fn generate_query_key_base(input_path: &Path) -> String {
     let mut s: Vec<String> = vec![];
 
     let mut copy = false;
@@ -373,120 +349,107 @@ fn process_service_file(input_path: PathBuf, state: &mut BuildState) {
     let syntax = syntax.unwrap();
 
     for item in syntax.items {
-        match item {
-            syn::Item::Fn(exported_fn) => {
-                let qsync_props = has_qsync_attribute(state.is_debug, &exported_fn.attrs);
+        if let syn::Item::Fn(exported_fn) = item {
+            let qsync_props = has_qsync_attribute(state.is_debug, &exported_fn.attrs);
 
-                let has_qsync_attribute = qsync_props.is_some();
+            let has_qsync_attribute = qsync_props.is_some();
 
-                if state.is_debug {
-                    if has_qsync_attribute {
-                        println!(
-                            "Encountered #[get|post|put|delete] struct: {}",
-                            exported_fn.sig.ident.to_string()
-                        );
-                    } else {
-                        println!(
-                            "Encountered non-query struct: {}",
-                            exported_fn.sig.ident.to_string()
-                        );
-                    }
-                }
-
+            if state.is_debug {
                 if has_qsync_attribute {
-                    let qsync_props = qsync_props.unwrap();
-                    let mut hook = Hook {
-                        uses_auth: false,
-                        endpoint_url: "".to_string(),
-                        endpoint_verb: HttpVerb::UNKNOWN,
-                        is_mutation: qsync_props.is_mutation,
-                        return_type: qsync_props.return_type,
-                        hook_name: generate_hook_name(
-                            &input_path,
-                            exported_fn.sig.ident.to_string(),
-                        ),
-                        query_key_base: generate_query_key_base(&input_path),
-                        body_params: vec![],
-                        path_params: vec![],
-                        query_params: vec![],
-                    };
-
-                    extract_endpoint_information(&input_path, &exported_fn.attrs, &mut hook);
-                    extract_path_params_from_hook_endpoint_url(&mut hook);
-
-                    let mut arg_index = 0;
-                    let num_args = exported_fn.sig.inputs.len() - 1;
-                    for arg in exported_fn.sig.inputs {
-                        match arg.clone() {
-                            FnArg::Typed(typed_arg) => match *typed_arg.clone().ty {
-                                Type::Path(type_path) => {
-                                    let input_type =
-                                        get_api_fn_input_param_type(typed_arg.clone(), type_path);
-
-                                    match input_type.param_type {
-                                        ParamType::AUTH => {
-                                            if state.is_debug {
-                                                println!("\t> ParamType::AUTH",);
-                                            }
-                                            hook.uses_auth = true;
-                                        }
-                                        ParamType::BODY => {
-                                            if state.is_debug {
-                                                println!(
-                                                    "\t> ParamType::BODY '{}: {}'",
-                                                    input_type.arg_name, input_type.arg_type
-                                                );
-                                            }
-                                            hook.body_params.push(HookBodyParam {
-                                                hook_arg_name: input_type.arg_name,
-                                                hook_arg_type: input_type.arg_type,
-                                            });
-                                        }
-                                        ParamType::PATH => {
-                                            if state.is_debug {
-                                                println!("\t> ParamType::PATH '{}: {}', (ignored; extracted from endpoint url)", input_type.arg_name, input_type.arg_type);
-                                            }
-                                            // hook.path_params.push(HookPathParam {
-                                            //     hook_arg_name: input_type.arg_name,
-                                            //     hook_arg_type: input_type.arg_type,
-                                            // });
-                                        }
-                                        ParamType::QUERY => {
-                                            if state.is_debug {
-                                                println!(
-                                                    "\t> ParamType::QUERY '{}: {}'",
-                                                    input_type.arg_name, input_type.arg_type
-                                                );
-                                            }
-
-                                            hook.query_params.push(HookQueryParam {
-                                                hook_arg_name: input_type.arg_name,
-                                                hook_arg_type: input_type.arg_type,
-                                            });
-                                        }
-                                        ParamType::UNKNOWN => {
-                                            // TODO: param type is unknown
-                                        }
-                                    }
-
-                                    // state.types.push_str(&format!("{}", input_type.ty));
-                                    if arg_index < num_args {
-                                        arg_index += 1;
-                                        // state.types.push_str(", ");
-                                    }
-                                }
-                                _ => {}
-                            },
-                            _ => {}
-                        }
-                    }
-                    state.types.push('\n');
-                    state.types.push_str(&hook.to_string());
-                    state.hooks.push(hook);
-                    state.types.push('\n');
+                    println!(
+                        "Encountered #[get|post|put|delete] struct: {}",
+                        exported_fn.sig.ident
+                    );
+                } else {
+                    println!("Encountered non-query struct: {}", exported_fn.sig.ident);
                 }
             }
-            _ => {}
+
+            if has_qsync_attribute {
+                let qsync_props = qsync_props.unwrap();
+                let mut hook = Hook {
+                    uses_auth: false,
+                    endpoint_url: "".to_string(),
+                    endpoint_verb: HttpVerb::Unknown,
+                    is_mutation: qsync_props.is_mutation,
+                    return_type: qsync_props.return_type,
+                    hook_name: generate_hook_name(&input_path, exported_fn.sig.ident.to_string()),
+                    query_key_base: generate_query_key_base(&input_path),
+                    body_params: vec![],
+                    path_params: vec![],
+                    query_params: vec![],
+                };
+
+                extract_endpoint_information(&input_path, &exported_fn.attrs, &mut hook);
+                extract_path_params_from_hook_endpoint_url(&mut hook);
+
+                let mut arg_index = 0;
+                let num_args = exported_fn.sig.inputs.len() - 1;
+                for arg in exported_fn.sig.inputs {
+                    if let FnArg::Typed(typed_arg) = arg.clone() {
+                        if let Type::Path(type_path) = *typed_arg.clone().ty {
+                            let input_type =
+                                get_api_fn_input_param_type(typed_arg.clone(), type_path);
+
+                            match input_type.param_type {
+                                ParamType::Auth => {
+                                    if state.is_debug {
+                                        println!("\t> ParamType::AUTH",);
+                                    }
+                                    hook.uses_auth = true;
+                                }
+                                ParamType::Body => {
+                                    if state.is_debug {
+                                        println!(
+                                            "\t> ParamType::BODY '{}: {}'",
+                                            input_type.arg_name, input_type.arg_type
+                                        );
+                                    }
+                                    hook.body_params.push(HookBodyParam {
+                                        hook_arg_name: input_type.arg_name,
+                                        hook_arg_type: input_type.arg_type,
+                                    });
+                                }
+                                ParamType::Path => {
+                                    if state.is_debug {
+                                        println!("\t> ParamType::PATH '{}: {}', (ignored; extracted from endpoint url)", input_type.arg_name, input_type.arg_type);
+                                    }
+                                    // hook.path_params.push(HookPathParam {
+                                    //     hook_arg_name: input_type.arg_name,
+                                    //     hook_arg_type: input_type.arg_type,
+                                    // });
+                                }
+                                ParamType::Query => {
+                                    if state.is_debug {
+                                        println!(
+                                            "\t> ParamType::QUERY '{}: {}'",
+                                            input_type.arg_name, input_type.arg_type
+                                        );
+                                    }
+
+                                    hook.query_params.push(HookQueryParam {
+                                        hook_arg_name: input_type.arg_name,
+                                        hook_arg_type: input_type.arg_type,
+                                    });
+                                }
+                                ParamType::Unknown => {
+                                    // TODO: param type is unknown
+                                }
+                            }
+
+                            // state.types.push_str(&format!("{}", input_type.ty));
+                            if arg_index < num_args {
+                                arg_index += 1;
+                                // state.types.push_str(", ");
+                            }
+                        }
+                    }
+                }
+                state.types.push('\n');
+                state.types.push_str(&hook.to_string());
+                state.hooks.push(hook);
+                state.types.push('\n');
+            }
         }
     }
 }
@@ -496,7 +459,7 @@ pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) 
         types: String::new(),
         hooks: vec![],
         unprocessed_files: Vec::<PathBuf>::new(),
-        is_debug: is_debug,
+        is_debug,
     };
 
     state.types.push_str(
@@ -635,8 +598,8 @@ pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) 
             {
                 file_content.push('\n');
                 file_content.push_str(&hook.to_string());
-                added = added + 1;
-                existing = existing - 1;
+                added += 1;
+                existing -= 1;
                 file_content.push('\n');
             }
 
@@ -655,11 +618,11 @@ pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) 
         }
     }
 
-    if state.unprocessed_files.len() > 0 {
+    if !state.unprocessed_files.is_empty() {
         println!("Could not parse the following files:");
     }
 
     for unprocessed_file in state.unprocessed_files {
-        println!("• {:#?}", file = unprocessed_file);
+        println!("• {file:#?}", file = unprocessed_file);
     }
 }

@@ -11,12 +11,8 @@ fn get_migration_number() -> usize {
         logger::message("Migrations directory does not exist, create it?");
     }
 
-    let count = match migrations_dir.read_dir().unwrap() {
-        v => v.count(),
-        // Err(_) => 3 // guess the migration number
-    };
-
-    return count;
+    let v = migrations_dir.read_dir().unwrap();
+    v.count()
 }
 
 pub fn create(name: &str, up: &str, down: &str) -> Result<()> {

@@ -2,10 +2,9 @@ use std::net::{Ipv4Addr, Ipv6Addr, SocketAddrV4, SocketAddrV6, TcpListener, ToSo
 
 /// binds a [`TcpListener`] to the given [`addr`](`ToSocketAddrs`)
 fn test_bind<A: ToSocketAddrs>(addr: A) -> bool {
-    match TcpListener::bind(addr).map(|t| t.local_addr().is_ok()) {
-        Ok(result) => result,
-        Err(_) => false,
-    }
+    TcpListener::bind(addr)
+        .map(|t| t.local_addr().is_ok())
+        .unwrap_or(false)
 }
 
 /// is the given port free on this machine

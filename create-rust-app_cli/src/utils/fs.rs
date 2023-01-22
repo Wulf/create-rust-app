@@ -12,21 +12,21 @@ pub fn is_rust_project(directory: &PathBuf) -> Result<bool> {
     }
 
     let is_verified_rust_project = std::process::Command::new("cargo")
-        .current_dir(&directory)
+        .current_dir(directory)
         .arg("verify-project")
         .stdout(std::process::Stdio::null())
         .status()
         .expect("failed to execute `cargo verify-project`")
         .success();
 
-    return Ok(is_verified_rust_project);
+    Ok(is_verified_rust_project)
 }
 
 pub fn get_current_working_directory() -> Result<PathBuf> {
-    return match std::env::current_dir() {
+    match std::env::current_dir() {
         Ok(path) => Ok(path),
         Err(_) => Err(anyhow!("Could not get current working directory.")),
-    };
+    }
 }
 
 pub fn ensure_file(file: &PathBuf, contents: Option<&str>) -> Result<()> {
@@ -38,10 +38,10 @@ pub fn ensure_file(file: &PathBuf, contents: Option<&str>) -> Result<()> {
     }
 
     if contents.is_some() {
-        std::fs::write(&file, contents.unwrap())?;
+        std::fs::write(file, contents.unwrap())?;
     }
 
-    return Ok(());
+    Ok(())
 }
 
 pub fn ensure_directory(directory: &PathBuf, prompt_before_create: bool) -> Result<()> {
@@ -78,7 +78,7 @@ pub fn ensure_directory(directory: &PathBuf, prompt_before_create: bool) -> Resu
             .interact()?;
 
         if proceed {
-            std::fs::remove_file(&directory)?;
+            std::fs::remove_file(directory)?;
             std::fs::create_dir_all(directory)?;
             return Ok(());
         } else {
@@ -89,7 +89,7 @@ pub fn ensure_directory(directory: &PathBuf, prompt_before_create: bool) -> Resu
         }
     }
 
-    return Ok(());
+    Ok(())
 }
 
 fn read(file_path: &str) -> Result<(PathBuf, String)> {
