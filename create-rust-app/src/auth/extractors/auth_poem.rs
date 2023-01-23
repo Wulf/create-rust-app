@@ -70,7 +70,7 @@ impl<'a> FromRequest<'a> for Auth {
 
         let access_token_str = auth_header_opt.unwrap().to_str().unwrap_or("");
 
-        if !access_token_str.starts_with("Bearer ") { 
+        if !access_token_str.starts_with("Bearer ") {
             return Err(Error::from_string(
                 "Invalid authorization header",
                 StatusCode::UNAUTHORIZED,

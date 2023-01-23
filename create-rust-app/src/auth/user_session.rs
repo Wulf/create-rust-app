@@ -2,7 +2,7 @@ use super::schema::*;
 use crate::diesel::*;
 
 use super::user::User;
-use super::{PaginationParams, ID, UTC};
+use super::{PaginationParams, Utc, ID};
 use crate::database::Connection;
 use diesel::QueryResult;
 use serde::{Deserialize, Serialize};
@@ -30,9 +30,9 @@ pub struct UserSession {
     pub refresh_token: String,
     pub device: Option<String>,
 
-    pub created_at: UTC,
+    pub created_at: Utc,
     #[cfg(not(feature = "database_sqlite"))]
-    pub updated_at: UTC,
+    pub updated_at: Utc,
 }
 
 #[tsync::tsync]

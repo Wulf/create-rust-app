@@ -26,5 +26,5 @@ Please follow the link below to complete your registration:
         link = link
     );
 
-    mailer.send(to_email, &subject, &text, &html);
+    mailer.send(to_email, subject, &text, &html);
 }

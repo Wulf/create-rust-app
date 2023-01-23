@@ -28,7 +28,7 @@ impl Plugin for Storage {
 
             add_file_msg(filename.as_ref());
             std::fs::create_dir_all(directory_path)?;
-            std::fs::write(file_path, file_contents)?;
+            std::fs::write(file_path, file_contents.data)?;
         }
 
         // ===============================
@@ -119,7 +119,7 @@ CREATE TABLE attachments(
 
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-"#}
+"#},
             },
             indoc! {r#"
 DROP TABLE attachment_blobs;

@@ -31,31 +31,39 @@ pub struct Mailer {
     pub actually_send: bool,
 }
 
+impl Default for Mailer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Mailer {
     /// using information stored in the `SMTP_FROM_ADDRESS`, `SMTP_SERVER`, `SMTP_USERNAME`, `SMTP_PASSWORD`, and `SEND_MAIL`
     /// environment variables to connect to a remote SMTP server,
     ///
     /// allows webservers to send emails to users for purposes
     /// like marketing, user authentification, etc.
-    pub fn new() -> Mailer {
+    pub fn new() -> Self {
         Mailer::check_environment_variables();
 
-        let from_address: String =
-            std::env::var("SMTP_FROM_ADDRESS").unwrap_or("create-rust-app@localhost".to_string());
-        let smtp_server: String = std::env::var("SMTP_SERVER").unwrap_or("".to_string());
-        let smtp_username: String = std::env::var("SMTP_USERNAME").unwrap_or("".to_string());
-        let smtp_password: String = std::env::var("SMTP_PASSWORD").unwrap_or("".to_string());
+        let from_address: String = std::env::var("SMTP_FROM_ADDRESS")
+            .unwrap_or_else(|_| "create-rust-app@localhost".to_string());
+        let smtp_server: String = std::env::var("SMTP_SERVER").unwrap_or_else(|_| "".to_string());
+        let smtp_username: String =
+            std::env::var("SMTP_USERNAME").unwrap_or_else(|_| "".to_string());
+        let smtp_password: String =
+            std::env::var("SMTP_PASSWORD").unwrap_or_else(|_| "".to_string());
         let actually_send: bool = std::env::var("SEND_MAIL")
-            .unwrap_or("false".to_string())
+            .unwrap_or_else(|_| "false".to_string())
             .eq_ignore_ascii_case("true");
 
-        return Mailer {
+        Mailer {
             from_address,
             smtp_server,
             smtp_username,
             smtp_password,
             actually_send,
-        };
+        }
     }
 
     /// checks that the required environment variables are set

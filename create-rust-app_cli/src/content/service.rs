@@ -55,10 +55,10 @@ fn config(service_name: &str) -> ServiceConfig {
     let model_name = service_name.to_pascal_case();
     let file_name = model_name.to_snake_case();
 
-    return ServiceConfig {
+    ServiceConfig {
         model_name,
         file_name,
-    };
+    }
 }
 
 fn generate_poem(service_name: &str) -> Service {
