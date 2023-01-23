@@ -15,11 +15,11 @@ categories = ["command-line-utilities", "development-tools", "web-programming", 
 ## COMMON / DEFAULT - required dependencies
 ##
 dotenv = "0.15.0"
-serde_json = "1.0.83"
+serde_json = "1.0.91"
 lettre = "0.10.1"
 tera = { version="1.17.0" }
 lazy_static = { version="1.4.0" }
-serde = { version = "1.0.143", features = ["derive"] }
+serde = { version = "1.0.152", features = ["derive"] }
 diesel = { version="2.0.0-rc.1", default-features = false, features = ["uuid", "r2d2", "chrono", "returning_clauses_for_sqlite_3_35"] } # plugin_dev, plugin_auth
 
 ##
@@ -36,47 +36,47 @@ libsqlite3-sys = { version = "0.25", optional = true, features = ["bundled"] }
 # plugin_auth
 rust-argon2 = { optional=true, version="1.0" }
 rand = { optional=true, version="0.8.5" }
-jsonwebtoken = { optional=true, version="7.2.0" }
-tsync = { optional=true, version="1.3.0" }
-chrono = { optional=true, version = "0.4.22", features = ["serde"] }
+jsonwebtoken = { optional=true, version="8.2.0" }
+tsync = { optional=true, version="1.6.0" }
+chrono = { optional=true, version = "0.4.23", default-features = false, features = ["clock", "serde"] }
 
 # plugin_dev
-diesel_migrations = { optional=true, version="2.0.0-rc.1" }
+diesel_migrations = { optional=true, version="2.0.0" }
 
 # plugin_storage
-aws-config = { optional=true, version="0.8.0" }
+aws-config = { optional=true, version="0.14.0" }
 aws-types = { optional=true, version="0.8.0" }
-aws-endpoint = { optional=true, version="0.8.0" }
+aws-endpoint = { optional=true, version="0.14.0" }
 aws-sdk-s3 = { optional=true, version="0.8.0" }
-futures-util = { optional=true, version="0.3.21" }
+futures-util = { optional=true, version="0.3.25" }
 http = { optional=true, version="0.2.6" }
-diesel_derives = { optional=true, version="1.4.1" }
-uuid = { optional=true, version="0.8.2", features=["v4", "serde"] }
+diesel_derives = { optional=true, version="2.0.1" }
+uuid = { optional=true, version="1.2.2", features=["v4", "serde"] }
 md5 = { optional=true, version="0.7.0" }
-base64 = { optional=true, version="0.13.0" }
+base64 = { optional=true, version="0.21.0" }
 
 ##
 ## BACKENDS
 ##
 
 # poem dependencies
-poem = { optional=true, version="1.3.30", features=["anyhow", "cookie", "static-files"] }
+poem = { optional=true, version="1.3.52", features=["anyhow", "cookie", "static-files"] }
 
 # actix_web dependencies
 actix-multipart = { optional=true, version="0.4.0" }
-actix-files = { optional=true, version="0.6.0" }
+actix-files = { optional=true, version="0.6.2" }
 actix-http = { optional=true, version="3.0.4" }
-actix-web = { optional=true, version="4.0.1" }
-actix-web-httpauth = { optional=true, version="0.6.0" }
+actix-web = { optional=true, version="4.2.1" }
+actix-web-httpauth = { optional=true, version="0.8.0" }
 derive_more = { optional=true, version="0.99.17" }
-futures = { optional=true, version="0.3.21" }
-env_logger = { optional=true, version= "0.9.0" }
+futures = { optional=true, version="0.3.25" }
+env_logger = { optional=true, version= "0.10.0" }
 ##
 ## MISC - here, we list deps which are required by multiple features but are not required in all configurations
 ##
 
 mime_guess = { optional=true, version="2.0.4" } # backend_poem, plugin_storage
-anyhow = { optional=true, version="1.0.57" } # backend_poem, plugin_auth
+anyhow = { optional=true, version="1.0.68" } # backend_poem, plugin_auth
 tokio = { optional=true, version = "1", features = ["full"] } # backend_poem, plugin-storage
 
 [features]
