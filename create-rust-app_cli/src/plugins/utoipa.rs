@@ -105,7 +105,6 @@ impl Plugin for Utoipa {
             }
         };
 
-
         Ok(())
     }
 }
