@@ -6,8 +6,11 @@ mod qsync;
 mod utils;
 
 use anyhow::Result;
+use clap::{
+    builder::{EnumValueParser, PossibleValue},
+    Parser, Subcommand, ValueEnum,
+};
 use std::path::PathBuf;
-use clap::{Parser,Subcommand,builder::{PossibleValue, EnumValueParser}, ValueEnum};
 
 use crate::project::CreationOptions;
 use content::project;
@@ -28,7 +31,7 @@ pub enum BackendDatabase {
 
 /// Struct to describe the CLI
 #[derive(Parser)]
-#[command(name="create-rust-app",author, version, about, long_about)]
+#[command(name = "create-rust-app", author, version, about, long_about)]
 struct Cli {
     /// subcommands
     #[command(subcommand)]
@@ -41,10 +44,10 @@ enum Commands {
     /// Create a new rust app
     Create {
         #[arg(
-            short='i',
-            long="interactive",
-            name="interactive mode",
-            help="Configure project through interactive TUI."
+            short = 'i',
+            long = "interactive",
+            name = "interactive mode",
+            help = "Configure project through interactive TUI."
         )]
         interactive: bool,
 
@@ -103,13 +106,13 @@ enum Commands {
     /// Configure an existing rust project
     Configure {
         #[arg(
-            short='s',
-            long="qsync",
-            name="query-sync",
-            help="Generate react-query hooks for frontend."
+            short = 's',
+            long = "qsync",
+            name = "query-sync",
+            help = "Generate react-query hooks for frontend."
         )]
         query_sync: bool, // TODO: add capability to get the parameters for qsync::process(...) from CLI
-    }
+    },
 }
 
 /// CREATE RUST APP
@@ -124,15 +127,15 @@ fn main() -> Result<()> {
     // matches just as you would the top level cmd
     // note, takes ownership of cli
     match cli.command {
-        Commands::Create { interactive, name, database, backendframework, plugins } => {
-            create_project(
-                interactive, 
-                name,
-                database,
-                backendframework,
-                plugins,
-            )?;
-        },
+        Commands::Create {
+            interactive,
+            name,
+            database,
+            backendframework,
+            plugins,
+        } => {
+            create_project(interactive, name, database, backendframework, plugins)?;
+        }
         Commands::Configure { query_sync } => {
             configure_project(query_sync)?;
         }
@@ -141,7 +144,13 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn create_project(interactive: bool, project_name: String, database:Option<BackendDatabase>, framework:Option<BackendFramework>, plugins:Option<Vec<String>>) -> anyhow::Result<()> {
+fn create_project(
+    interactive: bool,
+    project_name: String,
+    database: Option<BackendDatabase>,
+    framework: Option<BackendFramework>,
+    plugins: Option<Vec<String>>,
+) -> anyhow::Result<()> {
     // if we try making a project in an existing directory, throw an error
     if PathBuf::from(&project_name).exists() {
         logger::error(&format!(
@@ -169,8 +178,7 @@ fn create_project(interactive: bool, project_name: String, database:Option<Backe
                     Some(1) => BackendDatabase::Sqlite,
                     _ => panic!("Fatal: Unknown backend database specified."),
                 }
-            } 
-            else {
+            } else {
                 panic!("Fatal: No backend database specified")
             }
         }
@@ -188,33 +196,30 @@ fn create_project(interactive: bool, project_name: String, database:Option<Backe
                     .items(&items)
                     .default(0)
                     .interact_on_opt(&Term::stderr())?;
-            
+
                 match selection {
                     Some(0) => BackendFramework::ActixWeb,
                     Some(1) => BackendFramework::Poem,
                     _ => panic!("Fatal: Unknown backend framework specified."),
                 }
-            } 
-            else {
+            } else {
                 panic!("Fatal: No backend database specified")
             }
-        },
+        }
     };
 
     // get enabled features (plugins)
     let mut cra_enabled_features: Vec<String> = match plugins {
         Some(plugins) => plugins
             .iter()
-            .map(|plugin| {
-                match plugin.as_str() {
-                    "auth" => "plugin_auth".to_string(),
-                    "container" => "plugin_container".to_string(),
-                    "dev" => "plugin_dev".to_string(),
-                    "storage" => "plugin_storage".to_string(),
-                    "graphql" => "plugin_graphql".to_string(),
+            .map(|plugin| match plugin.as_str() {
+                "auth" => "plugin_auth".to_string(),
+                "container" => "plugin_container".to_string(),
+                "dev" => "plugin_dev".to_string(),
+                "storage" => "plugin_storage".to_string(),
+                "graphql" => "plugin_graphql".to_string(),
                     "utoipa" => "plugin_utoipa".to_string(),
-                    _ => panic!("Fatal: Unknown plugin specified")
-                }
+                _ => panic!("Fatal: Unknown plugin specified"),
             })
             .collect(),
         None => {
@@ -223,7 +228,7 @@ fn create_project(interactive: bool, project_name: String, database:Option<Backe
                 logger::message(
                     "Use UP/DOWN arrows to navigate, SPACE to enable/disable a plugin, and ENTER to confirm.",
                 );
-            
+
                 let items = vec![
                     "Authentication Plugin: local email-based authentication",
                     "Container Plugin: dockerize your app",
@@ -236,7 +241,7 @@ fn create_project(interactive: bool, project_name: String, database:Option<Backe
                     .items(&items)
                     .defaults(&[true, true, true, true, true, false])
                     .interact()?;
-            
+
                 let add_plugin_auth = chosen.iter().any(|x| *x == 0);
                 let add_plugin_container = chosen.iter().any(|x| *x == 1);
                 let add_plugin_dev = chosen.iter().any(|x| *x == 2);
@@ -265,11 +270,10 @@ fn create_project(interactive: bool, project_name: String, database:Option<Backe
                 }
 
                 features
-            }
-            else {
+            } else {
                 panic!("Fatal: No plugins specified")
             }
-        },
+        }
     };
     // add database and framework to enabled features
     cra_enabled_features.push(match backend_database {
@@ -304,27 +308,54 @@ fn create_project(interactive: bool, project_name: String, database:Option<Backe
         project_dir: PathBuf::from("."),
         backend_framework,
         backend_database,
-        plugin_auth: cra_enabled_features.iter().any(|feature| feature == "plugin_auth"),
-        plugin_container: cra_enabled_features.iter().any(|feature| feature == "plugin_container"),
-        plugin_dev: cra_enabled_features.iter().any(|feature| feature == "plugin_dev"),
-        plugin_storage: cra_enabled_features.iter().any(|feature| feature == "plugin_storage"),
-        plugin_graphql: cra_enabled_features.iter().any(|feature| feature == "plugin_graphql"),
-        plugin_utoipa: cra_enabled_features.iter().any(|feature| feature == "plugin_utoipa"),
+        plugin_auth: cra_enabled_features
+            .iter()
+            .any(|feature| feature == "plugin_auth"),
+        plugin_container: cra_enabled_features
+            .iter()
+            .any(|feature| feature == "plugin_container"),
+        plugin_dev: cra_enabled_features
+            .iter()
+            .any(|feature| feature == "plugin_dev"),
+        plugin_storage: cra_enabled_features
+            .iter()
+            .any(|feature| feature == "plugin_storage"),
+        plugin_graphql: cra_enabled_features
+            .iter()
+            .any(|feature| feature == "plugin_graphql"),
+        plugin_utoipa: cra_enabled_features
+            .iter()
+            .any(|feature| feature == "plugin_utoipa"),
     };
 
-    if cra_enabled_features.iter().any(|feature| feature == "plugin_auth") {
+    if cra_enabled_features
+        .iter()
+        .any(|feature| feature == "plugin_auth")
+    {
         plugins::install(plugins::auth::Auth {}, install_config.clone())?;
     }
-    if cra_enabled_features.iter().any(|feature| feature == "plugin_container") {
+    if cra_enabled_features
+        .iter()
+        .any(|feature| feature == "plugin_container")
+    {
         plugins::install(plugins::container::Container {}, install_config.clone())?;
     }
-    if cra_enabled_features.iter().any(|feature| feature == "plugin_dev") {
+    if cra_enabled_features
+        .iter()
+        .any(|feature| feature == "plugin_dev")
+    {
         plugins::install(plugins::dev::Dev {}, install_config.clone())?;
     }
-    if cra_enabled_features.iter().any(|feature| feature == "plugin_storage") {
+    if cra_enabled_features
+        .iter()
+        .any(|feature| feature == "plugin_storage")
+    {
         plugins::install(plugins::storage::Storage {}, install_config.clone())?;
     }
-    if cra_enabled_features.iter().any(|feature| feature == "plugin_graphql") {
+    if cra_enabled_features
+        .iter()
+        .any(|feature| feature == "plugin_graphql")
+    {
         plugins::install(plugins::graphql::GraphQL {}, install_config.clone())?;
     }
     if cra_enabled_features.iter().any(|feature| feature == "plugin_utoipa") {
@@ -345,7 +376,7 @@ fn create_project(interactive: bool, project_name: String, database:Option<Backe
     Ok(())
 }
 
-fn configure_project(query_sync:bool) -> Result<()> {
+fn configure_project(query_sync: bool) -> Result<()> {
     let current_dir: PathBuf = fs::get_current_working_directory()?;
 
     if !current_dir.exists() {
