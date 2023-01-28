@@ -7,7 +7,7 @@ mod utils;
 
 use anyhow::Result;
 use std::path::PathBuf;
-use structopt::StructOpt;
+use clap::Parser;
 
 use crate::project::CreationOptions;
 use content::project;
@@ -26,44 +26,25 @@ pub enum BackendDatabase {
     Sqlite,
 }
 
-#[derive(StructOpt, Debug)]
-#[structopt(name = "create-rust-app")]
-struct UnknownOpt {
-    #[structopt(name = "name")]
-    target: Option<String>,
+#[derive(Parser)]
+#[command(name="create-rust-app",author, version, about, long_about)]
+struct Cli {
+    /// Optional name to operate on
+    name: Option<String>,
 }
 
-#[derive(StructOpt, Debug)]
-#[structopt(name = "create-rust-app")]
-struct CreateOpt {
-    #[structopt(name = "name")]
-    target: String,
-}
-
-#[derive(StructOpt, Debug)]
-#[structopt(name = "create-rust-app")]
-struct UpdateOpt {
-    #[structopt(
-        short = "qsync",
-        long,
-        name = "query-sync",
-        help = "Generate react-query hooks for frontend."
-    )]
-    query_sync: bool,
-}
 
 /// CREATE RUST APP
 ///
 /// A MODERN WAY TO BOOTSTRAP A RUST+REACT APP IN A SINGLE COMMAND
 fn main() -> Result<()> {
-    let unknown_opts = UnknownOpt::from_args();
-
+    let cli = Cli::parse();
     let mut current_dir: PathBuf = fs::get_current_working_directory()?;
 
     project::check_cli_version()?;
 
-    if unknown_opts.target.is_some() {
-        current_dir = PathBuf::from(unknown_opts.target.unwrap());
+    if let Some(target) = cli.name.as_deref() {
+        current_dir = PathBuf::from(target);
 
         if current_dir.exists() {
             logger::error(&format!(
@@ -77,7 +58,7 @@ fn main() -> Result<()> {
     let is_rust_project_directory = current_dir.exists() && fs::is_rust_project(&current_dir)?;
 
     if !is_rust_project_directory {
-        create_project()?;
+        create_project(cli.name.unwrap())?;
     } else {
         configure_project()?;
     }
@@ -85,9 +66,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn create_project() -> anyhow::Result<()> {
-    let create_opts = CreateOpt::from_args();
-
+fn create_project(project_name:String) -> anyhow::Result<()> {
     logger::message("Select a database to use:");
     logger::message("Use UP/DOWN arrows to navigate and SPACE or ENTER to confirm.");
     let items = vec!["postgres", "sqlite"];
@@ -115,8 +94,6 @@ fn create_project() -> anyhow::Result<()> {
         Some(1) => BackendFramework::Poem,
         _ => panic!("Fatal: Unknown backend framework specified."),
     };
-
-    let project_name = create_opts.target;
 
     if project_name.is_empty() {
         logger::error("Please provide a project name");
@@ -260,21 +237,16 @@ fn configure_project() -> Result<()> {
     // println!("\nIf you were trying to create a rust app, include the name argument like so:\n\t{}", style("create-rust-app <project_name>").cyan());
     // return Ok(());
 
-    let update_opts = UpdateOpt::from_args();
     let items = vec![
         "Generate react-query hooks (beta)",
         "Add a model & service (beta)",
         "Cancel",
     ];
 
-    let selection = if update_opts.query_sync {
-        Some(0)
-    } else {
-        Select::with_theme(&ColorfulTheme::default())
+    let selection = Select::with_theme(&ColorfulTheme::default())
             .items(&items)
             .default(0)
-            .interact_on_opt(&Term::stderr())?
-    };
+            .interact_on_opt(&Term::stderr())?;
 
     if let Some(index) = selection {
         match index {
