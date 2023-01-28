@@ -7,144 +7,269 @@ mod utils;
 
 use anyhow::Result;
 use std::path::PathBuf;
-use clap::Parser;
+use clap::{Parser,Subcommand,builder::{PossibleValue, EnumValueParser}, ValueEnum};
 
 use crate::project::CreationOptions;
 use content::project;
 use dialoguer::{console::Term, theme::ColorfulTheme, Input, MultiSelect, Select};
 use utils::{fs, logger};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 pub enum BackendFramework {
     ActixWeb,
     Poem,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 pub enum BackendDatabase {
     Postgres,
     Sqlite,
 }
 
+/// Struct to describe the CLI
 #[derive(Parser)]
 #[command(name="create-rust-app",author, version, about, long_about)]
 struct Cli {
-    /// Optional name to operate on
-    name: Option<String>,
+    /// subcommands
+    #[command(subcommand)]
+    command: Commands,
 }
 
+/// enum for the various available subcommands
+#[derive(Subcommand)]
+enum Commands {
+    /// Create a new rust app
+    Create {
+        #[arg(
+            short='i',
+            long="interactive",
+            name="interactive mode",
+            help="Configure project through interactive TUI."
+        )]
+        interactive: bool,
+
+        /// Name to operate on
+        name: String,
+
+        #[arg(
+            short='d',
+            long="database",
+            name="database",
+            help="Database to use",
+            require_equals=true,
+            value_name="DATABASE",
+            value_parser=EnumValueParser::<BackendDatabase>::new(),
+            ignore_case=true,
+            required_unless_present="interactive mode",
+        )]
+        database: Option<BackendDatabase>,
+
+        #[arg(
+            short='b',
+            long="backend",
+            name="backend framework",
+            help="Rust backend framework to use",
+            require_equals=true,
+            value_name="FRAMEWORK",
+            value_parser=EnumValueParser::<BackendFramework>::new(),
+            ignore_case=true,
+            required_unless_present="interactive mode",
+        )]
+        backendframework: Option<BackendFramework>,
+
+        //TODO: add utoipa to this list when it's merged
+        #[arg(
+            short='p',
+            long="plugins",
+            name="plugins",
+            help="Plugins for your new project\nComma separated list ",
+            num_args=1..,
+            value_delimiter=',',
+            value_name="PLUGINS",
+            value_parser=[
+                PossibleValue::new("auth").help("Authentication Plugin: local email-based authentication"),
+                PossibleValue::new("container").help("Container Plugin: dockerize your app"),
+                PossibleValue::new("dev").help("Development Plugin: adds dev warnings and an admin portal"),
+                PossibleValue::new("storage").help("Storage Plugin: adds S3 file storage capabilities"),
+                PossibleValue::new("graphql").help("GraphQL Plugin: bootstraps a GraphQL setup including a playground"),
+            ],
+            ignore_case=true,
+            required_unless_present="interactive mode",
+        )]
+        plugins: Option<Vec<String>>,
+    },
+    // named Configure instead of Update because people would naturally assume that Update updates the version of the CLI
+    /// Configure an existing rust project
+    Configure {
+        #[arg(
+            short='s',
+            long="qsync",
+            name="query-sync",
+            help="Generate react-query hooks for frontend."
+        )]
+        query_sync: bool, // TODO: add capability to get the parameters for qsync::process(...) from CLI
+    }
+}
 
 /// CREATE RUST APP
 ///
 /// A MODERN WAY TO BOOTSTRAP A RUST+REACT APP IN A SINGLE COMMAND
 fn main() -> Result<()> {
     let cli = Cli::parse();
-    let mut current_dir: PathBuf = fs::get_current_working_directory()?;
 
     project::check_cli_version()?;
 
-    if let Some(target) = cli.name.as_deref() {
-        current_dir = PathBuf::from(target);
-
-        if current_dir.exists() {
-            logger::error(&format!(
-                "Cannot create a project: {:#?} already exists.",
-                &current_dir
-            ));
-            return Ok(());
+    // You can check for the existence of subcommands, and if found use their
+    // matches just as you would the top level cmd
+    // note, takes ownership of cli
+    match cli.command {
+        Commands::Create { interactive, name, database, backendframework, plugins } => {
+            create_project(
+                interactive, 
+                name,
+                database,
+                backendframework,
+                plugins,
+            )?;
+        },
+        Commands::Configure { query_sync } => {
+            configure_project(query_sync)?;
         }
-    }
-
-    let is_rust_project_directory = current_dir.exists() && fs::is_rust_project(&current_dir)?;
-
-    if !is_rust_project_directory {
-        create_project(cli.name.unwrap())?;
-    } else {
-        configure_project()?;
     }
 
     Ok(())
 }
 
-fn create_project(project_name:String) -> anyhow::Result<()> {
-    logger::message("Select a database to use:");
-    logger::message("Use UP/DOWN arrows to navigate and SPACE or ENTER to confirm.");
-    let items = vec!["postgres", "sqlite"];
-    let selection = Select::with_theme(&ColorfulTheme::default())
-        .items(&items)
-        .default(0)
-        .interact_on_opt(&Term::stderr())?;
-
-    let backend_database: BackendDatabase = match selection {
-        Some(0) => BackendDatabase::Postgres,
-        Some(1) => BackendDatabase::Sqlite,
-        _ => panic!("Fatal: Unknown backend framework specified."),
-    };
-
-    logger::message("Select a rust backend framework to use:");
-    logger::message("Use UP/DOWN arrows to navigate and SPACE or ENTER to confirm.");
-    let items = vec!["actix-web", "poem"];
-    let selection = Select::with_theme(&ColorfulTheme::default())
-        .items(&items)
-        .default(0)
-        .interact_on_opt(&Term::stderr())?;
-
-    let backend_framework: BackendFramework = match selection {
-        Some(0) => BackendFramework::ActixWeb,
-        Some(1) => BackendFramework::Poem,
-        _ => panic!("Fatal: Unknown backend framework specified."),
-    };
-
-    if project_name.is_empty() {
-        logger::error("Please provide a project name");
-
+fn create_project(interactive: bool, project_name: String, database:Option<BackendDatabase>, framework:Option<BackendFramework>, plugins:Option<Vec<String>>) -> anyhow::Result<()> {
+    // if we try making a project in an existing directory, throw an error
+    if PathBuf::from(&project_name).exists() {
+        logger::error(&format!(
+            "Cannot create a project: {:#?} already exists.",
+            PathBuf::from(&project_name)
+        ));
         return Ok(());
     }
 
-    logger::message("Please select plugins for your new project:");
-    logger::message(
-        "Use UP/DOWN arrows to navigate, SPACE to enable/disable a plugin, and ENTER to confirm.",
-    );
+    // get the backend database
+    let backend_database = match database {
+        Some(database) => database,
+        None => {
+            if interactive {
+                logger::message("Select a database to use:");
+                logger::message("Use UP/DOWN arrows to navigate and SPACE or ENTER to confirm.");
+                let items = vec!["postgres", "sqlite"];
+                let selection = Select::with_theme(&ColorfulTheme::default())
+                    .items(&items)
+                    .default(0)
+                    .interact_on_opt(&Term::stderr())?;
 
-    let items = vec![
-        "Authentication Plugin: local email-based authentication",
-        "Container Plugin: dockerize your app",
-        "Development Plugin: adds dev warnings and an admin portal",
-        "Storage Plugin: adds S3 file storage capabilities",
-        "GraphQL Plugin: bootstraps a GraphQL setup including a playground",
-    ];
-    let chosen: Vec<usize> = MultiSelect::with_theme(&ColorfulTheme::default())
-        .items(&items)
-        .defaults(&[true, true, true, true, true])
-        .interact()?;
+                match selection {
+                    Some(0) => BackendDatabase::Postgres,
+                    Some(1) => BackendDatabase::Sqlite,
+                    _ => panic!("Fatal: Unknown backend database specified."),
+                }
+            } 
+            else {
+                panic!("Fatal: No backend database specified")
+            }
+        }
+    };
 
-    let add_plugin_auth = chosen.iter().any(|x| *x == 0);
-    let add_plugin_container = chosen.iter().any(|x| *x == 1);
-    let add_plugin_dev = chosen.iter().any(|x| *x == 2);
-    let add_plugin_storage = chosen.iter().any(|x| *x == 3);
-    let add_plugin_graphql = chosen.iter().any(|x| *x == 4);
+    // get the backend framework
+    let backend_framework: BackendFramework = match framework {
+        Some(framework) => framework,
+        None => {
+            if interactive {
+                logger::message("Select a rust backend framework to use:");
+                logger::message("Use UP/DOWN arrows to navigate and SPACE or ENTER to confirm.");
+                let items = vec!["actix-web", "poem"];
+                let selection = Select::with_theme(&ColorfulTheme::default())
+                    .items(&items)
+                    .default(0)
+                    .interact_on_opt(&Term::stderr())?;
+            
+                match selection {
+                    Some(0) => BackendFramework::ActixWeb,
+                    Some(1) => BackendFramework::Poem,
+                    _ => panic!("Fatal: Unknown backend framework specified."),
+                }
+            } 
+            else {
+                panic!("Fatal: No backend database specified")
+            }
+        },
+    };
 
-    let mut features: Vec<String> = vec![];
-    if add_plugin_dev {
-        features.push("plugin_dev".to_string());
-    }
-    if add_plugin_auth {
-        features.push("plugin_auth".to_string());
-    }
-    if add_plugin_container {
-        features.push("plugin_container".to_string());
-    }
-    if add_plugin_storage {
-        features.push("plugin_storage".to_string());
-    }
-    if add_plugin_graphql {
-        features.push("plugin_graphql".to_string());
-    }
-    features.push(match backend_database {
+    // get enabled features (plugins)
+    let mut cra_enabled_features: Vec<String> = match plugins {
+        Some(plugins) => plugins
+            .iter()
+            .map(|plugin| {
+                match plugin.as_str() {
+                    "auth" => "plugin_auth".to_string(),
+                    "container" => "plugin_container".to_string(),
+                    "dev" => "plugin_dev".to_string(),
+                    "storage" => "plugin_storage".to_string(),
+                    "graphql" => "plugin_graphql".to_string(),
+                    _ => panic!("Fatal: Unknown plugin specified")
+                }
+            })
+            .collect(),
+        None => {
+            if interactive {
+                logger::message("Please select plugins for your new project:");
+                logger::message(
+                    "Use UP/DOWN arrows to navigate, SPACE to enable/disable a plugin, and ENTER to confirm.",
+                );
+            
+                let items = vec![
+                    "Authentication Plugin: local email-based authentication",
+                    "Container Plugin: dockerize your app",
+                    "Development Plugin: adds dev warnings and an admin portal",
+                    "Storage Plugin: adds S3 file storage capabilities",
+                    "GraphQL Plugin: bootstraps a GraphQL setup including a playground",
+                ];
+                let chosen: Vec<usize> = MultiSelect::with_theme(&ColorfulTheme::default())
+                    .items(&items)
+                    .defaults(&[true, true, true, true, true])
+                    .interact()?;
+            
+                let add_plugin_auth = chosen.iter().any(|x| *x == 0);
+                let add_plugin_container = chosen.iter().any(|x| *x == 1);
+                let add_plugin_dev = chosen.iter().any(|x| *x == 2);
+                let add_plugin_storage = chosen.iter().any(|x| *x == 3);
+                let add_plugin_graphql = chosen.iter().any(|x| *x == 4);
+            
+                let mut features: Vec<String> = vec![];
+                if add_plugin_auth {
+                    features.push("plugin_auth".to_string());
+                }
+                if add_plugin_container {
+                    features.push("plugin_container".to_string());
+                }
+                if add_plugin_dev {
+                    features.push("plugin_dev".to_string());
+                }
+                if add_plugin_storage {
+                    features.push("plugin_storage".to_string());
+                }
+                if add_plugin_graphql {
+                    features.push("plugin_graphql".to_string());
+                }
+
+                features
+            }
+            else {
+                panic!("Fatal: No plugins specified")
+            }
+        },
+    };
+    // add database and framework to enabled features
+    cra_enabled_features.push(match backend_database {
         BackendDatabase::Postgres => "database_postgres".to_string(),
         BackendDatabase::Sqlite => "database_sqlite".to_string(),
     });
-    features.push(match backend_framework {
+    cra_enabled_features.push(match backend_framework {
         BackendFramework::ActixWeb => "backend_actix-web".to_string(),
         BackendFramework::Poem => "backend_poem".to_string(),
     });
@@ -152,7 +277,7 @@ fn create_project(project_name:String) -> anyhow::Result<()> {
     project::create(
         project_name.as_ref(),
         CreationOptions {
-            cra_enabled_features: features,
+            cra_enabled_features: cra_enabled_features.clone(),
             backend_framework,
             backend_database,
         },
@@ -172,26 +297,26 @@ fn create_project(project_name:String) -> anyhow::Result<()> {
         project_dir: PathBuf::from("."),
         backend_framework,
         backend_database,
-        plugin_dev: add_plugin_dev,
-        plugin_auth: add_plugin_auth,
-        plugin_container: add_plugin_container,
-        plugin_storage: add_plugin_storage,
-        plugin_graphql: add_plugin_graphql,
+        plugin_auth: cra_enabled_features.iter().any(|feature| feature == "plugin_auth"),
+        plugin_container: cra_enabled_features.iter().any(|feature| feature == "plugin_container"),
+        plugin_dev: cra_enabled_features.iter().any(|feature| feature == "plugin_dev"),
+        plugin_storage: cra_enabled_features.iter().any(|feature| feature == "plugin_storage"),
+        plugin_graphql: cra_enabled_features.iter().any(|feature| feature == "plugin_graphql"),
     };
 
-    if add_plugin_auth {
+    if cra_enabled_features.iter().any(|feature| feature == "plugin_auth") {
         plugins::install(plugins::auth::Auth {}, install_config.clone())?;
     }
-    if add_plugin_container {
+    if cra_enabled_features.iter().any(|feature| feature == "plugin_container") {
         plugins::install(plugins::container::Container {}, install_config.clone())?;
     }
-    if add_plugin_dev {
+    if cra_enabled_features.iter().any(|feature| feature == "plugin_dev") {
         plugins::install(plugins::dev::Dev {}, install_config.clone())?;
     }
-    if add_plugin_storage {
+    if cra_enabled_features.iter().any(|feature| feature == "plugin_storage") {
         plugins::install(plugins::storage::Storage {}, install_config.clone())?;
     }
-    if add_plugin_graphql {
+    if cra_enabled_features.iter().any(|feature| feature == "plugin_graphql") {
         plugins::install(plugins::graphql::GraphQL {}, install_config.clone())?;
     }
 
@@ -209,7 +334,7 @@ fn create_project(project_name:String) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn configure_project() -> Result<()> {
+fn configure_project(query_sync:bool) -> Result<()> {
     let current_dir: PathBuf = fs::get_current_working_directory()?;
 
     if !current_dir.exists() {
@@ -234,10 +359,14 @@ fn configure_project() -> Result<()> {
         "Cancel",
     ];
 
-    let selection = Select::with_theme(&ColorfulTheme::default())
+    let selection = if query_sync {
+        Some(0)
+    } else {
+        Select::with_theme(&ColorfulTheme::default())
             .items(&items)
             .default(0)
-            .interact_on_opt(&Term::stderr())?;
+            .interact_on_opt(&Term::stderr())?
+    };
 
     if let Some(index) = selection {
         match index {
