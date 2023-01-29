@@ -7,7 +7,7 @@ mod utils;
 
 use anyhow::Result;
 use clap::{
-    builder::{EnumValueParser, PossibleValue},
+    builder::{EnumValueParser, PossibleValue, ValueHint},
     Parser, Subcommand, ValueEnum,
 };
 use std::path::PathBuf;
@@ -51,7 +51,10 @@ enum Commands {
         )]
         interactive: bool,
 
-        /// Name to operate on
+        #[arg(
+            help = "Name of new project",
+            value_hint = ValueHint::DirPath,
+        )]
         name: String,
 
         #[arg(
@@ -80,14 +83,15 @@ enum Commands {
         )]
         backendframework: Option<BackendFramework>,
 
+        //TODO: create an enum for the plugins if we can maintain the help information
         //TODO: add utoipa to this list when it's merged
         #[arg(
-            short='p',
             long="plugins",
             name="plugins",
             help="Plugins for your new project\nComma separated list ",
             num_args=1..,
             value_delimiter=',',
+            require_equals=true,
             value_name="PLUGINS",
             value_parser=[
                 PossibleValue::new("auth").help("Authentication Plugin: local email-based authentication"),
@@ -104,13 +108,58 @@ enum Commands {
     // named Configure instead of Update because people would naturally assume that Update updates the version of the CLI
     /// Configure an existing rust project
     Configure {
+        //TODO: Consider splitting these into 2 separate subcommands
         #[arg(
-            short = 's',
             long = "qsync",
             name = "query-sync",
-            help = "Generate react-query hooks for frontend."
+            help = "Generate react-query hooks for frontend. (beta)\nOnly supports Actix backend",
+            conflicts_with = "add new service"
         )]
-        query_sync: bool, // TODO: add capability to get the parameters for qsync::process(...) from CLI
+        query_sync: bool,
+
+        #[arg(
+            long="input",
+            name="input files",
+            value_name = "INPUT",
+            num_args=1..,
+            value_delimiter=',',
+            require_equals=true,
+            value_hint = ValueHint::FilePath,
+            value_hint = ValueHint::DirPath,
+            conflicts_with = "add new service",
+            hide = true,
+            help = "rust file(s) to read type information from",
+        )]
+        qsync_input_files: Option<Vec<PathBuf>>,
+
+        #[arg(
+            long="output",
+            name="output file",
+            value_name = "OUTPUT",
+            num_args=1,
+            value_hint = ValueHint::FilePath,
+            value_hint = ValueHint::DirPath,
+            conflicts_with = "add new service",
+            hide = true,
+            help = "file to write generated types to",
+        )]
+        qsync_output_file: Option<PathBuf>,
+
+        #[arg(
+            short = 'd',
+            name = "Debug",
+            help = "Dry-run, prints to stdout",
+            hide = true
+        )]
+        qsync_debug: bool,
+
+        #[arg(
+            long = "new-service",
+            name = "add new service",
+            help = "Add a model & service for backend. (beta)",
+            conflicts_with = "query-sync"
+        )]
+        add_new_service: bool,
     },
 }
 
@@ -135,8 +184,20 @@ fn main() -> Result<()> {
         } => {
             create_project(interactive, name, database, backendframework, plugins)?;
         }
-        Commands::Configure { query_sync } => {
-            configure_project(query_sync)?;
+        Commands::Configure {
+            query_sync,
+            qsync_input_files,
+            qsync_output_file,
+            qsync_debug,
+            add_new_service,
+        } => {
+            configure_project(
+                query_sync,
+                qsync_input_files,
+                qsync_output_file,
+                qsync_debug,
+                add_new_service,
+            )?;
         }
     }
 
@@ -363,7 +424,13 @@ fn create_project(
     Ok(())
 }
 
-fn configure_project(query_sync: bool) -> Result<()> {
+fn configure_project(
+    query_sync: bool,
+    qsync_input_files: Option<Vec<PathBuf>>,
+    qsync_output_file: Option<PathBuf>,
+    qsync_debug: bool,
+    new_service: bool,
+) -> Result<()> {
     let current_dir: PathBuf = fs::get_current_working_directory()?;
 
     if !current_dir.exists() {
@@ -382,15 +449,19 @@ fn configure_project(query_sync: bool) -> Result<()> {
     // println!("\nIf you were trying to create a rust app, include the name argument like so:\n\t{}", style("create-rust-app <project_name>").cyan());
     // return Ok(());
 
-    let items = vec![
-        "Generate react-query hooks (beta)",
-        "Add a model & service (beta)",
-        "Cancel",
-    ];
-
-    let selection = if query_sync {
+    let selection = if query_sync && new_service {
+        panic!("--qsync and --new-service are mutually exclusive")
+    } else if query_sync {
         Some(0)
+    } else if new_service {
+        Some(1)
     } else {
+        let items = vec![
+            "Generate react-query hooks (beta)",
+            "Add a model & service (beta)",
+            "Cancel",
+        ];
+
         Select::with_theme(&ColorfulTheme::default())
             .items(&items)
             .default(0)
@@ -400,6 +471,7 @@ fn configure_project(query_sync: bool) -> Result<()> {
     if let Some(index) = selection {
         match index {
             0 => {
+                // TODO: maybe obtain this programmatically by parsing the users cargo.toml file?
                 logger::message("Which backend framework are you using?");
                 logger::message("Use UP/DOWN arrows to navigate and SPACE or ENTER to confirm.");
                 let items = vec!["actix_web", "poem"];
@@ -415,9 +487,10 @@ fn configure_project(query_sync: bool) -> Result<()> {
                 };
 
                 qsync::process(
-                    vec![PathBuf::from("backend/services")],
-                    PathBuf::from("frontend/src/api.generated.ts"),
-                    false,
+                    qsync_input_files.unwrap_or_else(|| vec![PathBuf::from("backend/services")]),
+                    qsync_output_file
+                        .unwrap_or_else(|| PathBuf::from("frontend/src/api.generated.ts")),
+                    qsync_debug,
                 );
             }
             1 => {
