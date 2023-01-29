@@ -1,3 +1,7 @@
+#[cfg(feature = "plugin_utoipa")]
+use crate::auth::{
+    AuthMessageResponse, AuthTokenResponse, JwtSecurityAddon, UserSessionJson, UserSessionResponse,
+};
 use actix_http::StatusCode;
 use actix_web::cookie::{Cookie, SameSite};
 use actix_web::{delete, get, post, web, Error as AWError, Result};
@@ -6,6 +10,8 @@ use actix_web::{
     HttpRequest, HttpResponse,
 };
 use serde_json::json;
+#[cfg(feature = "plugin_utoipa")]
+use utoipa::OpenApi;
 
 use crate::auth::{
     controller,
@@ -18,21 +24,29 @@ use crate::auth::{
 use crate::Database;
 use crate::Mailer;
 
-#[get("/sessions")]
 /// handler for GET requests at the .../sessions endpoint,
 ///
 /// requires auth
 ///
-/// request should be a query that contains [`PaginationParams`]
+/// queries [`db`](`Database`) for all sessions owned by the User
+/// associated with [`auth`](`Auth`)
 ///
-/// see [`controller::get_sessions`]
+/// breaks up the results of that query as defined by [`info`](`PaginationParams`)
 ///
-/// # Responses
-/// | StatusCode | content |
-/// |:------------|---------|
-/// | 200 | [`UserSessionResponse`](`crate::auth::UserSessionResponse`) deserialized into a Json payload
-/// | 500 | Json payload : {"message": "Could not fetch sessions."}
-/// TODO: document the rest of the possible StatusCodes
+/// Items are arranged in the database in such a way that the most recently added or updated items are last
+/// and are paginated accordingly
+#[cfg_attr(feature = "plugin_utoipa", utoipa::path(
+    context_path = "/api/auth",
+    params(PaginationParams),
+    responses(
+        (status = 200, description = "success, returns a json payload with all the sessions belonging to the authenticated user", body = UserSessionResponse),
+        (status = 401, description = "Error: Unauthorized"),
+        (status = 500, description = "Could not fetch sessions."),
+    ),
+    tag = "Sessions",
+    security ( ("JWT" = []))
+))]
+#[get("/sessions")]
 async fn sessions(
     db: Data<Database>,
     auth: Auth,
@@ -51,22 +65,25 @@ async fn sessions(
     }
 }
 
-#[delete("/sessions/{id}")]
 /// handler for DELETE requests at the .../sessions/{id} endpoint.
 ///
 /// requires auth
 ///
-/// see [`controller::destroy_session`]
-///
-///
-/// # Responses
-/// | StatusCode | content |
-/// |:------------|---------|
-/// | 200 | Json payload : {"message": "Deleted."}
-/// | 404 | Json payload : {"message": "Session not found."}
-/// | 500 | Json payload : {"message": "Internal error."}
-/// | 500 | Json payload : {"message": "Could not delete session.`}
-/// TODO: document the rest of the possible StatusCodes
+/// deletes the entry in the `user_session` with the specified [`item_id`](`ID`) from
+/// [`db`](`Database`) if it's owned by the User associated with [`auth`](`Auth`)
+#[cfg_attr(feature = "plugin_utoipa", utoipa::path(
+    context_path = "/api/auth",
+    responses(
+        (status = 200, description = "Deleted", body = AuthMessageResponse),
+        (status = 401, description = "User not authenticated"),
+        (status = 404, description = "User session could not be found, or does not belong to authenticated user.", body = AuthMessageResponse),
+        (status = 500, description = "Internal Error.", body = AuthMessageResponse),
+        (status = 500, description = "Could not delete session.", body = AuthMessageResponse),
+    ),
+    tag = "Sessions",
+    security ( ("JWT" = []))
+))]
+#[delete("/sessions/{id}")]
 async fn destroy_session(
     db: Data<Database>,
     item_id: Path<ID>,
@@ -86,21 +103,23 @@ async fn destroy_session(
     }
 }
 
-#[delete("/sessions")]
 /// handler for DELETE requests at the .../sessions enpoint
 ///
 /// requires auth
 ///
-/// deletes all current sessions belonging to the user
-///
-/// see [`controller::destroy_sessions`]
-///
-/// # Responses
-/// | StatusCode | content |
-/// |:------------|---------|
-/// | 200 | Json payload : {"message": "Deleted."}
-/// | 500 | Json payload : {"message": "Could not delete sessions."}
-/// TODO: document the rest of the possible StatusCodes
+/// destroys all entries in the `user_session` table in [`db`](`Database`) owned
+/// by the User associated with [`auth`](`Auth`)
+#[cfg_attr(feature = "plugin_utoipa", utoipa::path(
+    context_path = "/api/auth",
+    responses(
+        (status = 200, description = "Deleted", body = AuthMessageResponse),
+        (status = 401, description = "User not authenticated"),
+        (status = 500, description = "Could not delete sessions.", body = AuthMessageResponse),
+    ),
+    tag = "Sessions",
+    security ( ("JWT" = []))
+))]
+#[delete("/sessions")]
 async fn destroy_sessions(db: Data<Database>, auth: Auth) -> Result<HttpResponse, AWError> {
     let result = web::block(move || controller::destroy_sessions(&db, &auth)).await?;
 
@@ -115,23 +134,24 @@ async fn destroy_sessions(db: Data<Database>, auth: Auth) -> Result<HttpResponse
     }
 }
 
-#[post("/login")]
 /// handler for POST requests at the .../login endpoint
 ///
-/// request must have the `Content-Type: application/json` header, and a Json payload that can be deserialized into [`LoginInput`]
-///
-/// see [`controller::login`]
-///
-/// # Responses
-/// | StatusCode | content |
-/// |:------------|---------|
-/// | 200 | Json payload with an "assess_token" field containing a JWT associated with the user
-/// | 400 | Json payload : {"message": "'device' cannot be longer than 256 characters."}
-/// | 400 | Json payload : {"message": "Account has not been activated."}
-/// | 401 | Json payload : {"message": "Invalid credentials."}
-/// | 500 | Json payload : {"message": "An internal server error occurred."}
-/// | 500 | Json payload : {"message": "Could not create a session."}
-/// TODO: document the rest of the possible StatusCodes
+/// creates a user session for the user associated with [`item`](`LoginInput`)
+/// in the request body (have the `content-type` header set to `application/json` and content that can be deserialized into [`LoginInput`])
+#[cfg_attr(feature = "plugin_utoipa", utoipa::path(
+    context_path = "/api/auth",
+    request_body(content = LoginInput, content_type = "application/json"),
+    responses(
+        (status = 200, description = "session created", body = AuthTokenResponse),
+        (status = 400, description = "'device' cannot be longer than 256 characters.", body = AuthMessageResponse),
+        (status = 400, description = "Account has not been activated.", body = AuthMessageResponse),
+        (status = 401, description = "Invalid credentials.", body = AuthMessageResponse),
+        (status = 500, description = "An internal server error occurred.", body = AuthMessageResponse),
+        (status = 500, description = "Could not create a session.", body = AuthMessageResponse),
+    ),
+    tag = "Sessions",
+))]
+#[post("/login")]
 async fn login(db: Data<Database>, Json(item): Json<LoginInput>) -> Result<HttpResponse, AWError> {
     let result = web::block(move || controller::login(&db, &item)).await?;
 
@@ -152,18 +172,21 @@ async fn login(db: Data<Database>, Json(item): Json<LoginInput>) -> Result<HttpR
     }
 }
 
-#[post("/logout")]
 /// handler for POST requests to the .../logout endpount
 ///
-/// see [`controller::logout']
+/// If this is successful, delete the cookie storing the refresh token
 ///
-/// # Responses
-/// | StatusCode | content |
-/// |:------------|---------|
-/// | 200 | command to delete the "refresh_token" cookie
-/// | 401 | Json payload : {"message": "Invalid session."}
-/// | 401 | Json payload : {"message": "Could not delete session."}
-/// TODO: document the rest of the possible StatusCodes
+/// TODO: document that it creates a refresh_token
+#[cfg_attr(feature = "plugin_utoipa", utoipa::path(
+    context_path = "/api/auth",
+    responses(
+        (status = 200, description = "deletes the \"refresh_token\" cookie"),
+        (status = 401, description = "Invalid session.", body = AuthMessageResponse),
+        (status = 401, description = "Could not delete session.", body = AuthMessageResponse),
+    ),
+    tag = "Sessions",
+))]
+#[post("/logout")]
 async fn logout(db: Data<Database>, req: HttpRequest) -> Result<HttpResponse, AWError> {
     let refresh_token = req
         .cookie(COOKIE_NAME)
@@ -187,18 +210,21 @@ async fn logout(db: Data<Database>, req: HttpRequest) -> Result<HttpResponse, AW
     }
 }
 
-#[post("/refresh")]
 /// handler for POST requests to the .../refresh endpoint
 ///
-/// see [`controller::refresh`]
+/// refreshes the user session associated with the clients refresh_token cookie
 ///
-/// # Responses
-/// | StatusCode | content |
-/// |:------------|---------|
-/// | 200 | Json payload with an "assess_token" field containing a JWT associated with the user
-/// | 401 | Json payload : {"message": "Invalid session."}
-/// | 401 | Json payload : {"message": "Invalid token."}
-/// TODO: document the rest of the possible StatusCodes
+/// TODO: document that it needs a refresh_token cookie
+#[cfg_attr(feature = "plugin_utoipa", utoipa::path(
+    context_path = "/api/auth",
+    responses(
+        (status = 200, description = "uses the \"refresh_token\" cookie to give the user a new session", body=AuthTokenResponse),
+        (status = 401, description = "Invalid session.", body = AuthMessageResponse),
+        (status = 401, description = "Invalid token.", body = AuthMessageResponse),
+    ),
+    tag = "Sessions",
+))]
+#[post("/refresh")]
 async fn refresh(db: Data<Database>, req: HttpRequest) -> Result<HttpResponse, AWError> {
     let refresh_token = req
         .cookie(COOKIE_NAME)
@@ -225,19 +251,23 @@ async fn refresh(db: Data<Database>, req: HttpRequest) -> Result<HttpResponse, A
     }
 }
 
-#[post("/register")]
 /// handler for POST requests to the .../register endpoint
 ///
-/// request must have the `Content-Type: application/json` header, and a Json payload that can be deserialized into [`RegisterInput`]
+/// creates a new User with the information in [`item`](`RegisterInput`)
 ///
-/// see [`controller::register`]
-///
-/// # Responses
-/// | StatusCode | content |
-/// |:------------|---------|
-/// | 200 | Json payload : {"message": "Registered! Check your email to activate your account."}
-/// | 400 | Json payload : {"message": "Already registered."}
-/// TODO: document the rest of the possible StatusCodes
+/// sends an email, using [`mailer`](`Mailer`), to the email address in [`item`](`RegisterInput`)
+/// that contains a unique link that allows the recipient to activate the account associated with
+/// that email address
+#[cfg_attr(feature = "plugin_utoipa", utoipa::path(
+    context_path = "/api/auth",
+    request_body(content = RegisterInput, content_type = "application/json"),
+    responses(
+        (status = 200, description = "Success, sends an email to the user with a link that will let them activate their account", body=AuthMessageResponse),
+        (status = 400, description = "Already registered.", body = AuthMessageResponse),
+    ),
+    tag = "Users",
+))]
+#[post("/register")]
 async fn register(
     db: Data<Database>,
     Json(item): Json<RegisterInput>,
@@ -255,20 +285,22 @@ async fn register(
     }
 }
 
-#[get("/activate")]
 /// handler for GET requests to the .../activate endpoint
 ///
-/// see [`controller:: activate`]
-///
-/// # Responses
-/// | StatusCode | content |
-/// |:------------|---------|
-/// | 200 | Json payload : {"message": "Activated."}
-/// | 200 | Json payload : {"message": "Already activated."}
-/// | 400 | Json payload : {"message": "Invalid token."}
-/// | 401 | Json payload : {"message": "Invalid token"}
-/// | 500 | Json payload : {"message": "Could not activate user. "}
-/// TODO: document the rest of the possible StatusCodes
+/// activates the account associated with the token in [`item`](`ActivationInput`)
+#[cfg_attr(feature = "plugin_utoipa", utoipa::path(
+    context_path = "/api/auth",
+    params(ActivationInput),
+    responses(
+        (status = 200, description = "Success, account associated with activation_token is activated", body=AuthMessageResponse),
+        (status = 200, description = "Already activated.", body = AuthMessageResponse),
+        (status = 400, description =  "Invalid token.", body = AuthMessageResponse),
+        (status = 401, description =  "Invalid token", body = AuthMessageResponse),
+        (status = 500, description =  "Could not activate user. ", body = AuthMessageResponse),
+    ),
+    tag = "Users",
+))]
+#[get("/activate")]
 async fn activate(
     db: Data<Database>,
     Query(item): Query<ActivationInput>,
@@ -285,18 +317,24 @@ async fn activate(
     }
 }
 
-#[post("/forgot")]
 /// handler for POST requests to the .../forgot endpoint
 ///
-/// request must have the `Content-Type: application/json` header, and a Json payload that can be deserialized into [`ForgotInput`]
+/// sends an email to the email in the ['ForgotInput'] Json in the request body
+/// that will allow the user associated with that email to change their password
 ///
-/// see [`controller::forgot_password`]
-///
-/// # Responses
-/// | StatusCode | content |
-/// |:------------|---------|
-/// | 200 | Json payload : {"message": "Please check your email."}
-/// TODO: document the rest of the possible StatusCodes
+/// sends an email, using [`mailer`](`Mailer`), to the email address in [`item`](`RegisterInput`)
+/// that contains a unique link that allows the recipient to reset the password
+/// of the account associated with that email address (or create a new account if there is
+/// no accound accosiated with the email address)
+#[cfg_attr(feature = "plugin_utoipa", utoipa::path(
+    context_path = "/api/auth",
+    request_body(content = ForgotInput, content_type = "application/json"),
+    responses(
+        (status = 200, description = "Success, password reset email is sent to users email", body=AuthMessageResponse),
+    ),
+    tag = "Users",
+))]
+#[post("/forgot")]
 async fn forgot_password(
     db: Data<Database>,
     Json(item): Json<ForgotInput>,
@@ -314,26 +352,28 @@ async fn forgot_password(
     }
 }
 
-#[post("/change")]
 /// handler for POST requests to the .../change endpoint
 ///
 /// requires auth
 ///
-/// request must have the `Content-Type: application/json` header, and a Json payload that can be deserialized into [`ChangeInput`]
-///
-/// see [`controller::change_password`]
-///
-/// # Responses
-/// | StatusCode | content |
-/// |:------------|---------|
-/// | 200 | Json payload : {"message": "Password changed."}
-/// | 400 | Json payload : {"message": "Missing password."}
-/// | 400 | Json payload : {"message": "The new password must be different."}
-/// | 400 | Json payload : {"message": "Account has not been activated."}
-/// | 400 | Json payload : {"message": "Invalid credentials."}
-/// | 500 | Json payload : {"message": "Could not find user."}
-/// | 500 | Json payload : {"message": "Could not update password."}
-/// TODO: document the rest of the possible StatusCodes
+/// change the password of the User associated with [`auth`](`Auth`)
+/// from [`item.old_password`](`ChangeInput`) to [`item.new_password`](`ChangeInput`)
+#[cfg_attr(feature = "plugin_utoipa", utoipa::path(
+    context_path = "/api/auth",
+    request_body(content = ChangeInput, content_type = "application/json"),
+    responses(
+        (status = 200, description = "Success, password changed", body=AuthMessageResponse),
+        (status = 400, description = "Missing password.", body=AuthMessageResponse),
+        (status = 400, description = "The new password must be different.", body=AuthMessageResponse),
+        (status = 400, description = "Account has not been activated.", body=AuthMessageResponse),
+        (status = 400, description = "Invalid credentials.", body=AuthMessageResponse),
+        (status = 500, description = "Could not find user.", body=AuthMessageResponse),
+        (status = 500, description = "Could not update password.", body=AuthMessageResponse),
+    ),
+    tag = "Users",
+    security ( ("JWT" = []))
+))]
+#[post("/change")]
 async fn change_password(
     db: Data<Database>,
     Json(item): Json<ChangeInput>,
@@ -352,38 +392,41 @@ async fn change_password(
     }
 }
 
-#[post("/check")]
 /// handler for POST requests to the .../check endpoint
 ///
 /// requires auth, but doesn't match it to a user
-///
-/// see [`controller::check`]
-///
-/// # Responses
-/// | StatusCode | content |
-/// |:------------|---------|
-/// | 200 | ()
+#[cfg_attr(feature = "plugin_utoipa", utoipa::path(
+    context_path = "/api/auth",
+    responses(
+        (status = 200, description = "Success, API is running"),
+    ),
+    tag = "Users",
+    security ( ("JWT" = []))
+))]
+#[post("/check")]
 async fn check(auth: Auth) -> HttpResponse {
     controller::check(&auth);
     HttpResponse::Ok().finish()
 }
 
-#[post("/reset")]
 /// handler for POST requests to the .../reset endpoint
 ///
-/// request must have the `Content-Type: application/json` header, and a Json payload that can be deserialized into [`ResetInput`]
-///
-/// see [`controller::reset_password`]
-///
-/// # Responses
-/// | StatusCode | content |
-/// |:------------|---------|
-/// | 200 | Json payload : {"message": "Password changed."}
-/// | 400 | Json payload : {"message": "Invalid token."}
-/// | 400 | Json payload : {"message": "Account has not been activated."}
-/// | 400 | Json payload : {"message": "The new password must be different."}
-/// | 401 | Json payload : {"message": "Invalid token."}
-/// | 500 | Json payload : {"message": "Could not update password."}
+/// changes the password of the user associated with [`item.reset_token`](`ResetInput`)
+/// to [`item.new_password`](`ResetInput`)
+#[cfg_attr(feature = "plugin_utoipa", utoipa::path(
+    context_path = "/api/auth",
+    request_body(content = ResetInput, content_type = "application/json"),
+    responses(
+        (status = 200, description = "Password changed.", body=AuthMessageResponse),
+        (status = 400, description = "Invalid token.", body=AuthMessageResponse),
+        (status = 400, description = "Account has not been activated.", body=AuthMessageResponse),
+        (status = 400, description = "The new password must be different.", body=AuthMessageResponse),
+        (status = 401, description = "Invalid token.", body=AuthMessageResponse),
+        (status = 500, description = "Could not update password.", body=AuthMessageResponse),
+    ),
+    tag = "Users",
+))]
+#[post("/reset")]
 async fn reset_password(
     db: Data<Database>,
     Json(item): Json<ResetInput>,
@@ -417,3 +460,20 @@ pub fn endpoints(scope: actix_web::Scope) -> actix_web::Scope {
         .service(change_password)
         .service(reset_password)
 }
+
+// swagger
+#[cfg(feature = "plugin_utoipa")]
+#[derive(OpenApi)]
+#[openapi(
+    paths(sessions, destroy_session, destroy_sessions, login, logout, refresh, register, activate, forgot_password, change_password, check, reset_password),
+    components(
+        schemas(UserSessionResponse, UserSessionJson, AuthMessageResponse, AuthTokenResponse, LoginInput, RegisterInput, ForgotInput, ChangeInput, ResetInput)
+    ),
+    tags(
+        (name = "Auth", description = "users and user_sessions management endpoints"),
+        (name = "Sessions", description = "Endpoints for user_sessions management"),
+        (name = "Users", description = "Endpoints for useres management"),
+    ),
+    modifiers(&JwtSecurityAddon)
+)]
+pub struct ApiDoc;

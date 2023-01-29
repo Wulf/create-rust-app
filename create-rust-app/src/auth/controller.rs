@@ -23,18 +23,23 @@ lazy_static! {
     };
 }
 
+#[cfg(not(debug_assertions))]
 type Seconds = i64;
 type StatusCode = i32;
 type Message = &'static str;
 
 #[derive(Deserialize, Serialize)]
+#[cfg_attr(feature = "plugin_utoipa", derive(utoipa::ToSchema))]
 /// Rust struct representing the Json body of
 /// POST requests to the .../login endpoint
 pub struct LoginInput {
     email: String,
     password: String,
     device: Option<String>,
-    ttl: Option<Seconds>,
+    #[cfg(not(debug_assertions))]
+    ttl: Option<Seconds>, // Seconds
+    #[cfg(debug_assertions)]
+    ttl: Option<i64>, // Seconds
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -46,6 +51,7 @@ pub struct RefreshTokenClaims {
 }
 
 #[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "plugin_utoipa", derive(utoipa::ToSchema))]
 /// Rust struct representing the Json body of
 /// POST requests to the .../register endpoint
 pub struct RegisterInput {
@@ -62,6 +68,7 @@ pub struct RegistrationClaims {
 }
 
 #[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "plugin_utoipa", derive(utoipa::IntoParams))]
 /// Rust struct representing the Json body of
 /// GET requests to the .../activate endpoint
 pub struct ActivationInput {
@@ -69,6 +76,7 @@ pub struct ActivationInput {
 }
 
 #[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "plugin_utoipa", derive(utoipa::ToSchema))]
 /// Rust struct representing the Json body of
 /// POST requests to the /forgot endpoint
 pub struct ForgotInput {
@@ -84,6 +92,7 @@ pub struct ResetTokenClaims {
 }
 
 #[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "plugin_utoipa", derive(utoipa::ToSchema))]
 /// Rust struct representing the Json body of
 /// POST requests to the /change endpoint
 pub struct ChangeInput {
@@ -92,6 +101,7 @@ pub struct ChangeInput {
 }
 
 #[derive(Serialize, Deserialize)]
+#[cfg_attr(feature = "plugin_utoipa", derive(utoipa::ToSchema))]
 /// Rust struct representing the Json body of
 /// POST requests to the /reset endpoint
 pub struct ResetInput {
