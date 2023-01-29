@@ -97,8 +97,7 @@ path = "backend/main.rs"
 
 [profile.dev]
 debug-assertions=true
-"#,
-        project_name = project_name
+"#
     );
 
     let mut final_toml = String::default();
@@ -292,7 +291,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
 
     let mut enabled_features: String = cra_enabled_features
         .iter()
-        .map(|f| format!("\"{}\"", f))
+        .map(|f| format!("\"{f}\""))
         .collect::<Vec<String>>()
         .join(", ");
     if !cra_enabled_features.is_empty() {
@@ -589,7 +588,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
 pub fn create_resource(backend: BackendFramework, resource_name: &str) -> Result<()> {
     let resource_name = resource_name.to_pascal_case();
 
-    logger::message(&format!("Creating resource '{}'", resource_name));
+    logger::message(&format!("Creating resource '{resource_name}'"));
 
     crate::content::service::create(
         backend,

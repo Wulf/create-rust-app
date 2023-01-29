@@ -261,7 +261,7 @@ fn extract_endpoint_information(
         "".to_string()
     };
 
-    hook.endpoint_url = format!("/api/{}{}", endpoint_base, handler_path);
+    hook.endpoint_url = format!("/api/{endpoint_base}{handler_path}");
 
     hook.endpoint_verb = verb;
 }
@@ -514,7 +514,7 @@ pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) 
     for input_path in input_paths {
         if !input_path.exists() {
             if is_debug {
-                println!("Path `{:#?}` does not exist", input_path);
+                println!("Path `{input_path:#?}` does not exist");
             }
 
             state.unprocessed_files.push(input_path);
@@ -539,10 +539,10 @@ pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) 
                             {
                                 process_service_file(path, &mut state);
                             } else if is_debug {
-                                println!("Encountered non-service or non-rust file `{:#?}`", path);
+                                println!("Encountered non-service or non-rust file `{path:#?}`");
                             }
                         } else if is_debug {
-                            println!("Encountered directory `{:#?}`", path);
+                            println!("Encountered directory `{path:#?}`");
                         }
                     }
                     Err(_) => {
@@ -612,7 +612,7 @@ pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) 
         } else {
             let mut file: File = File::create(&output_path).expect("Unable to write to file");
             match file.write_all(state.types.as_bytes()) {
-                Ok(_) => println!("Successfully generated hooks, see {:#?}", output_path),
+                Ok(_) => println!("Successfully generated hooks, see {output_path:#?}"),
                 Err(_) => println!("Failed to generate types, an error occurred."),
             }
         }
@@ -623,6 +623,6 @@ pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) 
     }
 
     for unprocessed_file in state.unprocessed_files {
-        println!("• {file:#?}", file = unprocessed_file);
+        println!("• {unprocessed_file:#?}");
     }
 }

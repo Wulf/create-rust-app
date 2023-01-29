@@ -12,8 +12,7 @@ Hello,
 Someone requested a password reset for the account associated with this email, but no account exists!
 If this was intentional, you can register for a new account using the link below:
 {link}
-"#,
-        link = link
+"#
     );
     let html = format!(
         r#"
@@ -24,8 +23,7 @@ Hello,
 Someone requested a password reset for the account associated with this email, but no account exists!
 If this was intentional, you can register for a new account using the link below:
 {link}
-"#,
-        link = link
+"#
     );
 
     mailer.send(to_email, subject, &text, &html);
