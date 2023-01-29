@@ -56,7 +56,7 @@ md5 = { optional=true, version="0.7.0" }
 base64 = { optional=true, version="0.21.0" }
 
 # plugin_utoipa dependencies
-utoipa = { optional=true, version="2", features=["actix_extras", "chrono", "openapi_extensions"] }
+utoipa = { optional=true, version="3", features=["actix_extras", "chrono", "openapi_extensions"] }
 utoipa-swagger-ui = { optional=true, version="3", features=["actix-web"]}
 
 ##
