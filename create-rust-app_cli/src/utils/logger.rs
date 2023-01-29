@@ -45,7 +45,7 @@ pub fn error(msg: &str) {
 }
 
 pub fn exit(msg: &str, err: std::io::Error) -> ! {
-    eprintln!("{}: {:?}", msg, err);
+    eprintln!("{msg}: {err:?}");
     std::process::exit(1);
 }
 
@@ -111,7 +111,7 @@ pub fn project_created_msg(install_config: crate::plugins::InstallConfig) {
     message("  1. Change to your project directory");
     message(&format!(
         "     $ {}",
-        style(format!("cd {:#?}", project_dir)).cyan()
+        style(format!("cd {project_dir:#?}")).cyan()
     ));
     message("  2. Open `.env` and set the DATABASE_URL");
     message(&format!("     $ {}", style("vim .env").cyan()));

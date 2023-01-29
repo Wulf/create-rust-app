@@ -187,8 +187,7 @@ use actix_web::guard;"##,
         .data(app_data.database.clone())
         .data(app_data.mailer.clone()){other_data}
         .finish();
-"##,
-                        other_data = other_data
+"##
                     ),
                 )?;
 

@@ -212,7 +212,7 @@ impl Storage {
             .map_err(|err| {
                 self.error_string(
                     "Could not delete objects",
-                    format!("{:#?}", keys),
+                    format!("{keys:#?}"),
                     err.to_string(),
                 )
             })?;

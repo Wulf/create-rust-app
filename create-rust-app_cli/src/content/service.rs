@@ -35,10 +35,8 @@ pub fn create(
     match backend {
         BackendFramework::ActixWeb => {
             let name = resource.config.file_name.as_str();
-            let service_entry = &format!(
-                "services::{}::endpoints(web::scope(\"{}\"))",
-                name, base_endpoint_path
-            );
+            let service_entry =
+                &format!("services::{name}::endpoints(web::scope(\"{base_endpoint_path}\"))");
             register_actix(name, service_entry)?;
         }
         BackendFramework::Poem => register_poem(
@@ -259,8 +257,7 @@ pub fn register_poem(
         main_file_contents = main_file_contents.replace(
             "let mut api_routes = Route::new();",
             &format!(
-                "let mut api_routes = Route::new();\n\t\tapi_routes = api_routes.nest(\"{}\", {});",
-                service_base_endpoint_path, service_api_fn
+                "let mut api_routes = Route::new();\n\t\tapi_routes = api_routes.nest(\"{service_base_endpoint_path}\", {service_api_fn});",
             ),
         );
         std::fs::write(main_file_path, main_file_contents)?;
@@ -280,8 +277,7 @@ pub fn register_actix(name: &str, service: &str) -> Result<()> {
             r#"let mut api_scope = web::scope("/api");"#,
             &format!(
                 r#"let mut api_scope = web::scope("/api");
-        api_scope = api_scope.service({});"#,
-                service
+        api_scope = api_scope.service({service});"#
             ),
         );
         std::fs::write(main_file_path, main_file_contents)?;

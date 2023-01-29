@@ -13,8 +13,7 @@ Someone requested a password reset for the account associated with this email.
 Please visit this link to reset your password:
 {link}
 (valid for 24 hours)
-"#,
-        link = link
+"#
     );
     let html = format!(
         r#"
@@ -26,8 +25,7 @@ Someone requested a password reset for the account associated with this email.
 Please visit this link to reset your password:
 {link}
 (valid for 24 hours)
-"#,
-        link = link
+"#
     );
 
     mailer.send(to_email, subject, &text, &html);

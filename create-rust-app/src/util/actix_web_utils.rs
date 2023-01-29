@@ -13,7 +13,7 @@ pub fn render_single_page_application(route: &str, view: &str) -> Scope {
     let route = route.strip_prefix('/').unwrap_or(route);
     let view = view.strip_prefix('/').unwrap_or(view);
 
-    actix_web::web::scope(&format!("/{}{{tail:(/.*)?}}", route))
+    actix_web::web::scope(&format!("/{route}{{tail:(/.*)?}}"))
         .app_data(Data::new(SinglePageApplication {
             view_name: view.to_string(),
         }))
