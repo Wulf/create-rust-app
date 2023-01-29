@@ -3,6 +3,7 @@ pub mod container;
 pub mod dev;
 pub mod graphql;
 pub mod storage;
+pub mod utoipa;
 
 use crate::{project, BackendFramework};
 use crate::{utils::logger, BackendDatabase};
@@ -19,6 +20,7 @@ pub struct InstallConfig {
     pub plugin_container: bool,
     pub plugin_storage: bool,
     pub plugin_graphql: bool,
+    pub plugin_utoipa: bool,
 }
 
 pub trait Plugin {

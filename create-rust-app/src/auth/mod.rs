@@ -1,5 +1,11 @@
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "plugin_utoipa")]
+use utoipa::{
+    openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme},
+    Modify,
+};
+
 // Auth guard / extractor
 mod extractors;
 pub use extractors::*;
@@ -33,6 +39,8 @@ type Utc = chrono::NaiveDateTime;
 
 #[tsync::tsync]
 #[derive(Deserialize)]
+#[cfg_attr(feature = "plugin_utoipa", derive(utoipa::IntoParams))]
+// TODO: make "PaginationParams" something provided by this crate
 /// Rust struct that provides the information needed to allow
 /// pagination of results for requests that have a lot of results
 ///
@@ -51,6 +59,7 @@ impl PaginationParams {
 
 #[tsync::tsync]
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "plugin_utoipa", derive(utoipa::ToSchema))]
 /// Rust struct representation of a entry from the databases user_session table
 /// serialized into Json
 pub struct UserSessionJson {
@@ -63,6 +72,7 @@ pub struct UserSessionJson {
 
 #[tsync::tsync]
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[cfg_attr(feature = "plugin_utoipa", derive(utoipa::ToSchema))]
 /// Rust struct representation of the
 /// backends JSON response to a GET request at the /sessions endpoint
 pub struct UserSessionResponse {
@@ -79,4 +89,37 @@ pub struct AccessTokenClaims {
     pub token_type: String,
     pub roles: Vec<String>,
     pub permissions: Vec<Permission>,
+}
+
+#[cfg(feature = "plugin_utoipa")]
+pub struct JwtSecurityAddon;
+#[cfg(feature = "plugin_utoipa")]
+impl Modify for JwtSecurityAddon {
+    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+        let components = openapi.components.as_mut().unwrap(); // we can unwrap safely since there already is components registered.
+        components.add_security_scheme(
+            "JWT",
+            SecurityScheme::Http(
+                HttpBuilder::new()
+                    .scheme(HttpAuthScheme::Bearer)
+                    .bearer_format("JWT")
+                    .build(),
+            ),
+        )
+    }
+}
+#[cfg(feature = "plugin_utoipa")]
+#[tsync::tsync]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+/// structure to help utoipa know what responses that contain a message
+pub struct AuthMessageResponse {
+    pub message: String,
+}
+
+#[cfg(feature = "plugin_utoipa")]
+#[tsync::tsync]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
+/// structure to help utoipa know what responses that contain the access_token should look like
+pub struct AuthTokenResponse {
+    pub access_token: String,
 }
