@@ -20,7 +20,7 @@ lettre = "0.10.1"
 tera = { version="1.17.0" }
 lazy_static = { version="1.4.0" }
 serde = { version = "1.0.152", features = ["derive"] }
-diesel = { version="2.0.0-rc.1", default-features = false, features = ["uuid", "r2d2", "chrono", "returning_clauses_for_sqlite_3_35"] } # plugin_dev, plugin_auth
+diesel = { version="2.0.3", default-features = false, features = ["uuid", "r2d2", "chrono", "returning_clauses_for_sqlite_3_35"] } # plugin_dev, plugin_auth
 
 ##
 ## Database
