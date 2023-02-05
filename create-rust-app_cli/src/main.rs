@@ -36,7 +36,6 @@ pub enum BackendDatabase {
     author,
     version,
     about,
-    long_about,
     args_conflicts_with_subcommands = true
 )]
 struct Cli {
