@@ -31,11 +31,24 @@ pub enum BackendDatabase {
 
 /// Struct to describe the CLI
 #[derive(Parser)]
-#[command(name = "create-rust-app", author, version, about, long_about)]
+#[command(
+    name = "create-rust-app",
+    author,
+    version,
+    about,
+    long_about,
+    args_conflicts_with_subcommands = true
+)]
 struct Cli {
     /// subcommands
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
+
+    #[arg(
+        help = "Optional, if included assumes using the Create subcommand with this value as the Name of new project",
+        value_hint = ValueHint::DirPath,
+    )]
+    name: Option<String>,
 }
 
 /// enum for the various available subcommands
@@ -50,7 +63,7 @@ enum Commands {
             help = "Configure project through interactive CLI arguments.",
             requires = "database",
             requires = "backend framework",
-            requires = "plugins",
+            requires = "plugins"
         )]
         cli_mode: bool,
 
@@ -171,33 +184,39 @@ fn main() -> Result<()> {
 
     project::check_cli_version()?;
 
-    // You can check for the existence of subcommands, and if found use their
-    // matches just as you would the top level cmd
-    // note, takes ownership of cli
+    // did user provide sub commands?
     match cli.command {
-        Commands::Create {
-            cli_mode,
-            name,
-            database,
-            backendframework,
-            plugins,
-        } => {
-            create_project(cli_mode, name, database, backendframework, plugins)?;
+        Some(command) => {
+            // determine command based on the subcommand used
+            match command {
+                Commands::Create {
+                    cli_mode,
+                    name,
+                    database,
+                    backendframework,
+                    plugins,
+                } => create_project(cli_mode, name, database, backendframework, plugins)?,
+                Commands::Configure {
+                    query_sync,
+                    qsync_input_files,
+                    qsync_output_file,
+                    qsync_debug,
+                    add_new_service,
+                } => configure_project(
+                    query_sync,
+                    qsync_input_files,
+                    qsync_output_file,
+                    qsync_debug,
+                    add_new_service,
+                )?,
+            };
         }
-        Commands::Configure {
-            query_sync,
-            qsync_input_files,
-            qsync_output_file,
-            qsync_debug,
-            add_new_service,
-        } => {
-            configure_project(
-                query_sync,
-                qsync_input_files,
-                qsync_output_file,
-                qsync_debug,
-                add_new_service,
-            )?;
+        None => {
+            // base command on presence of Name arg
+            match cli.name {
+                Some(name) => create_project(false, name, None, None, None)?,
+                None => configure_project(false, None, None, false, false)?,
+            };
         }
     }
 
