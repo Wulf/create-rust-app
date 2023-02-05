@@ -23,7 +23,7 @@ cargo install create-rust-app_cli
 ## Quick start
 
 ```sh
-create-rust-app create -i my-todo-app
+create-rust-app create my-todo-app
 # .. select backend framework, plugins, etc.
 ```
 
