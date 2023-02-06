@@ -63,7 +63,7 @@ pub fn to_typescript_type(ty: &syn::Type) -> String {
                 "DateTime" => "Date".to_string(),
                 "Option" => match arguments {
                     syn::PathArguments::Parenthesized(parenthesized_argument) => {
-                        format!("{:?}", parenthesized_argument)
+                        format!("{parenthesized_argument:?}")
                     }
                     syn::PathArguments::AngleBracketed(anglebracketed_argument) => format!(
                         "{} | undefined",
@@ -73,7 +73,7 @@ pub fn to_typescript_type(ty: &syn::Type) -> String {
                 },
                 "Vec" => match arguments {
                     syn::PathArguments::Parenthesized(parenthesized_argument) => {
-                        format!("{:?}", parenthesized_argument)
+                        format!("{parenthesized_argument:?}")
                     }
                     syn::PathArguments::AngleBracketed(anglebracketed_argument) => format!(
                         "Array<{}>",

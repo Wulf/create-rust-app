@@ -532,10 +532,7 @@ pub fn register(
     mail::auth_register::send(
         mailer,
         &user.email,
-        &format!(
-            "http://localhost:3000/activate?token={token}",
-            token = token
-        ),
+        &format!("http://localhost:3000/activate?token={token}"),
     );
 
     Ok(())
@@ -645,10 +642,7 @@ pub fn forgot_password(
         )
         .unwrap();
 
-        let link = &format!(
-            "http://localhost:3000/reset?token={reset_token}",
-            reset_token = reset_token
-        );
+        let link = &format!("http://localhost:3000/reset?token={reset_token}");
         mail::auth_recover_existent_account::send(mailer, &user.email, link);
     } else {
         let link = &"http://localhost:300/register".to_string();

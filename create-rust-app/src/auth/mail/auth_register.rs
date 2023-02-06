@@ -11,8 +11,7 @@ Hello,
 
 Please follow the link below to complete your registration:
 {link}
-"#,
-        link = link
+"#
     );
     let html = format!(
         r#"
@@ -22,8 +21,7 @@ Hello,
 
 Please follow the link below to complete your registration:
 {link}
-"#,
-        link = link
+"#
     );
 
     mailer.send(to_email, subject, &text, &html);

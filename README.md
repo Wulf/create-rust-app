@@ -39,7 +39,7 @@ create-rust-app
 ### 1. Project creation
 
 ```rust
-create-rust-app <project_name>
+create-rust-app create -i <project_name>
 ```
 
 - Run frontend & backend with a single command: `cargo fullstack`
