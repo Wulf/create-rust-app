@@ -1,14 +1,14 @@
-use tokio::process::Command;
 use std::iter::FromIterator;
 use std::path::PathBuf;
 use std::sync::Arc;
+use tokio::process::Command;
 use tokio::sync::Mutex;
 
-use tokio::sync::broadcast::{Sender, Receiver};
+use tokio::sync::broadcast::{Receiver, Sender};
 
 use super::NPM;
 
-use super::{DevServerEvent, DevState, check_exit};
+use super::{check_exit, DevServerEvent, DevState};
 
 pub async fn start(
     project_dir: &'static str,

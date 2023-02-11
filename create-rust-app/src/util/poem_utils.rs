@@ -35,7 +35,8 @@ async fn render_spa_handler(spa_info: Data<&SinglePageApplication>) -> impl Into
 }
 
 // used to count number of refresh requests sent when viteJS dev server is down
-#[cfg(debug_assertions)] static REQUEST_REFRESH_COUNT: Mutex<i32> = Mutex::new(0);
+#[cfg(debug_assertions)]
+static REQUEST_REFRESH_COUNT: Mutex<i32> = Mutex::new(0);
 
 /// takes a request to, say, www.you_webapp.com/foo/bar and looks in the ./backend/views folder
 /// for a html file/template at the matching path (in this case, ./foo/bar.html),
@@ -55,7 +56,8 @@ pub async fn render_views(uri: &Uri) -> impl IntoResponse {
         // Request the browser to refresh the page (maybe the server is up but the browser just can't reconnect)
 
         if path.eq("/__vite_ping") {
-            #[cfg(feature = "plugin_dev")] {
+            #[cfg(feature = "plugin_dev")]
+            {
                 crate::dev::vitejs_ping_down().await;
             }
             let mut count = REQUEST_REFRESH_COUNT.lock().unwrap();
@@ -68,10 +70,10 @@ pub async fn render_views(uri: &Uri) -> impl IntoResponse {
                 return StatusCode::NOT_FOUND.into_response();
             }
         }
-
         // If this is a non-viteJS ping request, let's reset the refresh attempt count
         else {
-            #[cfg(feature = "plugin_dev")] {
+            #[cfg(feature = "plugin_dev")]
+            {
                 crate::dev::vitejs_ping_up().await;
             }
             let mut count = REQUEST_REFRESH_COUNT.lock().unwrap();

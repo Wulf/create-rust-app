@@ -249,7 +249,11 @@ impl Attachment {
 
     /// in poem, we need to pass in the pool itself because the Connection is not Send+Sync which poem handlers require
     #[cfg(feature = "backend_poem")]
-    pub async fn detach(pool: std::sync::Arc<crate::database::Pool>, storage: &Storage, item_id: ID) -> Result<(), String> {
+    pub async fn detach(
+        pool: std::sync::Arc<crate::database::Pool>,
+        storage: &Storage,
+        item_id: ID,
+    ) -> Result<(), String> {
         let mut db = pool.get().unwrap();
 
         let attached =

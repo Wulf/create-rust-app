@@ -71,19 +71,30 @@ impl Mailer {
     /// prints messages denoting which, if any, of the required
     /// environment variables were not set
     pub fn check_environment_variables() {
-        let vars = vec!["SMTP_FROM_ADDRESS", "SMTP_SERVER", "SMTP_USERNAME", "SMTP_PASSWORD", "SEND_MAIL"];
-        
+        let vars = vec![
+            "SMTP_FROM_ADDRESS",
+            "SMTP_SERVER",
+            "SMTP_USERNAME",
+            "SMTP_PASSWORD",
+            "SEND_MAIL",
+        ];
+
         let unset_vars = vars
             .into_iter()
             .filter(|v| std::env::var(v).is_err())
             .collect::<Vec<_>>();
 
         if unset_vars.len() > 0 {
-            println!("Warning: Mailing disabled; the following variables must be set: {}", unset_vars.join(", "));
+            println!(
+                "Warning: Mailing disabled; the following variables must be set: {}",
+                unset_vars.join(", ")
+            );
         }
 
         let send_mail_value = std::env::var("SEND_MAIL").unwrap_or_default();
-        if !send_mail_value.eq_ignore_ascii_case("true") && !send_mail_value.eq_ignore_ascii_case("false") {
+        if !send_mail_value.eq_ignore_ascii_case("true")
+            && !send_mail_value.eq_ignore_ascii_case("false")
+        {
             println!("Warning: SEND_MAIL must be `true` or `false`");
         }
     }

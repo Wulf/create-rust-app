@@ -5,8 +5,8 @@ use crate::utils::fs;
 use crate::utils::logger::add_file_msg;
 use crate::BackendFramework;
 use anyhow::Result;
-use rust_embed::RustEmbed;
 use indoc::indoc;
+use rust_embed::RustEmbed;
 
 pub struct Dev {}
 
@@ -49,7 +49,9 @@ impl Plugin for Dev {
     "react-query": "^3.21.0""#,
         )?;
 
-        fs::append("frontend/src/dev.tsx", indoc! {r##"
+        fs::append(
+            "frontend/src/dev.tsx",
+            indoc! {r##"
             // Sets up the development environment.
             //
             // Note: When running `cargo frontend` and `cargo backend` individually, "DEV_SERVER_PORT" is not set.
@@ -57,7 +59,8 @@ impl Plugin for Dev {
             if (import.meta.env.DEV_SERVER_PORT !== 'false') {
                 import('./setupDevelopment')
             }
-        "##})?;
+        "##},
+        )?;
 
         match install_config.backend_framework {
             BackendFramework::ActixWeb => {

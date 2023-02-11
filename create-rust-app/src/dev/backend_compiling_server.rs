@@ -222,7 +222,11 @@ fn compile(project_dir: &'static str, ws_s: Sender<DevServerEvent>) -> bool {
     let start_time = std::time::SystemTime::now();
 
     let mut command = std::process::Command::new("cargo")
-        .args(&["build", "-q", "--message-format=json-diagnostic-rendered-ansi"])
+        .args(&[
+            "build",
+            "-q",
+            "--message-format=json-diagnostic-rendered-ansi",
+        ])
         .current_dir(project_dir)
         .stdout(Stdio::piped())
         .spawn()

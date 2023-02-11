@@ -6,14 +6,9 @@ use poem::{
     Error, IntoResponse, Result, Route,
 };
 
-use crate::dev::{
-    controller,
-    controller::MySqlQuery,
-};
+use crate::dev::{controller, controller::MySqlQuery};
 
-use crate::{
-    Database,
-};
+use crate::Database;
 
 #[handler]
 async fn query(db: Data<&Database>, body: Json<MySqlQuery>) -> Result<impl IntoResponse> {
@@ -24,6 +19,5 @@ async fn query(db: Data<&Database>, body: Json<MySqlQuery>) -> Result<impl IntoR
 }
 
 pub fn api() -> Route {
-    Route::new()
-        .at("/db/query", post(query))
+    Route::new().at("/db/query", post(query))
 }

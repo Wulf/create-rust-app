@@ -2,18 +2,18 @@ use std::sync::{Arc, Mutex};
 
 use axum::{
     extract::{ws::WebSocket, State, WebSocketUpgrade},
-    response::{IntoResponse, Html},
+    http::status::StatusCode,
+    response::{Html, IntoResponse},
     routing::get,
     Router,
-    http::status::StatusCode
 };
 use cargo_metadata::CompilerMessage;
 use futures_util::{SinkExt, StreamExt};
-use tokio::sync::broadcast::{Sender, Receiver};
+use tokio::sync::broadcast::{Receiver, Sender};
 
-use crate::{Database, dev::controller};
+use crate::{dev::controller, Database};
 
-use super::{DevServerEvent, CreateRustAppMigration};
+use super::{CreateRustAppMigration, DevServerEvent};
 
 #[derive(Debug)]
 struct CurrentDevState {
@@ -28,7 +28,8 @@ struct CurrentDevState {
 }
 
 struct AppState {
-    #[allow(dead_code)] project_dir: &'static str,
+    #[allow(dead_code)]
+    project_dir: &'static str,
     rx: tokio::sync::Mutex<Receiver<DevServerEvent>>, // this is the original subscribed receiver which hasn't missed a single event :)
     tx: Sender<DevServerEvent>,
     file_tx: Sender<String>,
@@ -36,11 +37,18 @@ struct AppState {
     dev: Mutex<CurrentDevState>,
 }
 
-pub async fn start(project_dir: &'static str, dev_port: u16, dev_server_events_r: Receiver<DevServerEvent>, dev_server_events_s: Sender<DevServerEvent>, file_events_s: Sender<String>, features: Vec<String>) {
+pub async fn start(
+    project_dir: &'static str,
+    dev_port: u16,
+    dev_server_events_r: Receiver<DevServerEvent>,
+    dev_server_events_s: Sender<DevServerEvent>,
+    file_events_s: Sender<String>,
+    features: Vec<String>,
+) {
     if dotenv::dotenv().is_err() {
         panic!("ERROR: Could not load environment variables from dotenv file");
     }
-    
+
     let app_state = Arc::new(AppState {
         project_dir: project_dir,
         rx: tokio::sync::Mutex::new(dev_server_events_r),
@@ -55,8 +63,8 @@ pub async fn start(project_dir: &'static str, dev_port: u16, dev_server_events_r
             compiler_messages: vec![],
             vite_status: true,
             features,
-            migrations_pending: (false, vec![])
-        })
+            migrations_pending: (false, vec![]),
+        }),
     });
 
     let app = Router::new()
@@ -115,10 +123,10 @@ async fn ws_handler(ws: WebSocketUpgrade, State(state): State<Arc<AppState>>) ->
 async fn handle_socket(stream: WebSocket, state: Arc<AppState>) {
     use axum::extract::ws::Message;
     let (mut sender, mut receiver) = stream.split();
-    
+
     /*
         SECTION: sending initial state
-    */ 
+    */
     let compiler_messages = state.dev.lock().unwrap().compiler_messages.clone();
     let backend_status = state.dev.lock().unwrap().backend_status.clone();
     let backend_compiling = state.dev.lock().unwrap().backend_compiling.clone();
@@ -127,14 +135,52 @@ async fn handle_socket(stream: WebSocket, state: Arc<AppState>) {
     let vite_status = state.dev.lock().unwrap().vite_status.clone();
     let features = state.dev.lock().unwrap().features.clone();
     let migrations_pending = state.dev.lock().unwrap().migrations_pending.clone();
-    sender.send(Message::Text(DevServerEvent::FeaturesList(features).json())).await.unwrap();
-    sender.send(Message::Text(DevServerEvent::CompileSuccess(backend_compiled).json())).await.unwrap();
-    sender.send(Message::Text(DevServerEvent::CompileMessages(compiler_messages).json())).await.unwrap();
-    sender.send(Message::Text(DevServerEvent::BackendStatus(backend_status).json())).await.unwrap();
-    sender.send(Message::Text(DevServerEvent::BackendRestarting(backend_restarting).json())).await.unwrap();
-    sender.send(Message::Text(DevServerEvent::BackendCompiling(backend_compiling).json())).await.unwrap();
-    sender.send(Message::Text(DevServerEvent::ViteJSStatus(vite_status).json())).await.unwrap();
-    sender.send(Message::Text(DevServerEvent::PendingMigrations(migrations_pending.0, migrations_pending.1).json())).await.unwrap();
+    sender
+        .send(Message::Text(DevServerEvent::FeaturesList(features).json()))
+        .await
+        .unwrap();
+    sender
+        .send(Message::Text(
+            DevServerEvent::CompileSuccess(backend_compiled).json(),
+        ))
+        .await
+        .unwrap();
+    sender
+        .send(Message::Text(
+            DevServerEvent::CompileMessages(compiler_messages).json(),
+        ))
+        .await
+        .unwrap();
+    sender
+        .send(Message::Text(
+            DevServerEvent::BackendStatus(backend_status).json(),
+        ))
+        .await
+        .unwrap();
+    sender
+        .send(Message::Text(
+            DevServerEvent::BackendRestarting(backend_restarting).json(),
+        ))
+        .await
+        .unwrap();
+    sender
+        .send(Message::Text(
+            DevServerEvent::BackendCompiling(backend_compiling).json(),
+        ))
+        .await
+        .unwrap();
+    sender
+        .send(Message::Text(
+            DevServerEvent::ViteJSStatus(vite_status).json(),
+        ))
+        .await
+        .unwrap();
+    sender
+        .send(Message::Text(
+            DevServerEvent::PendingMigrations(migrations_pending.0, migrations_pending.1).json(),
+        ))
+        .await
+        .unwrap();
 
     /*
         SECTION: receive dev server events
@@ -147,70 +193,75 @@ async fn handle_socket(stream: WebSocket, state: Arc<AppState>) {
 
         while let Ok(e) = rx.recv().await {
             let mut send_response = true;
-            
+
             match e.clone() {
                 DevServerEvent::CHECK_MIGRATIONS => {
                     send_response = false;
                     let migrations = controller::get_migrations(&db);
                     if controller::needs_migration(&db) {
-                        dse_s.send(DevServerEvent::PendingMigrations(true, migrations)).ok();
+                        dse_s
+                            .send(DevServerEvent::PendingMigrations(true, migrations))
+                            .ok();
                     } else {
-                        dse_s.send(DevServerEvent::PendingMigrations(false, migrations)).ok();
+                        dse_s
+                            .send(DevServerEvent::PendingMigrations(false, migrations))
+                            .ok();
                     }
-                },
+                }
                 DevServerEvent::MigrationResponse(success, _) => {
                     // this is a response; we don't need to handle anything on the dev-server side
                     let migrations = controller::get_migrations(&db);
-                    dse_s.send(DevServerEvent::PendingMigrations(!success, migrations)).ok();
-                },
+                    dse_s
+                        .send(DevServerEvent::PendingMigrations(!success, migrations))
+                        .ok();
+                }
                 DevServerEvent::PendingMigrations(a, b) => {
                     let mut s = state2.dev.lock().unwrap();
                     (*s).migrations_pending = (a, b);
-                },
+                }
                 DevServerEvent::FeaturesList(list) => {
                     let mut s = state2.dev.lock().unwrap();
                     (*s).features = list;
-                },
+                }
                 DevServerEvent::BackendCompiling(b) => {
                     let mut s = state2.dev.lock().unwrap();
                     (*s).backend_compiling = b;
-                },
+                }
                 DevServerEvent::BackendStatus(b) => {
                     let mut s = state2.dev.lock().unwrap();
                     (*s).backend_status = b;
-                },
+                }
                 DevServerEvent::BackendRestarting(b) => {
                     let mut s = state2.dev.lock().unwrap();
                     (*s).backend_restarting = b;
-                },
+                }
                 DevServerEvent::CompileSuccess(b) => {
                     let mut s = state2.dev.lock().unwrap();
                     (*s).backend_compiled = b;
-                },
+                }
                 DevServerEvent::CompileMessages(messages) => {
                     let mut s = state2.dev.lock().unwrap();
                     (*s).compiler_messages = messages.clone();
-                },
+                }
                 DevServerEvent::SHUTDOWN => {
                     let mut s = state2.dev.lock().unwrap();
                     (*s).backend_status = false;
-                },
+                }
                 DevServerEvent::ViteJSStatus(b) => {
                     let mut s = state2.dev.lock().unwrap();
                     (*s).vite_status = b;
                 }
             };
-            
+
             if send_response {
                 sender.send(Message::Text(e.json())).await.unwrap();
             }
         }
     });
 
-
     /*
         SECTION: receive websocket events
-    */ 
+    */
     let state3 = state.clone();
     let file_tx = state.file_tx.clone();
     let mut recv_task = tokio::spawn(async move {
@@ -230,13 +281,13 @@ async fn handle_socket(stream: WebSocket, state: Arc<AppState>) {
 
                                     let (_, file_name) = t.split_at(5);
                                     file_tx.send(file_name.to_string()).ok();
-                                    
+
                                     // WARNING: this hack causes a race condition between the file above being registered for ignoring
                                     //          and the `open` command below which will modify the file
                                     //
                                     // suggestion 1: change the method by which we open files so they don't get "modified" when opening them
                                     //               the new method should be one which can open a specific line and column, unlike the current solution
-                                    // 
+                                    //
                                     // suggestion 2: listen for a 'file-registered' event from the backend compiling server
                                     //               so we know that it won't re-compile based on the modify event that this
                                     //               file opening causes
@@ -244,9 +295,16 @@ async fn handle_socket(stream: WebSocket, state: Arc<AppState>) {
                                         println!("📝 Could not open file `{file_name}`");
                                     });
                                 } else if t.eq_ignore_ascii_case("migrate") {
-                                    let (success, error_message) = controller::migrate_db(&state3.db);
+                                    let (success, error_message) =
+                                        controller::migrate_db(&state3.db);
 
-                                    state3.tx.send(DevServerEvent::MigrationResponse(success, error_message)).ok();
+                                    state3
+                                        .tx
+                                        .send(DevServerEvent::MigrationResponse(
+                                            success,
+                                            error_message,
+                                        ))
+                                        .ok();
                                 }
                             });
                         }

@@ -232,15 +232,24 @@ impl Storage {
     }
 
     fn check_environment_variables() {
-        let vars = vec!["S3_HOST", "S3_REGION", "S3_BUCKET", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY"];
-        
+        let vars = vec![
+            "S3_HOST",
+            "S3_REGION",
+            "S3_BUCKET",
+            "S3_ACCESS_KEY_ID",
+            "S3_SECRET_ACCESS_KEY",
+        ];
+
         let unset_vars = vars
             .into_iter()
             .filter(|v| std::env::var(v).is_err())
             .collect::<Vec<_>>();
 
         if unset_vars.len() > 0 {
-            println!("Warning: Storage disabled; the following variables must be set: {}", unset_vars.join(", "));
+            println!(
+                "Warning: Storage disabled; the following variables must be set: {}",
+                unset_vars.join(", ")
+            );
         }
     }
 
