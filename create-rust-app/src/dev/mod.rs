@@ -21,14 +21,14 @@ use watchexec::signal::source::worker;
 use watchexec::signal::source::MainSignal;
 
 #[cfg(windows)]
-const NPM: &'static str = "npm.cmd";
+const NPM: &str = "npm.cmd";
 
 #[cfg(not(windows))]
-const NPM: &'static str = "npm";
+const NPM: &str = "npm";
 
 pub async fn vitejs_ping_down() {
     let port = std::env::var("DEV_SERVER_PORT");
-    if !port.is_ok() {
+    if port.is_err() {
         return;
     }
     let port = port.unwrap();
@@ -46,7 +46,7 @@ pub async fn vitejs_ping_down() {
 
 pub async fn vitejs_ping_up() {
     let port = std::env::var("DEV_SERVER_PORT");
-    if !port.is_ok() {
+    if port.is_err() {
         return;
     }
     let port = port.unwrap();
@@ -64,7 +64,7 @@ pub async fn vitejs_ping_up() {
 
 pub async fn setup_development() {
     let port = std::env::var("DEV_SERVER_PORT");
-    if !port.is_ok() {
+    if port.is_err() {
         return;
     }
     let port = port.unwrap();
@@ -195,11 +195,15 @@ pub struct DevState {
 
 fn get_features(project_dir: &'static str) -> Vec<String> {
     let cargo_toml = Manifest::from_path(PathBuf::from_iter([project_dir, "Cargo.toml"]))
-        .expect(&format!("Could not find \"{project_dir}\""));
+        .unwrap_or_else(|_| panic!("Could not find \"{}\"", project_dir));
+    // .expect(&format!("Could not find \"{project_dir}\""));
     let deps = cargo_toml.dependencies;
-    let dep = deps.get("create-rust-app").expect(&format!(
-        "Expected \"{project_dir}\" to list 'create-rust-app' as a dependency."
-    ));
+    let dep = deps.get("create-rust-app").unwrap_or_else(|| {
+        panic!(
+            "Expected \"{}\" to list 'create-rust-app' as a dependency.",
+            project_dir
+        )
+    });
     let dep = dep.clone();
 
     dep.req_features().to_vec()

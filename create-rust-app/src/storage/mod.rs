@@ -245,7 +245,7 @@ impl Storage {
             .filter(|v| std::env::var(v).is_err())
             .collect::<Vec<_>>();
 
-        if unset_vars.len() > 0 {
+        if !unset_vars.is_empty() {
             println!(
                 "Warning: Storage disabled; the following variables must be set: {}",
                 unset_vars.join(", ")

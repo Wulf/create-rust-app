@@ -64,7 +64,7 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
             }
             let mut count = REQUEST_REFRESH_COUNT.lock().unwrap();
             if *count < 3 {
-                *count = 1 + *count;
+                *count += 1;
                 println!("The vite dev server seems to be down... refreshing page ({count}).");
                 return HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
                     .append_header(("Location", "."))

@@ -119,7 +119,7 @@ pub async fn start(
                 .filter(|e| e.metadata.contains_key("exit-watchexec"))
                 .collect::<Vec<_>>();
 
-            if exit_events.len() > 0 {
+            if exit_events.is_empty() {
                 println!("continuous backend compilation stopped.");
                 let mut m = state3.lock().await;
                 m.watchexec_running = false;
@@ -160,7 +160,7 @@ pub async fn start(
                 })
                 .collect::<Vec<_>>();
 
-            if file_events.len() > 0 {
+            if file_events.is_empty() {
                 // compile
                 ws_s.send(DevServerEvent::BackendCompiling(true)).ok();
                 if compile(project_dir, ws_s.clone()) {
@@ -186,25 +186,22 @@ pub async fn start(
 
     tokio::spawn(async move {
         while let Ok(event) = signal_rx.recv().await {
-            match event {
-                DevServerEvent::SHUTDOWN => {
-                    let mut metadata = HashMap::new();
-                    metadata.insert("exit-watchexec".to_string(), vec!["true".to_string()]);
-                    we2.send_event(
-                        Event {
-                            tags: vec![
-                                Tag::Signal(MainSignal::Interrupt),
-                                Tag::Signal(MainSignal::Terminate),
-                            ],
-                            metadata,
-                        },
-                        Priority::Urgent,
-                    )
-                    .await
-                    .unwrap(); // stops watch exec
-                    server_s.send("stop").await.unwrap(); // stops backend server
-                }
-                _ => {}
+            if let DevServerEvent::SHUTDOWN = event {
+                let mut metadata = HashMap::new();
+                metadata.insert("exit-watchexec".to_string(), vec!["true".to_string()]);
+                we2.send_event(
+                    Event {
+                        tags: vec![
+                            Tag::Signal(MainSignal::Interrupt),
+                            Tag::Signal(MainSignal::Terminate),
+                        ],
+                        metadata,
+                    },
+                    Priority::Urgent,
+                )
+                .await
+                .unwrap(); // stops watch exec
+                server_s.send("stop").await.unwrap(); // stops backend server
             }
         }
     });
@@ -222,7 +219,7 @@ fn compile(project_dir: &'static str, ws_s: Sender<DevServerEvent>) -> bool {
     let start_time = std::time::SystemTime::now();
 
     let mut command = std::process::Command::new("cargo")
-        .args(&[
+        .args([
             "build",
             "-q",
             "--message-format=json-diagnostic-rendered-ansi",
@@ -257,12 +254,9 @@ fn compile(project_dir: &'static str, ws_s: Sender<DevServerEvent>) -> bool {
                     .unwrap_or("?".to_string());
 
                 if finished.success {
-                    println!("✅ Compiled ({} seconds)", compile_time_s);
+                    println!("✅ Compiled ({compile_time_s} seconds)");
                 } else {
-                    println!(
-                        "❌ Compilation failed: see errors in app ({} seconds)",
-                        compile_time_s
-                    );
+                    println!("❌ Compilation failed: see errors in app ({compile_time_s} seconds)",);
                 }
             }
             _ => (), // Unknown message

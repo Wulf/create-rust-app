@@ -35,19 +35,16 @@ pub async fn start(
     // ).await.unwrap();
 
     while let Ok(event) = signal_rx.recv().await {
-        match event {
-            DevServerEvent::SHUTDOWN => {
-                println!("Shutting down frontend server...");
-                if child_process.id().is_some() {
-                    child_process.kill().await.unwrap();
-                }
-                let mut m = state.lock().await;
-                m.frontend_server_running = false;
-                check_exit(&m);
-                drop(m);
-                break;
+        if let DevServerEvent::SHUTDOWN = event {
+            println!("Shutting down frontend server...");
+            if child_process.id().is_some() {
+                child_process.kill().await.unwrap();
             }
-            _ => {}
+            let mut m = state.lock().await;
+            m.frontend_server_running = false;
+            check_exit(&m);
+            drop(m);
+            break;
         }
     }
     println!("frontend server stopped.");

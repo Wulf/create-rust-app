@@ -27,18 +27,13 @@ pub struct HealthCheckResponse {
 }
 
 /// /db/query
-pub fn query_db(db: &Database, body: &MySqlQuery) -> Result<String, ()> {
+pub fn query_db(db: &Database, body: &MySqlQuery) -> Result<String, diesel::result::Error> {
     let q = format!("SELECT json_agg(q) as json FROM ({}) q;", body.query);
     let mut db = db.pool.get().unwrap();
 
-    let rows = sql_query(q.as_str()).get_result::<MyQueryResult>(&mut db);
-    if rows.is_err() {
-        return Err(());
-    }
-
-    let result = rows.unwrap().json;
-
-    Ok(result)
+    Ok(sql_query(q.as_str())
+        .get_result::<MyQueryResult>(&mut db)?
+        .json)
 }
 
 /// /db/is-connected
@@ -93,7 +88,7 @@ pub fn get_migrations(db: &Database) -> Vec<CreateRustAppMigration> {
                 existing.status = MigrationStatus::Applied;
             }
             None => all_migrations.push(CreateRustAppMigration {
-                name: format!("{}_?", dm.to_string()),
+                name: format!("{dm}_?"),
                 version: dm.to_string(),
                 status: MigrationStatus::AppliedButMissingLocally,
             }),
@@ -136,6 +131,4 @@ pub fn migrate_db(db: &Database) -> (bool, /* error message: */ Option<String>) 
 }
 
 /// /health
-pub fn health() -> () {
-    ()
-}
+pub fn health() {}

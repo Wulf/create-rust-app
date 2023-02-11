@@ -50,7 +50,7 @@ pub async fn start(
     }
 
     let app_state = Arc::new(AppState {
-        project_dir: project_dir,
+        project_dir,
         rx: tokio::sync::Mutex::new(dev_server_events_r),
         tx: dev_server_events_s,
         file_tx: file_events_s,
@@ -128,11 +128,11 @@ async fn handle_socket(stream: WebSocket, state: Arc<AppState>) {
         SECTION: sending initial state
     */
     let compiler_messages = state.dev.lock().unwrap().compiler_messages.clone();
-    let backend_status = state.dev.lock().unwrap().backend_status.clone();
-    let backend_compiling = state.dev.lock().unwrap().backend_compiling.clone();
-    let backend_restarting = state.dev.lock().unwrap().backend_restarting.clone();
-    let backend_compiled = state.dev.lock().unwrap().backend_compiled.clone();
-    let vite_status = state.dev.lock().unwrap().vite_status.clone();
+    let backend_status = state.dev.lock().unwrap().backend_status;
+    let backend_compiling = state.dev.lock().unwrap().backend_compiling;
+    let backend_restarting = state.dev.lock().unwrap().backend_restarting;
+    let backend_compiled = state.dev.lock().unwrap().backend_compiled;
+    let vite_status = state.dev.lock().unwrap().vite_status;
     let features = state.dev.lock().unwrap().features.clone();
     let migrations_pending = state.dev.lock().unwrap().migrations_pending.clone();
     sender
@@ -217,39 +217,39 @@ async fn handle_socket(stream: WebSocket, state: Arc<AppState>) {
                 }
                 DevServerEvent::PendingMigrations(a, b) => {
                     let mut s = state2.dev.lock().unwrap();
-                    (*s).migrations_pending = (a, b);
+                    s.migrations_pending = (a, b);
                 }
                 DevServerEvent::FeaturesList(list) => {
                     let mut s = state2.dev.lock().unwrap();
-                    (*s).features = list;
+                    s.features = list;
                 }
                 DevServerEvent::BackendCompiling(b) => {
                     let mut s = state2.dev.lock().unwrap();
-                    (*s).backend_compiling = b;
+                    s.backend_compiling = b;
                 }
                 DevServerEvent::BackendStatus(b) => {
                     let mut s = state2.dev.lock().unwrap();
-                    (*s).backend_status = b;
+                    s.backend_status = b;
                 }
                 DevServerEvent::BackendRestarting(b) => {
                     let mut s = state2.dev.lock().unwrap();
-                    (*s).backend_restarting = b;
+                    s.backend_restarting = b;
                 }
                 DevServerEvent::CompileSuccess(b) => {
                     let mut s = state2.dev.lock().unwrap();
-                    (*s).backend_compiled = b;
+                    s.backend_compiled = b;
                 }
                 DevServerEvent::CompileMessages(messages) => {
                     let mut s = state2.dev.lock().unwrap();
-                    (*s).compiler_messages = messages.clone();
+                    s.compiler_messages = messages.clone();
                 }
                 DevServerEvent::SHUTDOWN => {
                     let mut s = state2.dev.lock().unwrap();
-                    (*s).backend_status = false;
+                    s.backend_status = false;
                 }
                 DevServerEvent::ViteJSStatus(b) => {
                     let mut s = state2.dev.lock().unwrap();
-                    (*s).vite_status = b;
+                    s.vite_status = b;
                 }
             };
 
@@ -266,57 +266,49 @@ async fn handle_socket(stream: WebSocket, state: Arc<AppState>) {
     let file_tx = state.file_tx.clone();
     let mut recv_task = tokio::spawn(async move {
         let state3 = state3.clone();
-        loop {
-            if let Some(msg) = receiver.next().await {
-                if let Ok(msg) = msg {
-                    match msg {
-                        Message::Text(t) => {
+
+        while let Some(msg) = receiver.next().await {
+            if let Ok(msg) = msg {
+                match msg {
+                    Message::Text(t) => {
+                        let state3 = state3.clone();
+                        let file_tx = file_tx.clone();
+                        tokio::spawn(async move {
                             let state3 = state3.clone();
-                            let file_tx = file_tx.clone();
-                            tokio::spawn(async move {
-                                let state3 = state3.clone();
-                                if t.starts_with("open:") {
-                                    // HACK: tell the backend server we're about the modify the file (this is a side effect of the `open` crate)
-                                    //       that way it won't try to recompile as a result of this filesystem modification event
+                            if t.starts_with("open:") {
+                                // HACK: tell the backend server we're about the modify the file (this is a side effect of the `open` crate)
+                                //       that way it won't try to recompile as a result of this filesystem modification event
 
-                                    let (_, file_name) = t.split_at(5);
-                                    file_tx.send(file_name.to_string()).ok();
+                                let (_, file_name) = t.split_at(5);
+                                file_tx.send(file_name.to_string()).ok();
 
-                                    // WARNING: this hack causes a race condition between the file above being registered for ignoring
-                                    //          and the `open` command below which will modify the file
-                                    //
-                                    // suggestion 1: change the method by which we open files so they don't get "modified" when opening them
-                                    //               the new method should be one which can open a specific line and column, unlike the current solution
-                                    //
-                                    // suggestion 2: listen for a 'file-registered' event from the backend compiling server
-                                    //               so we know that it won't re-compile based on the modify event that this
-                                    //               file opening causes
-                                    open::that(file_name).unwrap_or_else(|_| {
-                                        println!("📝 Could not open file `{file_name}`");
-                                    });
-                                } else if t.eq_ignore_ascii_case("migrate") {
-                                    let (success, error_message) =
-                                        controller::migrate_db(&state3.db);
+                                // WARNING: this hack causes a race condition between the file above being registered for ignoring
+                                //          and the `open` command below which will modify the file
+                                //
+                                // suggestion 1: change the method by which we open files so they don't get "modified" when opening them
+                                //               the new method should be one which can open a specific line and column, unlike the current solution
+                                //
+                                // suggestion 2: listen for a 'file-registered' event from the backend compiling server
+                                //               so we know that it won't re-compile based on the modify event that this
+                                //               file opening causes
+                                open::that(file_name).unwrap_or_else(|_| {
+                                    println!("📝 Could not open file `{file_name}`");
+                                });
+                            } else if t.eq_ignore_ascii_case("migrate") {
+                                let (success, error_message) = controller::migrate_db(&state3.db);
 
-                                    state3
-                                        .tx
-                                        .send(DevServerEvent::MigrationResponse(
-                                            success,
-                                            error_message,
-                                        ))
-                                        .ok();
-                                }
-                            });
-                        }
-                        Message::Binary(_) => {}
-                        Message::Ping(_) => {}
-                        Message::Pong(_) => {}
-                        Message::Close(_) => {}
+                                state3
+                                    .tx
+                                    .send(DevServerEvent::MigrationResponse(success, error_message))
+                                    .ok();
+                            }
+                        });
                     }
+                    Message::Binary(_) => {}
+                    Message::Ping(_) => {}
+                    Message::Pong(_) => {}
+                    Message::Close(_) => {}
                 }
-            } else {
-                // clent disconnected
-                break;
             }
         }
     });
