@@ -3,6 +3,11 @@ compile_error!(
     "feature \"backend_actix-web\" and feature \"backend_poem\" cannot be enabled at the same time"
 );
 
+#[cfg(all(feature = "database_sqlite", feature = "database_postgres"))]
+compile_error!(
+    "feature \"database_sqlite\" and feature \"database_postgres\" cannot be enabled at the same time"
+);
+
 // #[cfg(not(any(feature = "backend_poem", feature = "backend_actix-web")))]
 // compile_error!("Please enable one of the backend features (options: 'backend_actix-web', 'backend-poem')");
 
@@ -17,12 +22,15 @@ pub mod auth;
 
 #[cfg(all(feature = "plugin_dev", debug_assertions))]
 pub mod dev;
+#[cfg(all(feature = "plugin_dev", debug_assertions))]
+pub use dev::setup_development;
 
 mod database;
 pub use database::{Connection, Database, Pool};
 
 #[cfg(feature = "backend_poem")]
 mod logger;
+#[allow(deprecated)] // deprecated; we're going to roll out better logging soon. Use your own tracing setup for now!
 #[cfg(feature = "backend_poem")]
 pub use logger::Logger as PoemLogger;
 
@@ -82,8 +90,6 @@ pub fn setup() -> AppData {
     if std::env::var("DATABASE_URL").is_err() {
         panic!("No DATABASE_URL environment variable set!");
     }
-
-    Mailer::check_environment_variables();
 
     AppData {
         mailer: Mailer::new(),

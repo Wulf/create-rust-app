@@ -9,7 +9,7 @@ const App = () => {
   /* CRA: app hooks */
   
   // @ts-ignore
-    return (
+  return (
     <div className="App">
       <div className="App-nav-header">
         <div style={{ display: 'flex', flex: 1 }}>
@@ -22,11 +22,11 @@ const App = () => {
         </div>
       </div>
       <div style={{ margin: '0 auto', maxWidth: '800px' }}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/todos" element={<Todos />} />
-            {/* CRA: routes */}
-          </Routes>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/todos" element={<Todos />} />
+          {/* CRA: routes */}
+        </Routes>
       </div>
     </div>
   )

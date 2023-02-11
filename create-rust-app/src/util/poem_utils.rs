@@ -1,3 +1,5 @@
+use std::sync::Mutex;
+
 use poem::http::{StatusCode, Uri};
 use poem::middleware::{AddData, AddDataEndpoint};
 use poem::web::Data;
@@ -32,6 +34,9 @@ async fn render_spa_handler(spa_info: Data<&SinglePageApplication>) -> impl Into
     template_response(content)
 }
 
+// used to count number of refresh requests sent when viteJS dev server is down
+#[cfg(debug_assertions)] static REQUEST_REFRESH_COUNT: Mutex<i32> = Mutex::new(0);
+
 /// takes a request to, say, www.you_webapp.com/foo/bar and looks in the ./backend/views folder
 /// for a html file/template at the matching path (in this case, ./foo/bar.html),
 /// defaults to index.html
@@ -45,9 +50,33 @@ pub async fn render_views(uri: &Uri) -> impl IntoResponse {
     let path = uri.path();
 
     #[cfg(debug_assertions)]
-    if path.eq("/__vite_ping") {
-        println!("The vite dev server seems to be down...");
-        return StatusCode::NOT_FOUND.into_response();
+    {
+        // Catch viteJS ping requests and try to handle them gracefully
+        // Request the browser to refresh the page (maybe the server is up but the browser just can't reconnect)
+
+        if path.eq("/__vite_ping") {
+            #[cfg(feature = "plugin_dev")] {
+                crate::dev::vitejs_ping_down().await;
+            }
+            let mut count = REQUEST_REFRESH_COUNT.lock().unwrap();
+            if *count < 3 {
+                *count = 1 + *count;
+                println!("The vite dev server seems to be down... refreshing page ({count}).");
+                return poem::web::Redirect::temporary(".").into_response();
+            } else {
+                println!("The vite dev server is down.");
+                return StatusCode::NOT_FOUND.into_response();
+            }
+        }
+
+        // If this is a non-viteJS ping request, let's reset the refresh attempt count
+        else {
+            #[cfg(feature = "plugin_dev")] {
+                crate::dev::vitejs_ping_up().await;
+            }
+            let mut count = REQUEST_REFRESH_COUNT.lock().unwrap();
+            *count = 0;
+        }
     }
 
     let mut template_path = to_template_name(path);

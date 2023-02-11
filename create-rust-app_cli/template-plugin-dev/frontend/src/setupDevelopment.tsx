@@ -4,215 +4,308 @@
 
 /* require() this file in development mode to enable development hints */
 
-import React, { useEffect, useRef, useState } from 'react'
-import ReactDOM from 'react-dom'
-import {
-  QueryClient,
-  QueryClientProvider,
-  useMutation,
-  useQuery,
-} from 'react-query'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import ReactDOM from 'react-dom/client'
+import ReconnectingWebsocket from 'reconnecting-websocket'
+import Ansi from 'ansi-to-react'
 
-const warning = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="currentColor"
-    height="24px"
-    width="24px"
-    viewBox="0 0 24 24"
-  >
-    <path d="M12 2.829l9.172 9.171-9.172 9.171-9.172-9.171 9.172-9.171zm0-2.829l-12 12 12 12 12-12-12-12zm-1 7h2v6h-2v-6zm1 10.25c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z" />
-  </svg>
-)
-const close = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="currentColor"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-  >
-    <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm4.151 17.943l-4.143-4.102-4.117 4.159-1.833-1.833 4.104-4.157-4.162-4.119 1.833-1.833 4.155 4.102 4.106-4.16 1.849 1.849-4.1 4.141 4.157 4.104-1.849 1.849z" />
-  </svg>
-)
-
-interface Action {
-  label: string
-  fn: () => void
+interface Migration {
+  name: string
+  status: 'Applied' | 'AppliedButMissingLocally' | 'Pending' | 'Unknown'
+  version: string
 }
 
-const DevBoxItem = (props: {
-  actions?: Action[]
-  children: React.ReactNode
-}) => {
-  return (
-    <div style={{ display: 'flex', flexFlow: 'column nowrap' }}>
-      <div>{props.children}</div>
-      <div style={{ display: 'flex' }}>
-        {props.actions?.map((action) => (
-          <button onClick={() => action.fn()}>{action.label}</button>
-        ))}
-      </div>
-    </div>
-  )
-}
+const useWebsocketConnection = () => {
+  const [features, setFeaturesList] = useState<Set<String>>(new Set())
+  const [backendCompileState, setBackendCompileState] = useState(true)
+  const [backendCompilingState, setBackendCompilingState] = useState(false)
+  const [backendRestartingState, setBackendRestartingState] = useState(false)
+  const [backendCompilerMessages, setBackendCompilerMessages] = useState<CompilerMessage[]>([])
+  const [backendOnlineState, setBackendOnlineState] = useState(true)
+  const [wsConnected, setWsConnected] = useState(false)
+  const [viteStatus, setViteStatus] = useState(true)
+  const [migrationsPending, setMigrationPending] = useState(false)
+  const [migrating, setMigrating] = useState(false)
+  const [migrationSuccess, setMigrationSuccess] = useState(true)
+  const [migrationError, setMigrationError] = useState()
+  const [migrations, setMigrations] = useState<Migration[]>([])
 
-const DevBox = () => {
-  const [display, setDisplay] = useState<boolean>(true)
-
-  const healthQuery = useQuery(
-    'health',
-    () => fetch('/api/development/health').then((r) => r.json()),
-    {
-      onSuccess: () => queryClient.invalidateQueries('migrations'),
-    }
-  )
-  const dbMigrationQuery = useQuery('migrations', () =>
-    fetch('/api/development/db/needs-migration').then((r) => r.json())
-  )
-  const dbMigrateMutation = useMutation(
-    () => fetch('/api/development/db/migrate').then((r) => r.json()),
-    {
-      onSuccess: () => queryClient.invalidateQueries('migrations'),
-    }
-  )
-  // const hasSystemRoleQuery = useQuery('role-check', () => fetch('/api/development/auth/has-system-role', { headers: { Authorization: `${auth.accessToken}` } }).then(r => r.json()))
-  // const addSystemRoleMutation = useMutation(() => fetch('/api/development/auth/add-system-role', { headers: { Authorization: `${auth.accessToken}` } }).then(r => r.json()), {
-  //   onSuccess: () => queryClient.invalidateQueries('role-check')
-  // })
-
-  const isFetching =
-    healthQuery.isFetching ||
-    dbMigrationQuery.isFetching /*|| hasSystemRoleQuery.isFetching*/
-  const shouldDisplay = useRef<boolean>(true)
-
-  shouldDisplay.current = !!(
-    (
-      healthQuery.isError ||
-      dbMigrationQuery.isError ||
-      dbMigrationQuery.data
-    ) /*|| hasSystemRoleQuery.data === false*/
-  )
-
-  // useEffect(() => {
-  //   hasSystemRoleQuery.refetch()
-  // }, [auth.isAuthenticated, auth.accessToken])
+  const wsRef = useRef<ReconnectingWebsocket>()
 
   useEffect(() => {
-    setDisplay(shouldDisplay.current)
-  }, [
-    shouldDisplay,
-    healthQuery.isError,
-    healthQuery.isFetching,
-    healthQuery.data,
-    dbMigrationQuery.isError,
-    dbMigrationQuery.data,
-    // hasSystemRoleQuery.data
-  ])
+    const connect = () => {
+      if (wsRef.current) {
+        wsRef.current.close()
+      }
+
+      const ws = new ReconnectingWebsocket(`ws://localhost:${import.meta.env.DEV_SERVER_PORT}/ws`);
+
+      wsRef.current = ws;
+
+      ws.onopen = () => { setWsConnected(true) }
+      ws.onclose = () => { setWsConnected(false) }
+      ws.onerror = (err) => {
+        console.error('create-rust-app:plugin_dev: Websocket error', err)
+        ws.close()
+      }
+      ws.onmessage = (payload) => {
+        const data = JSON.parse(payload.data)
+
+        // console.log("DEV MESSAGE", data)
+
+        if (data.type === 'featuresList') {
+          setFeaturesList(new Set(data.features))
+        } else if (data.type === 'backendCompiling') {
+          setBackendCompilingState(data.compiling)
+        } else if (data.type === 'compileStatus') {
+          setBackendCompileState(data.compiled)
+        } else if (data.type === 'backendStatus') {
+          setBackendOnlineState(data.status)
+        } else if (data.type === 'compilerMessages') {
+          setBackendCompilerMessages(data.messages)
+        } else if (data.type === 'viteStatus') {
+          setViteStatus(data.status)
+        } else if (data.type === 'backendRestarting') {
+          setBackendRestartingState(data.status)
+        } else if (data.type === 'migrationsPending') {
+          setMigrationPending(data.status)
+          setMigrations(data.migrations)
+        } else if (data.type === 'migrateResponse') {
+          setMigrationSuccess(data.status)
+          setMigrationError(data.error)
+          setMigrating(false)
+        }
+      }
+    }
+
+    connect();
+
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close()
+      }
+    }
+  }, [])
+
+  interface RequestBase {
+    type: string
+  }
+
+  interface OpenRequest extends RequestBase { type: 'open'; file: string }
+  interface MigrateRequest extends RequestBase { type: 'migrate' }
+
+  type WebsocketRequest =
+    | MigrateRequest
+    | OpenRequest
+
+  const send = useCallback((message: WebsocketRequest) => {
+    let msg = ''
+
+    if (message.type === 'open') {
+      msg = `open:${message.file}`
+    } else if (message.type === 'migrate') {
+      msg = `migrate`
+      setMigrating(true)
+    }
+
+    if (msg.length === 0) return
+
+    wsRef.current?.send(msg)
+  }, [wsRef.current]);
+
+  return {
+    features,
+    backendCompileState,
+    backendCompilingState,
+    backendRestartingState,
+    backendCompilerMessages,
+    backendOnlineState,
+    wsConnected,
+    viteStatus,
+    migrationsPending,
+    migrationSuccess,
+    migrationError,
+    migrating,
+    migrations,
+    send
+  }
+}
+
+
+const DevBox = () => {
+  const state = useWebsocketConnection()
+  const [isWeirdMigrationState, setWeirdMigrationState] = useState(false)
+  const send = state.send
+
+  const shouldDisplay = state.backendCompileState !== true
+    || state.backendRestartingState === true
+    || state.backendOnlineState !== true
+    || state.wsConnected === false
+    || state.backendCompilingState === true
+    || state.viteStatus === false
+    || state.migrationsPending === true
+    || state.migrationSuccess === false
+    || state.migrating === true
+    || isWeirdMigrationState
+
+  useEffect(() => {
+    if (state.migrations?.find(m => m.status === 'AppliedButMissingLocally')) {
+      setWeirdMigrationState(true)
+    }
+  }, [state.migrations])
+    
+  const compilerErrors = state.backendCompilerMessages
+    ?.filter(m => m?.message?.level === "error")
 
   return (
     <div
       style={{
-        display: display && shouldDisplay.current ? 'block' : 'none',
-        margin: '12px',
-        padding: '12px',
-        backgroundColor: 'white',
+        display: shouldDisplay ? 'block' : 'none',
+        margin: '1px',
+        padding: '4px',
+        backgroundColor: 'black',
+        color: 'white',
+        overflow: 'scroll',
+        maxHeight: 'calc(100vh - 200px)',
       }}
     >
-      <div style={{ position: 'absolute', height: '0px', width: '0px' }}>
-        <div style={{ position: 'relative', left: '-36px', top: '-36px' }}>
-          <a
-            style={{
-              textDecoration: 'none',
-              boxShadow: '0 4px 4px #00000066',
-              color: '#fe4646',
-              backgroundColor: '#FFF',
-              borderRadius: '50%',
-              display: 'inline-flex',
-            }}
-            href="/"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              setDisplay(false)
-            }}
-          >
-            {close}
-          </a>
-        </div>
-      </div>
-      <div
-        style={{
-          display: 'flex',
-          marginBottom: '12px',
-          flexFlow: 'row nowrap',
-        }}
-      >
-        <span
-          style={{
-            fontSize: '24px',
-            fontWeight: 'bolder',
-            flex: 1,
-            color: 'rgba(207,144,58,1)',
-            display: 'flex',
-            overflow: 'hidden',
-            height: '30px',
-          }}
-        >
-          <div style={{ flex: 1 }}>DEVBOX</div>{' '}
-          {isFetching && <div className={`${DEVBOX_ID}-loader`}></div>}
-        </span>
-        {!isFetching && (
-          <span style={{ color: 'rgba(207,144,58,1)' }}>{warning}</span>
-        )}
-      </div>
-      {(healthQuery.isError || healthQuery.isFetching) && (
-        <DevBoxItem
-          actions={[
-            {
-              label: 'Retry',
-              fn: () => queryClient.invalidateQueries('health'),
-            },
-          ]}
-        >
-          <span style={{ color: 'hotpink' }}>WARN!</span>&nbsp;
-          {healthQuery.isError && 'The backend is not reachable.'}
-          {healthQuery.isFetching && 'Connecting to backend...'}
-        </DevBoxItem>
-      )}
-      {!healthQuery.isError && (
-        <>
-          {!dbMigrationQuery.isError && dbMigrationQuery.data && (
-            <DevBoxItem
-              actions={[
-                {
-                  label: dbMigrateMutation.isLoading
-                    ? 'running...'
-                    : 'Run Migrations',
-                  fn: () => {
-                    if (dbMigrateMutation.isLoading) return
-                    dbMigrateMutation.mutate()
-                  },
-                },
-              ]}
-            >
-              <span style={{ color: 'hotpink' }}>WARN!</span>&nbsp;Some
-              migrations are pending!
-            </DevBoxItem>
-          )}
-          {/* {hasSystemRoleQuery.data === false && <DevBoxItem actions={[{
-          label: addSystemRoleMutation.isLoading ? 'running...' : 'Add `developer` role to current user',
-          fn: () => {
-            if (addSystemRoleMutation.isLoading) return
-            addSystemRoleMutation.mutate()
-          }
-        }]}>
-          <span style={{color: 'deepskyblue'}}>INFO!</span>&nbsp;The logged in user doesn't have the developer role. You may not have access to administrative developer tasks.
-        </DevBoxItem>} */}
-        </>
-      )}
+      {/* 
+        DEV SERVER CONNECTION
+      */}
+      {state.wsConnected === false && <div>Connecting to development server...</div>}
+      {state.viteStatus === false && <div>Vite dev server is down... <a href="#" onClick={(e) => {
+        e.preventDefault()
+        window.location.reload()
+      }}>refresh?</a></div>}
+      
+      {/* 
+        MIGRATIONS
+      */}
+      {isWeirdMigrationState && <div><span style={{ color: 'tomato' }}>Migrations are in a strange state...</span> <a href="#" onClick={() => setWeirdMigrationState(false)}>ok, thanks!</a></div>}
+      {state.migrationSuccess === false && <div>⚠️ Migration failed ({state.migrationError}).</div>}
+      {state.migrationsPending === true &&
+        <div>
+          <span style={{ color: 'goldenrod' }}>Migrations are pending...</span> <a href="#" onClick={e => {
+            e.preventDefault()
+            if (!state.migrating) {
+              send({ type: 'migrate' })
+            }
+          }}>{state.migrating === false ? 'migrate?' : 'migrating...'}</a>
+        </div>}
+
+        {(state.migrationsPending === true || isWeirdMigrationState) && <div>{state.migrations?.sort((a, b) => b.version.localeCompare(a.version)).map(m => (
+          <div style={{ display: 'flex', color: m.status === 'Applied' ? 'white' : (m.status === 'Pending' ? 'goldenrod' : 'tomato') }}>
+            <span>
+              {m.name}
+            </span>
+            <span style={{ flex: 1, border: '0px dotted white', borderBottomWidth: '1px' }} />
+            <span>
+              {m.status}
+            </span>
+          </div>
+        ))}
+      </div>}
+      
+      {/*
+        COMPILATION
+      */}
+      {state.backendCompileState === false && <div>The last compilation failed.</div>}
+      {state.backendOnlineState === false && <div>The backend is offline!</div>}
+      {state.backendCompilingState && <div>🔨 Compiling backend...</div>}
+      {state.backendRestartingState === true && <div>♻️ Restarting backend...</div>}
+      {compilerErrors.length > 0 &&
+        <pre>
+          {compilerErrors.map(m => (
+            <CompilerMessage
+              onOpenFile={(path) => {
+                send({ type: 'open', file: path })
+              }}
+              m={m}
+            />
+          ))}
+        </pre>
+      }
     </div>
   )
+}
+
+interface CompilerMessage {
+  package_id: {
+    repr: string
+  },
+  target: {
+    name: string,
+    kind: Array<"bin" | "example" | "test" | "bench" | "lib" | "custom-build">,
+    crate_types: Array<string>,
+    required_features: Array<string>,
+    src_path: string,
+    edition: string,
+    doctest: boolean,
+    test: boolean,
+    doc: boolean,
+  },
+  message: {
+    message: string,
+    code?: {
+      code?: string
+      explanation?: string
+    },
+    /// "error: internal compiler error", "error", "warning", "note", "help"
+    level: "error: internal compiler error" | "error" | "warning" | "note" | "help" | "failure-note",
+    /// A list of source code spans this diagnostic is associated with.
+    spans: Array<{
+      file_name: string,
+      byte_start: number,
+      byte_end: number,
+      line_start: number,
+      line_end: number,
+      column_start: number,
+      column_end: number,
+      is_primary: boolean,
+      text: Array<{
+        text: string,
+        highlight_start: number,
+        highlight_end: number,
+      }>,
+      label?: string,
+      suggested_replacement?: string,
+      suggestion_applicability?: string,
+      expansion?: any,
+    }>,
+    children: Array<any>,
+    rendered?: string, // The message as rustc would render it 
+  },
+}
+
+interface CompilerMessageProps {
+  m: CompilerMessage
+  onOpenFile: (f: string) => void
+}
+const CompilerMessage = ({ m, onOpenFile }: CompilerMessageProps) => {
+  const primarySpan = m.message.spans.filter(s => s.is_primary)[0];
+
+  if (!primarySpan) return <></> // <div>no primary span, <pre>{JSON.stringify(m)}</pre></div>
+
+  return <pre
+    style={{ overflow: 'hidden' }}
+  >
+    <div>
+      <strong><span className={m.message.level}>{m.message.level}</span>: {m.message.message}</strong>
+    </div>
+    <div>
+      <span className="guide">&nbsp;&nbsp;--&gt;&nbsp;</span>
+      <span className="file" onClick={(e) => {
+        e.preventDefault()
+        onOpenFile(`${primarySpan.file_name}`)
+      }}
+      >
+        {primarySpan.file_name} {/* the following svg was taken from https://iconmonstr.com/cursor-2-svg/ and does not belong to the create-rust-app project */}<svg xmlns="http://www.w3.org/2000/svg" fill="white" width="12" height="12" viewBox="0 0 24 24" fill-rule="evenodd" clip-rule="evenodd"><path d="M14 4h-13v18h20v-11h1v12h-22v-20h14v1zm10 5h-1v-6.293l-11.646 11.647-.708-.708 11.647-11.646h-6.293v-1h8v8z" /></svg>
+      </span>
+    </div>
+    <div style={{ whiteSpace: 'pre' }}>
+      <Ansi>{m.message.rendered?.split('\n').slice(2).join('\n')}</Ansi>
+    </div>
+  </pre>
 }
 
 const DEVBOX_ID = 'create-rust-app-devbox'
@@ -233,96 +326,52 @@ devBoxStyle.innerHTML = `
   position: fixed;
   height: 0px;
   width: 0px;
-  right: 12px;
-  bottom: 12px;
-  font-size: 16px;
+  bottom: 0;
+  font-size: 12px;
 }
 .${DEVBOX_ID} > div {
   position: absolute;
   bottom: 0;
-  right: 0;
+  width: 100vw;
   transition-property: all;
 	transition-duration: .5s;
   font-family: monospace;
 	transition-timing-function: cubic-bezier(1, 1, 1, 1);
   color: black;
   background: rgb(255,69,69);
-  background: linear-gradient(345deg, rgba(255,69,69,1) 0%, rgba(207,144,58,1) 100%);
-  min-width: 400px;
-  box-shadow: 0 4px 4px #00000044;
+  background: linear-gradient(0deg, rgba(0,0,0,1) 0%, rgba(255,255,255,1) 100%);
+  box-shadow: 0 0px 8px #00000088;
 }
 
-.${DEVBOX_ID}-loader,
-.${DEVBOX_ID}-loader:before,
-.${DEVBOX_ID}-loader:after {
-  background: #e86840;
-  -webkit-animation: ${DEVBOX_ID}-loader-animation 1s infinite ease-in-out;
-  animation: ${DEVBOX_ID}-loader-animation 1s infinite ease-in-out;
-  width: 1em;
-  height: 1em;
+.${DEVBOX_ID} a {
+  color: skyblue;
 }
-.${DEVBOX_ID}-loader {
-  color: #e86840;
-  text-indent: -9999em;
-  margin: 21px 30px;
-  position: relative;
-  font-size: 11px;
-  -webkit-transform: translateZ(0);
-  -ms-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-animation-delay: -0.16s;
-  animation-delay: -0.16s;
+
+.file:hover {
+  text-decoration: underline;
+  cursor: pointer;
+  background-color: gray;
 }
-.${DEVBOX_ID}-loader:before,
-.${DEVBOX_ID}-loader:after {
-  position: absolute;
-  top: 0;
-  content: '';
+
+.guide {
+  color: rgb(106,112,246);
 }
-.${DEVBOX_ID}-loader:before {
-  left: -1.5em;
-  -webkit-animation-delay: -0.32s;
-  animation-delay: -0.32s;
+
+.warning {
+  color: yellow;
 }
-.${DEVBOX_ID}-loader:after {
-  left: 1.5em;
+
+.error {
+  color: rgb(237,118,108);
 }
-@-webkit-keyframes ${DEVBOX_ID}-loader-animation {
-  0%, 80%, 100% {
-    box-shadow: 0 0;
-    height: 4em;
-  }
-  40% {
-    box-shadow: 0 -2em;
-    height: 5em;
-  }
-}
-@keyframes ${DEVBOX_ID}-loader-animation {
-  0%, 80%, 100% {
-    box-shadow: 0 0;
-    height: 4em;
-  }
-  40% {
-    box-shadow: 0 -2em;
-    height: 5em;
-  }
+
+pre {
+  white-space: pre-line;
+  font-family: monospace;
 }
 `
 devBox.appendChild(devBoxStyle)
 devBox.appendChild(document.createElement('div'))
 document.body.appendChild(devBox)
 
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: false } },
-})
-
-ReactDOM.render(
-  <>
-    <QueryClientProvider client={queryClient}>
-      <DevBox />
-    </QueryClientProvider>
-  </>,
-  devBox.children[1]
-)
-
-export {}
+ReactDOM.createRoot(devBox.children[1]).render(<DevBox />)

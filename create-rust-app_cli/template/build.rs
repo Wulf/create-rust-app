@@ -11,6 +11,11 @@ use std::{io::Write, process::Command};
  * so that we can include println!(...) statements in build.rs
  */
 
+/*
+ * Note 2: this file was written for *nix systems -- it likely won't
+ * work on windows!
+ */
+
 #[allow(dead_code)]
 fn shell(command: &str) {
     // println!("build.rs => {}", command);
@@ -37,9 +42,9 @@ fn shell(command: &str) {
 fn main() {
     // Only install frontend dependencies when building release
     #[cfg(not(debug_assertions))]
-    shell("cd frontend && yarn install --frozen-lockfile");
+    shell("cd frontend && npm install --frozen-lockfile");
 
     // Only build frontend when building a release
     #[cfg(not(debug_assertions))]
-    shell("cd frontend && yarn build");
+    shell("cd frontend && npm build");
 }

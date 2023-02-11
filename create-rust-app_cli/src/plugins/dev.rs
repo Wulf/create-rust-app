@@ -6,6 +6,7 @@ use crate::utils::logger::add_file_msg;
 use crate::BackendFramework;
 use anyhow::Result;
 use rust_embed::RustEmbed;
+use indoc::indoc;
 
 pub struct Dev {}
 
@@ -19,11 +20,6 @@ impl Plugin for Dev {
     }
 
     fn install(&self, install_config: InstallConfig) -> Result<()> {
-        if !install_config.plugin_auth {
-            crate::logger::error("The development plugin requires the Auth plugin (temporarily). For details, see: https://github.com/Wulf/create-rust-app/issues/52");
-            std::process::exit(1);
-        }
-
         for filename in Asset::iter() {
             if filename.starts_with("README.md")
                 || filename.contains(".cargo/admin") && !filename.contains(".cargo/admin/dist")
@@ -53,7 +49,15 @@ impl Plugin for Dev {
     "react-query": "^3.21.0""#,
         )?;
 
-        fs::append("frontend/src/dev.tsx", "\nimport './setupDevelopment'")?;
+        fs::append("frontend/src/dev.tsx", indoc! {r##"
+            // Sets up the development environment.
+            //
+            // Note: When running `cargo frontend` and `cargo backend` individually, "DEV_SERVER_PORT" is not set.
+            //       Use `cargo fullstack` for the full development experience.
+            if (import.meta.env.DEV_SERVER_PORT !== 'false') {
+                import('./setupDevelopment')
+            }
+        "##})?;
 
         match install_config.backend_framework {
             BackendFramework::ActixWeb => {

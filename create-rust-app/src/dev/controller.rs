@@ -1,8 +1,14 @@
-use crate::auth::{Auth, Role};
 use crate::Database;
-use diesel::{query_dsl::RunQueryDsl, sql_query, sql_types::Text};
+use diesel::{
+    migration::{Migration, MigrationSource},
+    query_dsl::RunQueryDsl,
+    sql_query,
+    sql_types::Text,
+};
 use diesel_migrations::{FileBasedMigrations, MigrationHarness};
 use serde::{Deserialize, Serialize};
+
+use super::{CreateRustAppMigration, MigrationStatus};
 
 #[derive(Debug, Deserialize, QueryableByName)]
 pub struct MyQueryResult {
@@ -21,15 +27,13 @@ pub struct HealthCheckResponse {
 }
 
 /// /db/query
-pub fn query_db(db: &Database, body: &MySqlQuery) -> Result<String, String> {
+pub fn query_db(db: &Database, body: &MySqlQuery) -> Result<String, ()> {
     let q = format!("SELECT json_agg(q) as json FROM ({}) q;", body.query);
     let mut db = db.pool.get().unwrap();
 
-    let rows = sql_query(q.as_str())
-        .get_result::<MyQueryResult>(&mut db)
-        .map_err(|e| e.to_string());
+    let rows = sql_query(q.as_str()).get_result::<MyQueryResult>(&mut db);
     if rows.is_err() {
-        return Err(rows.err().unwrap());
+        return Err(());
     }
 
     let result = rows.unwrap().json;
@@ -37,23 +41,66 @@ pub fn query_db(db: &Database, body: &MySqlQuery) -> Result<String, String> {
     Ok(result)
 }
 
-/// /auth/has-system-role
-pub fn check_system_role(auth: &Auth) -> bool {
-    auth.has_permission("system".to_string())
-}
-
-/// /auth/add-system-role
-pub fn add_system_role(db: &Database, auth: &Auth) -> bool {
-    let mut db = db.pool.clone().get().unwrap();
-
-    Role::assign(&mut db, auth.user_id, "system").unwrap()
-}
-
 /// /db/is-connected
 pub fn is_connected(db: &Database) -> bool {
     let mut db = db.pool.clone().get().unwrap();
     let is_connected = sql_query("SELECT 1;").execute(&mut db);
     is_connected.is_err()
+}
+
+pub fn get_migrations(db: &Database) -> Vec<CreateRustAppMigration> {
+    // Vec<diesel::migration::Migration> {
+    let mut db = db.pool.clone().get().unwrap();
+
+    let source = FileBasedMigrations::find_migrations_directory().unwrap();
+
+    #[cfg(feature = "database_sqlite")]
+    let file_migrations =
+        MigrationSource::<crate::database::DieselBackend>::migrations(&source).unwrap();
+    #[cfg(feature = "database_postgres")]
+    let file_migrations =
+        MigrationSource::<crate::database::DieselBackend>::migrations(&source).unwrap();
+
+    let db_migrations = MigrationHarness::applied_migrations(&mut db).unwrap();
+    let pending_migrations = MigrationHarness::pending_migrations(&mut db, source).unwrap();
+
+    let mut all_migrations = vec![];
+
+    file_migrations.iter().for_each(|fm| {
+        all_migrations.push(CreateRustAppMigration {
+            name: fm.name().to_string(),
+            version: fm.name().version().to_string(),
+            status: MigrationStatus::Unknown,
+        })
+    });
+
+    // update the status for any pending file_migrations
+    pending_migrations.iter().for_each(|pm| {
+        if let Some(existing) = all_migrations.iter_mut().find(|m| {
+            m.version
+                .eq_ignore_ascii_case(&pm.name().version().to_string())
+        }) {
+            existing.status = MigrationStatus::Pending;
+        }
+    });
+
+    db_migrations.iter().for_each(|dm| {
+        match all_migrations
+            .iter_mut()
+            .find(|m| m.version.eq_ignore_ascii_case(&dm.to_string()))
+        {
+            Some(existing) => {
+                existing.status = MigrationStatus::Applied;
+            }
+            None => all_migrations.push(CreateRustAppMigration {
+                name: format!("{}_?", dm.to_string()),
+                version: dm.to_string(),
+                status: MigrationStatus::AppliedButMissingLocally,
+            }),
+        }
+    });
+
+    all_migrations
 }
 
 /// /db/needs-migration
@@ -67,7 +114,7 @@ pub fn needs_migration(db: &Database) -> bool {
 
 /// /db/migrate
 /// performs any pending migrations
-pub fn migrate_db(db: &Database) -> bool {
+pub fn migrate_db(db: &Database) -> (bool, /* error message: */ Option<String>) {
     let mut db = db.pool.clone().get().unwrap();
 
     let source = FileBasedMigrations::find_migrations_directory().unwrap();
@@ -75,18 +122,20 @@ pub fn migrate_db(db: &Database) -> bool {
         MigrationHarness::has_pending_migration(&mut db, source.clone()).unwrap();
 
     if !has_pending_migrations {
-        return true;
+        return (true, None);
     }
 
     let op = MigrationHarness::run_pending_migrations(&mut db, source);
-
-    if op.is_err() {
-        println!("{:#?}", op.err());
-        return false;
+    match op {
+        Ok(_) => (true, None),
+        Err(err) => {
+            println!("{err:#?}");
+            (false, Some(err.to_string()))
+        }
     }
-
-    true
 }
 
 /// /health
-pub fn health() {}
+pub fn health() -> () {
+    ()
+}

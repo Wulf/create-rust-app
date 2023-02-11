@@ -1,4 +1,3 @@
-#[macro_use]
 extern crate diesel;
 
 use actix_files::{Files};
@@ -13,6 +12,7 @@ mod mail;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    #[cfg(debug_assertions)] create_rust_app::setup_development().await;
     let app_data = create_rust_app::setup();
 
     HttpServer::new(move || {

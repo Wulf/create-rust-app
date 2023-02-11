@@ -44,7 +44,7 @@ Outputs to `frontend/src/types/rust.d.ts`.
 
 ```sh
 # frontend
-cd frontend && yarn && yarn start
+cd frontend && npm && npm start
 ```
 
 ```sh
@@ -60,3 +60,6 @@ cargo watch -x run -i frontend/
 
 - `diesel database setup`
 - `diesel database reset`
+
+# Tips
+* Use the [mold](https://github.com/rui314/mold) linker for slightly faster compilation.

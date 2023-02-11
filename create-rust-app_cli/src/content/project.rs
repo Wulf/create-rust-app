@@ -92,6 +92,14 @@ name = "dsync"
 path = ".cargo/bin/dsync.rs"
 
 [[bin]]
+name = "backend"
+path = ".cargo/bin/backend.rs"
+
+[[bin]]
+name = "frontend"
+path = ".cargo/bin/frontend.rs"
+
+[[bin]]
 name = "{project_name}"
 path = "backend/main.rs"
 

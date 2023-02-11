@@ -95,9 +95,9 @@ export const Todos = () => {
       <div style={{ display: 'flex', flexFlow: 'column', textAlign: 'left' }}>
         <h1>Todos</h1>
         {(!todos || todos.total_items === 0) && "No todos, create one!"}
-        {todos?.items.map((todo, index) =>
+        {todos?.items.map((todo) =>
             todo.id === selectedTodo?.id ? (
-                <div className="Form">
+                <div key="form" className="Form">
                   <div style={{ display: 'flex' }}>
                     <input
                         style={{ flex: 1 }}

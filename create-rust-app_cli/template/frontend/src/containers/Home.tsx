@@ -12,7 +12,7 @@ export const Home = () => {
         <img src={reactLogo} className="App-logo" alt="react-logo" />
       </div>
       <p>
-        Edit <code>app/src/App.tsx</code> and save to reload.
+        Edit <code>frontend/src/App.tsx</code> and save to reload.
       </p>
 
       <div style={{ display: 'flex', justifyContent: 'center' }}>

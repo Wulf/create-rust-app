@@ -14,13 +14,13 @@ categories = ["command-line-utilities", "development-tools", "web-programming", 
 ##
 ## COMMON / DEFAULT - required dependencies
 ##
-dotenv = "0.15.0"
+dotenv = "0.15.0" # + plugin_dev
 serde_json = "1.0.91"
 lettre = "0.10.1"
 tera = { version="1.17.0" }
 lazy_static = { version="1.4.0" }
 serde = { version = "1.0.152", features = ["derive"] }
-diesel = { version="2.0.0-rc.1", default-features = false, features = ["uuid", "r2d2", "chrono", "returning_clauses_for_sqlite_3_35"] } # plugin_dev, plugin_auth
+diesel = { version="2.0.0-rc.1", default-features = false, features = ["uuid", "r2d2", "chrono"] } # + plugin_dev, plugin_auth
 
 ##
 ## Database
@@ -42,13 +42,20 @@ chrono = { optional=true, version = "0.4.23", default-features = false, features
 
 # plugin_dev
 diesel_migrations = { optional=true, version="2.0.0" }
+cargo_metadata = { optional=true, version="0.15.2" }
+watchexec = { optional=true, version="2.0.2" }
+#### tracing = { optional=true, version="0.1" }
+#### tracing-subscriber = { optional=true, version="0.3.16", features=["env-filter"] }
+reqwest = { optional=true, version="0.11.13" }
+clearscreen = { optional=true, version="2.0.0" }
+open = { optional=true, version="3.2.0" }
+cargo_toml = { optional=true, version = "0.14.0" }
 
 # plugin_storage
 aws-config = { optional=true, version="0.14.0" }
 aws-types = { optional=true, version="0.8.0" }
 aws-endpoint = { optional=true, version="0.14.0" }
 aws-sdk-s3 = { optional=true, version="0.8.0" }
-futures-util = { optional=true, version="0.3.25" }
 http = { optional=true, version="0.2.6" }
 diesel_derives = { optional=true, version="2.0.1" }
 uuid = { optional=true, version="1.2.2", features=["v4", "serde"] }
@@ -75,23 +82,31 @@ actix-web-httpauth = { optional=true, version="0.8.0" }
 derive_more = { optional=true, version="0.99.17" }
 futures = { optional=true, version="0.3.25" }
 env_logger = { optional=true, version= "0.10.0" }
+
+# axum dependencies (not yet released; only used for plugin_dev)
+
+axum = { optional=true, version="0.6.1" }
+
 ##
 ## MISC - here, we list deps which are required by multiple features but are not required in all configurations
 ##
 
 mime_guess = { optional=true, version="2.0.4" } # backend_poem, plugin_storage
-anyhow = { optional=true, version="1.0.68" } # backend_poem, plugin_auth
-tokio = { optional=true, version = "1", features = ["full"] } # backend_poem, plugin-storage
+anyhow = { optional=true, version="1.0.57" } # backend_poem, plugin_auth, plugin_dev
+tokio = { optional=true, version = "1", features = ["full"] } # backend_poem, plugin_storage
+async-priority-channel = "0.1.0"
+futures-util = { optional=true, version = "0.3.25" } # plugin_dev, TODO:plugin_storage?
 
 [features]
 default = ["backend_actix-web", "database_postgres", "plugin_auth", "plugin_container", "plugin_dev", "plugin_graphql", "plugin_storage", "plugin_utoipa"]
-plugin_dev = ["diesel_migrations"]
+plugin_dev = ["backend_axum", "cargo_toml", "open", "reqwest", "anyhow", "clearscreen", "watchexec", "cargo_metadata", "diesel_migrations", "futures-util"]
 plugin_container = []
 plugin_auth = ["anyhow", "rust-argon2", "rand", "jsonwebtoken", "chrono", "tsync"]
-plugin_storage = [ "aws-config", "aws-types", "aws-endpoint", "aws-sdk-s3", "tokio", "futures-util", "http", "diesel_derives", "uuid", "md5", "mime_guess", "base64" ]
+plugin_storage = [ "aws-config", "aws-types", "aws-endpoint", "aws-sdk-s3", "tokio", "http", "diesel_derives", "uuid", "md5", "mime_guess", "base64" ] # note: might need to add "futures-util"?
 plugin_graphql = []
 plugin_utoipa = ["utoipa", "utoipa-swagger-ui", "backend_actix-web"]
 backend_poem = ["poem", "anyhow", "mime_guess", "tokio"]
 backend_actix-web = ["actix-web", "actix-http", "actix-files", "actix-multipart", "actix-web-httpauth","derive_more", "futures", "env_logger"]
-database_sqlite = ["diesel/sqlite", "libsqlite3-sys/bundled"]
+backend_axum = ["axum", "axum/ws"]
+database_sqlite = ["diesel/sqlite", "diesel/returning_clauses_for_sqlite_3_35", "libsqlite3-sys/bundled"]
 database_postgres = ["diesel/postgres"]
