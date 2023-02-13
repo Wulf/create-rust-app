@@ -1350,7 +1350,7 @@ dependencies = [
  "aws-config",
  "aws-endpoint 0.14.0",
  "aws-sdk-s3",
- "aws-types 0.8.0",
+ "aws-types 0.14.0",
  "axum",
  "base64 0.21.0",
  "cargo_metadata",
