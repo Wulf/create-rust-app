@@ -1,16 +1,16 @@
 import react from '@vitejs/plugin-react'
-import {resolve} from 'path'
-import {defineConfig} from 'vite'
 import glob from 'glob'
+import { resolve } from 'path'
+import { defineConfig } from 'vite'
 
-const buildRollupInput = (isDevelopment) => {
-    const rollupInput = isDevelopment ? {
+const buildRollupInput = (isDevelopment): { [entryAlias: string]: string } => {
+    const rollupInput: { [entryAlias: string]: string } = isDevelopment ? {
         'dev.tsx': resolve(__dirname, './src/dev.tsx')
     } : {}
 
     // TODO: use import.meta.glob() + npm uninstall glob
 
-    glob.sync(resolve(__dirname, './bundles/**/*.tsx')).map(inputEntry => {
+    glob.sync(resolve(__dirname, './bundles/**/*.tsx')).map((inputEntry: string) => {
         let outputEntry = inputEntry
         // output entry is an absolute path, let's remove the absolute part:
         outputEntry = outputEntry.replace(`${__dirname}/`, '')
@@ -26,15 +26,25 @@ const buildRollupInput = (isDevelopment) => {
 // https://vitejs.dev/config/
 export default defineConfig(async ({ command, mode }) => ({
     base: command === 'serve' ? 'http://localhost:21012' : '/',
+    clearScreen: false,
     build: {
         manifest: true,
         rollupOptions: {
             input: buildRollupInput(command === 'serve')
         },
     },
-    plugins: [react()],
+    define: {
+        // When this variable is set, setupDevelopment.tsx will also be loaded!
+        // See `dev.tsx` which is included in development.
+        'import.meta.env.DEV_SERVER_PORT': JSON.stringify(process.env.DEV_SERVER_PORT ?? false),
+    },
+    plugins: [
+        react(),
+    ],
+
     server: {
         port: 21012,
+        host: '127.0.0.1',
         proxy: {
             // with options
             '/api': {

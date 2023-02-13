@@ -1,5 +1,6 @@
 use create_rust_app::Mailer;
 
+#[allow(dead_code)]
 pub fn send(mailer: &Mailer, to_email: &str) {
     let subject = "Example Email";
     let text = format!(

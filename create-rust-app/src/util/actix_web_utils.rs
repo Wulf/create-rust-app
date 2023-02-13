@@ -1,3 +1,5 @@
+use std::sync::Mutex;
+
 use super::template_utils::SinglePageApplication;
 use crate::util::template_utils::{to_template_name, DEFAULT_TEMPLATE, TEMPLATES};
 use actix_files::NamedFile;
@@ -30,6 +32,10 @@ async fn render_spa_handler(
     template_response(content)
 }
 
+// used to count number of refresh requests sent when viteJS dev server is down
+#[cfg(debug_assertions)]
+static REQUEST_REFRESH_COUNT: Mutex<i32> = Mutex::new(0);
+
 /// takes a request to, say, www.you_webapp.com/foo/bar and looks in the ./backend/views folder
 /// for a html file/template at the matching path (in this case, ./foo/bar.html),
 /// defaults to index.html
@@ -46,7 +52,37 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
     #[cfg(debug_assertions)]
     if path.eq("/__vite_ping") {
         println!("The vite dev server seems to be down...");
-        return HttpResponse::NotFound().finish();
+    }
+    {
+        // Catch viteJS ping requests and try to handle them gracefully
+        // Request the browser to refresh the page (maybe the server is up but the browser just can't reconnect)
+
+        if path.eq("/__vite_ping") {
+            #[cfg(feature = "plugin_dev")]
+            {
+                crate::dev::vitejs_ping_down().await;
+            }
+            let mut count = REQUEST_REFRESH_COUNT.lock().unwrap();
+            if *count < 3 {
+                *count += 1;
+                println!("The vite dev server seems to be down... refreshing page ({count}).");
+                return HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
+                    .append_header(("Location", "."))
+                    .finish();
+            } else {
+                println!("The vite dev server is down.");
+                return HttpResponse::NotFound().finish();
+            }
+        }
+        // If this is a non-viteJS ping request, let's reset the refresh attempt count
+        else {
+            #[cfg(feature = "plugin_dev")]
+            {
+                crate::dev::vitejs_ping_up().await;
+            }
+            let mut count = REQUEST_REFRESH_COUNT.lock().unwrap();
+            *count = 0;
+        }
     }
 
     let mut template_path = to_template_name(req.path());

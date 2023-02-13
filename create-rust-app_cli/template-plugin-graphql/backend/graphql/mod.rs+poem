@@ -8,12 +8,12 @@ pub use mutation::MutationRoot;
 pub use subscription::SubscriptionRoot;
 
 use async_graphql::{Data, Schema};
-use async_graphql::http::{ALL_WEBSOCKET_PROTOCOLS, GraphQLPlaygroundConfig, playground_source};
+use async_graphql::http::{ALL_WEBSOCKET_PROTOCOLS};
 use create_rust_app::auth::{Auth, Permission};
 use jsonwebtoken::{DecodingKey, decode, Validation};
 use std::iter::FromIterator;
-use async_graphql_poem::{GraphQLProtocol, GraphQLRequest, GraphQLResponse, GraphQLSubscription, GraphQLWebSocket};
-use poem::{handler, Result, IntoResponse};
+use async_graphql_poem::{GraphQLProtocol, GraphQLRequest, GraphQLResponse, GraphQLWebSocket};
+use poem::{handler, IntoResponse};
 use poem::web::Html;
 use poem::web::websocket::WebSocket;
 

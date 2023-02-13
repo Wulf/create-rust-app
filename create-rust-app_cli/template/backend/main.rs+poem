@@ -1,10 +1,9 @@
-#[macro_use]
 extern crate diesel;
 
 use poem::endpoint::{StaticFilesEndpoint};
 use poem::{
     listener::TcpListener,
-    middleware::{AddData, CookieJarManager},
+    middleware::{AddData, CookieJarManager, Tracing},
     EndpointExt, Route, Server,
 };
 
@@ -15,6 +14,7 @@ mod services;
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
+    #[cfg(debug_assertions)] create_rust_app::setup_development().await;
     tracing_subscriber::fmt::init();
 
     let data = create_rust_app::setup();
@@ -36,8 +36,8 @@ async fn main() -> Result<(), std::io::Error> {
         .run(
             app.with(AddData::new(data.mailer))
                 .with(AddData::new(data.database))
-                .with(create_rust_app::PoemLogger)
                 .with(CookieJarManager::new())
+                .with(Tracing)
                 .catch_error(create_rust_app::not_found),
         )
         .await

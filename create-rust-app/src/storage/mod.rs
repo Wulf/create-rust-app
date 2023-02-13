@@ -232,24 +232,24 @@ impl Storage {
     }
 
     fn check_environment_variables() {
-        if std::env::var("S3_HOST").is_err() {
-            println!("Note: Storage disabled; 'S3_HOST' is not set.")
-        }
+        let vars = vec![
+            "S3_HOST",
+            "S3_REGION",
+            "S3_BUCKET",
+            "S3_ACCESS_KEY_ID",
+            "S3_SECRET_ACCESS_KEY",
+        ];
 
-        if std::env::var("S3_REGION").is_err() {
-            println!("Note: Storage disabled; 'S3_REGION' is not set.")
-        }
+        let unset_vars = vars
+            .into_iter()
+            .filter(|v| std::env::var(v).is_err())
+            .collect::<Vec<_>>();
 
-        if std::env::var("S3_BUCKET").is_err() {
-            println!("Note: Storage disabled; 'S3_BUCKET' is not set.")
-        }
-
-        if std::env::var("S3_ACCESS_KEY_ID").is_err() {
-            println!("Note: Storage disabled; 'S3_ACCESS_KEY_ID' is not set.")
-        }
-
-        if std::env::var("S3_SECRET_ACCESS_KEY").is_err() {
-            println!("Note: Storage disabled; 'S3_SECRET_ACCESS_KEY' is not set.")
+        if !unset_vars.is_empty() {
+            println!(
+                "Warning: Storage disabled; the following variables must be set: {}",
+                unset_vars.join(", ")
+            );
         }
     }
 

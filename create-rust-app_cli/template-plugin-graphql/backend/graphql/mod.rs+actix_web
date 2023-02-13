@@ -9,7 +9,7 @@ pub use subscription::SubscriptionRoot;
 
 use actix_web::{HttpRequest, HttpResponse, web};
 use async_graphql::{Data, Schema};
-use async_graphql::http::{GraphQLPlaygroundConfig, playground_source};
+// use async_graphql::http::{GraphQLPlaygroundConfig, playground_source};
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse, GraphQLSubscription};
 use create_rust_app::auth::{Auth, Permission};
 use jsonwebtoken::{DecodingKey, decode, Validation};

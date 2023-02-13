@@ -1,5 +1,6 @@
 /frontend/dist
 /.cargo/.build
+/.cargo/tmp
 .env*
 !.env.example
 build-log*.txt

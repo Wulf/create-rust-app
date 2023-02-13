@@ -2,6 +2,8 @@
 fullstack="run --bin fullstack"
 tsync="run --bin tsync"
 dsync="run --bin dsync"
+backend="run --bin backend"
+frontend="run --bin frontend"
 
 [build]
 target-dir=".cargo/.build"

@@ -3,7 +3,6 @@ use diesel::QueryResult;
 //use md5;
 //use mime_guess;
 use serde::{Deserialize, Serialize};
-//use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::diesel::*;
@@ -132,7 +131,7 @@ impl Attachment {
     /// in poem, we need to pass in the pool itself because the Connection is not Send+Sync which poem handlers require
     #[cfg(feature = "backend_poem")]
     pub async fn attach(
-        pool: Arc<Pool>,
+        pool: std::sync::Arc<crate::database::Pool>,
         storage: &Storage,
         name: String,
         record_type: String,
@@ -160,7 +159,7 @@ impl Attachment {
             if existing.is_ok() {
                 // one already exists, we need to delete it
                 if overwrite_existing {
-                    Attachment::detach(pool.clone(), &storage, existing.unwrap().id).await.map_err(|err| {
+                    Attachment::detach(pool.clone(), &storage, existing.unwrap().id).await.map_err(|_| {
                         format!("Could not detach the existing attachment for '{name}' attachment on '{record_type}'", name=name.clone(), record_type=record_type.clone())
                     })?;
                 } else {
@@ -250,7 +249,11 @@ impl Attachment {
 
     /// in poem, we need to pass in the pool itself because the Connection is not Send+Sync which poem handlers require
     #[cfg(feature = "backend_poem")]
-    pub async fn detach(pool: Arc<Pool>, storage: &Storage, item_id: ID) -> Result<(), String> {
+    pub async fn detach(
+        pool: std::sync::Arc<crate::database::Pool>,
+        storage: &Storage,
+        item_id: ID,
+    ) -> Result<(), String> {
         let mut db = pool.get().unwrap();
 
         let attached =
