@@ -16,7 +16,7 @@ categories = ["command-line-utilities", "development-tools", "web-programming", 
 ##
 dotenv = "0.15.0" # + plugin_dev
 serde_json = "1.0.93"
-lettre = "0.10.1"
+lettre = "0.10.2"
 tera = { version="1.17.0" }
 lazy_static = { version="1.4.0" }
 serde = { version = "1.0.152", features = ["derive"] }
