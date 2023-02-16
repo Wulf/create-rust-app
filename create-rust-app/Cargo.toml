@@ -49,7 +49,7 @@ watchexec = { optional=true, version="2.0.2" }
 reqwest = { optional=true, version="0.11.13" }
 clearscreen = { optional=true, version="2.0.0" }
 open = { optional=true, version="3.2.0" }
-cargo_toml = { optional=true, version = "0.14.0" }
+cargo_toml = { optional=true, version = "0.15.1" }
 
 # plugin_storage
 aws-config = { optional=true, version="0.14.0" }
