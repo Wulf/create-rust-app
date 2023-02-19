@@ -95,7 +95,7 @@ mime_guess = { optional=true, version="2.0.4" } # backend_poem, plugin_storage
 anyhow = { optional=true, version="1.0.57" } # backend_poem, plugin_auth, plugin_dev
 tokio = { optional=true, version = "1", features = ["full"] } # backend_poem, backend_axum, plugin_storage
 async-priority-channel = "0.1.0"
-futures-util = { optional=true, version = "0.3.25" } # plugin_dev, TODO:plugin_storage?
+futures-util = { optional=true, version = "0.3.26" } # plugin_dev, TODO:plugin_storage?
 
 [features]
 default = ["backend_actix-web", "database_postgres", "plugin_auth", "plugin_container", "plugin_dev", "plugin_graphql", "plugin_storage", "plugin_utoipa"]
