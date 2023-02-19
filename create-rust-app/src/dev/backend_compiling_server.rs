@@ -119,7 +119,7 @@ pub async fn start(
                 .filter(|e| e.metadata.contains_key("exit-watchexec"))
                 .collect::<Vec<_>>();
 
-            if exit_events.is_empty() {
+            if !exit_events.is_empty() {
                 println!("continuous backend compilation stopped.");
                 let mut m = state3.lock().await;
                 m.watchexec_running = false;
@@ -141,8 +141,6 @@ pub async fn start(
                 .filter(|e| {
                     e.tags.iter().any(|t| match t {
                         Tag::Path { path, file_type: _ } => {
-                            // println!("PATH {:#?}", path);
-
                             if path
                                 .to_str()
                                 .unwrap()
@@ -160,7 +158,7 @@ pub async fn start(
                 })
                 .collect::<Vec<_>>();
 
-            if file_events.is_empty() {
+            if !file_events.is_empty() {
                 // compile
                 ws_s.send(DevServerEvent::BackendCompiling(true)).ok();
                 if compile(project_dir, ws_s.clone()) {
