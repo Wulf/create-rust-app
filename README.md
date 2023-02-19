@@ -77,9 +77,13 @@ create-rust-app create -i <project_name>
   - Dockerfile to containerize your rust app into a single image
 
 - **Development plugin**
-  - View your database via the admin portal at `localhost:3000/admin` (editing functionality coming soon™)
+  - View your database via the admin portal at `localhost:3000/admin` (still in development, editing functionality coming soon™)
   - A "devbox" on the frontend indicates when the backend is compiling or when the database is not reachable
   - Moreover, the devbox displays when migrations are pending + includes a "run migrations" button
+  - In-browser compilation errors and migration checking:
+    <a href="https://user-images.githubusercontent.com/4259838/218256539-b94ecba1-abe6-4e42-b4f4-4d80b6d4079b.png"><img src="https://user-images.githubusercontent.com/4259838/218256539-b94ecba1-abe6-4e42-b4f4-4d80b6d4079b.png" width="650px" /></a>
+    <a href="https://user-images.githubusercontent.com/4259838/218256539-b94ecba1-abe6-4e42-b4f4-4d80b6d4079b.png"><img src="https://user-images.githubusercontent.com/4259838/218256528-4b6ca2a4-ffae-4c9e-bc20-c4a483355b01.png" width="650px" /></a>
+
 
 - **Storage plugin**
   - Adds `Storage` extractor which allows you to upload/download files from an S3-compatible object store
@@ -140,11 +144,9 @@ cd my_project && create-rust-app
   - Generates a hook for each handler function defined in the `services/` folder
   - Edit generated hooks afterwards -- they won't be regenerated unless you delete (or rename) the hook!
 
-## Walkthrough
+## Walkthrough (old)
 
 [![Gif](docs/create-rust-app-v2.gif)](https://github.com/Wulf/create-rust-app/blob/main/docs/create-rust-app-v2.mp4)
-
-- This video is a little outdated
 
 ## Contributing
 

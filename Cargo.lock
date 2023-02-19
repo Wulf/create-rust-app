@@ -1338,7 +1338,7 @@ dependencies = [
 
 [[package]]
 name = "create-rust-app"
-version = "9.0.0"
+version = "9.0.1"
 dependencies = [
  "actix-files",
  "actix-http",
