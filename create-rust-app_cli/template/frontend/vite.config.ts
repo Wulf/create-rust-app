@@ -36,7 +36,7 @@ export default defineConfig(async ({ command, mode }) => ({
     define: {
         // When this variable is set, setupDevelopment.tsx will also be loaded!
         // See `dev.tsx` which is included in development.
-        'import.meta.env.DEV_SERVER_PORT': JSON.stringify(process.env.DEV_SERVER_PORT ?? false),
+        'import.meta.env.DEV_SERVER_PORT': String(process.env.DEV_SERVER_PORT),
     },
     plugins: [
         react(),

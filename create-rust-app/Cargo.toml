@@ -93,7 +93,7 @@ axum = { optional=true, version="0.6.1" }
 
 mime_guess = { optional=true, version="2.0.4" } # backend_poem, plugin_storage
 anyhow = { optional=true, version="1.0.57" } # backend_poem, plugin_auth, plugin_dev
-tokio = { optional=true, version = "1", features = ["full"] } # backend_poem, plugin_storage
+tokio = { optional=true, version = "1", features = ["full"] } # backend_poem, backend_axum, plugin_storage
 async-priority-channel = "0.1.0"
 futures-util = { optional=true, version = "0.3.25" } # plugin_dev, TODO:plugin_storage?
 
@@ -107,6 +107,6 @@ plugin_graphql = []
 plugin_utoipa = ["utoipa", "utoipa-swagger-ui", "backend_actix-web"]
 backend_poem = ["poem", "anyhow", "mime_guess", "tokio"]
 backend_actix-web = ["actix-web", "actix-http", "actix-files", "actix-multipart", "actix-web-httpauth","derive_more", "futures", "env_logger"]
-backend_axum = ["axum", "axum/ws"]
+backend_axum = ["axum", "axum/ws", "tokio"]
 database_sqlite = ["diesel/sqlite", "diesel/returning_clauses_for_sqlite_3_35", "libsqlite3-sys/bundled"]
 database_postgres = ["diesel/postgres"]

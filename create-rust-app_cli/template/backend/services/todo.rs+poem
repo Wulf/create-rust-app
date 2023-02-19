@@ -6,7 +6,7 @@ use poem::{
     IntoResponse, Result, Route,
 };
 use create_rust_app::Database;
-use crate::models::todos::{Todo, TodoForm};
+use crate::models::todos::{CreateTodo, Todo, UpdateTodo};
 
 #[tsync::tsync]
 #[derive(serde::Deserialize)]
@@ -43,7 +43,7 @@ async fn read(db: Data<&Database>, Path(item_id): Path<i32>) -> Result<impl Into
 #[handler]
 async fn create(
     db: Data<&Database>,
-    Json(item): Json<TodoForm>,
+    Json(item): Json<CreateTodo>,
 ) -> Result<impl IntoResponse> {
     let mut con = db.get_connection();
 
@@ -58,7 +58,7 @@ async fn create(
 async fn update(
     db: Data<&Database>,
     Path(item_id): Path<i32>,
-    Json(item): Json<TodoForm>,
+    Json(item): Json<UpdateTodo>,
 ) -> Result<impl IntoResponse> {
     let mut con = db.get_connection();
 

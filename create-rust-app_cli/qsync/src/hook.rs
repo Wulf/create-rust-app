@@ -1,4 +1,5 @@
 use std::fmt::Write as _;
+use crate::utils;
 
 use super::params::is_primitive_type;
 use super::processor::HttpVerb;
@@ -26,8 +27,6 @@ pub struct Hook {
     pub return_type: String,
     pub is_mutation: bool,
 
-    pub query_key_base: String,
-
     // params
     pub query_params: Vec<HookQueryParam>,
     pub body_params: Vec<HookBodyParam>,
@@ -37,7 +36,7 @@ pub struct Hook {
 ///
 /// A react hook which uses react-query to pull data from some endpoint. Here's an example:
 ///
-/// ```
+/// ```ts
 /// export const useCenters = (params: PaginationParams) => {
 ///   return useQuery<Centers[]>(
 ///    ['centers', params],
@@ -178,20 +177,22 @@ impl Hook {
 
         let mut query_key = String::new();
 
-        for (index, arg) in self.path_params.iter().enumerate() {
-            if self.is_mutation {
-                query_key.push_str("params.");
-            }
-            query_key.push_str(&arg.hook_arg_name);
-            if index != self.path_params.len() - 1 {
-                query_key.push_str(", ");
-            }
-        }
+        // // INCLUDE PATH PARAMS IN QUERY KEY
+        // for (index, arg) in self.path_params.iter().enumerate() {
+        //     if self.is_mutation {
+        //         query_key.push_str("params.");
+        //     }
+        //     query_key.push_str(&arg.hook_arg_name);
+        //     if index != self.path_params.len() - 1 {
+        //         query_key.push_str(", ");
+        //     }
+        // }
+        //
+        // if !self.path_params.is_empty() && !self.query_params.is_empty() {
+        //     query_key.push_str(", ");
+        // }
 
-        if !self.path_params.is_empty() && !self.query_params.is_empty() {
-            query_key.push_str(", ");
-        }
-
+        // INCLUDE QUERY PARAMS IN QUERY KEY
         for (index, arg) in self.query_params.iter().enumerate() {
             if self.is_mutation {
                 query_key.push_str("params.");
@@ -202,7 +203,7 @@ impl Hook {
             }
         }
 
-        if (!self.path_params.is_empty() || !self.query_params.is_empty())
+        if (/* !self.path_params.is_empty() || */ !self.query_params.is_empty())
             && !self.body_params.is_empty()
         {
             query_key.push_str(", ");
@@ -221,7 +222,18 @@ impl Hook {
         if !query_key.is_empty() {
             query_key.insert_str(0, ", ")
         }
-        query_key.insert_str(0, &format!("{:?}", self.query_key_base));
+
+        let query_key_base = self.endpoint_url.trim_start_matches("/api/").split("/").into_iter().map(|t| {
+            // in actix-web, paths which have {} denote a path param
+            if t.starts_with("{") && t.ends_with("}") {
+                let path_param = t.chars().skip(1).take(t.len() - 2).collect::<String>();
+                format!("pathParams.{path_param}")
+            } else {
+                format!("\"{t}\"").to_string()
+            }
+        }).collect::<Vec<_>>();
+
+        query_key.insert_str(0, &format!("{}", query_key_base.join(", ")));
 
         query_key
     }
@@ -240,13 +252,14 @@ impl ToString for Hook {
             }},
         }})).json(),
         {{
+            mutationKey: [{query_key}],
             onSuccess: () => queryClient.invalidateQueries([{query_key}]),
         }}
     )
 }}"#,
                 variables = self.build_vars_string(),
                 authorization_header = if self.uses_auth {
-                    "'Authorization': `${auth.accessToken}`,\n              "
+                    "'Authorization': `Bearer ${auth.accessToken}`,\n              "
                 } else {
                     ""
                 },
@@ -261,7 +274,7 @@ impl ToString for Hook {
                     ""
                 },
                 endpoint_url = self.endpoint_url.replace('{', "${pathParams."),
-                endpoint_verb = &format!("{:?}", self.endpoint_verb),
+                endpoint_verb = &format!("{:?}", self.endpoint_verb).to_ascii_uppercase(),
                 hook_name = self.hook_name,
                 hook_args = self.build_args_string(),
                 return_type = self.return_type.trim_matches('"'),
@@ -282,7 +295,7 @@ impl ToString for Hook {
 }}"#,
                 variables = self.build_vars_string(),
                 authorization_header = if self.uses_auth {
-                    "'Authorization': `${auth.accessToken}`,\n              "
+                    "'Authorization': `Bearer ${auth.accessToken}`,\n              "
                 } else {
                     ""
                 },
@@ -297,7 +310,7 @@ impl ToString for Hook {
                     ""
                 },
                 endpoint_url = self.endpoint_url.replace('{', "${pathParams."),
-                endpoint_verb = &format!("{:?}", self.endpoint_verb),
+                endpoint_verb = &format!("{:?}", self.endpoint_verb).to_ascii_uppercase(),
                 hook_name = self.hook_name,
                 hook_args = self.build_args_string(),
                 return_type = self.return_type.trim_matches('"'),

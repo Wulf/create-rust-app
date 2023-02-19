@@ -1,6 +1,6 @@
 use actix_web::{delete, Error, get, HttpResponse, post, put, Result, web::{Data, Json, Path, Query}};
 use create_rust_app::Database;
-use crate::models::todos::{Todo, TodoForm};
+use crate::models::todos::{CreateTodo, Todo, UpdateTodo};
 
 #[tsync::tsync]
 #[derive(serde::Deserialize)]
@@ -46,7 +46,7 @@ async fn read(
 #[post("")]
 async fn create(
     db: Data<Database>,
-    Json(item): Json<TodoForm>,
+    Json(item): Json<CreateTodo>,
 ) -> Result<HttpResponse, Error> {
     let mut con = db.get_connection();
 
@@ -59,7 +59,7 @@ async fn create(
 async fn update(
     db: Data<Database>,
     item_id: Path<i32>,
-    Json(item): Json<TodoForm>,
+    Json(item): Json<UpdateTodo>,
 ) -> HttpResponse {
     let mut con = db.get_connection();
 

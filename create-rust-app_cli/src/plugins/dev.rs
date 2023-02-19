@@ -56,7 +56,7 @@ impl Plugin for Dev {
             //
             // Note: When running `cargo frontend` and `cargo backend` individually, "DEV_SERVER_PORT" is not set.
             //       Use `cargo fullstack` for the full development experience.
-            if (import.meta.env.DEV_SERVER_PORT !== 'false') {
+            if (import.meta.env.DEV_SERVER_PORT) {
                 import('./setupDevelopment')
             }
         "##},

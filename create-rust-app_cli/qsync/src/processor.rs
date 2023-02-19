@@ -6,6 +6,8 @@ use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
+use darling::FromMeta;
+
 use syn::FnArg;
 use syn::Pat;
 use syn::PatType;
@@ -13,6 +15,7 @@ use syn::PathArguments;
 use syn::Type;
 use syn::TypePath;
 use walkdir::WalkDir;
+use crate::utils::file_path_to_vec_string;
 
 extern crate inflector;
 use super::processor::inflector::Inflector;
@@ -22,8 +25,14 @@ struct QsyncAttributeProps {
     is_mutation: bool,
 }
 
+#[derive(Debug, FromMeta)]
+pub struct MacroArgs {
+    return_type: Option<String>,
+    mutate: Option<bool>,
+}
+
 fn has_qsync_attribute(
-    _is_debug: bool,
+    is_debug: bool,
     attributes: &[syn::Attribute],
 ) -> Option<QsyncAttributeProps> {
     let mut qsync_props = QsyncAttributeProps {
@@ -31,75 +40,53 @@ fn has_qsync_attribute(
         return_type: "TODO".to_string(),
     };
     let mut has_actix_attribute = false;
-    /*
-        The #[qsync] attribute was removed:
-        • is_mutation can be inferred from the HTTP verb, and,
-        • return_type can be added in by the user after after the hook is generated.
-    */
-    let has_qsync_attribute = true;
+    let mut has_qsync_attribute = false;
 
     for attr in attributes.iter() {
-        let last_segment = attr.path.segments.last();
-        if let Some(last_segment) = last_segment {
-            // if last_segment
-            //     .clone()
-            //     .ident
-            //     .to_string()
-            //     .as_str()
-            //     .eq_ignore_ascii_case("qsync")
-            // {
-            //     has_qsync_attribute = true;
+        let meta = attr.parse_meta().unwrap();
 
-            //     for token in attr.tokens.clone() {
-            //         match token {
-            //             TokenTree::Group(g) => {
-            //                 for i in g.stream() {
-            //                     match i {
-            //                         TokenTree::Ident(ident) => {
-            //                             if ident.to_string().eq_ignore_ascii_case("mutate") {
-            //                                 qsync_props.is_mutation = true;
-            //                             }
-            //                         }
-            //                         TokenTree::Literal(literal) => {
-            //                             qsync_props.return_type = literal.to_string();
-            //                         }
-            //                         _ => {}
-            //                     }
-            //                 }
-            //             }
-            //             _ => {
-            //                 if is_debug {
-            //                     println!("Could not parse attribute");
-            //                 }
-            //                 continue;
-            //             }
-            //         }
-            //     }
-            // }
+        // extract and compare against attribute's identifier (#[path::to::identifier])
+        let attr_identifier = meta.path().segments.last()
+            .map(|r| r.ident.to_string())
+            .unwrap_or_default();
 
-            match last_segment.ident.to_string().as_str() {
-                "get" => {
-                    has_actix_attribute = true;
-                    qsync_props.is_mutation = false;
+        match attr_identifier.as_str() {
+            "qsync" => {
+                has_qsync_attribute = true;
+
+                let args = MacroArgs::from_meta(&meta);
+                if args.is_err() {
+                    if is_debug {
+                        println!("qsync error reading attribute args: {:?}", &args.err());
+                    }
+                    continue;
                 }
-                "post" => {
-                    has_actix_attribute = true;
-                    qsync_props.is_mutation = true;
-                }
-                "patch" => {
-                    has_actix_attribute = true;
-                    qsync_props.is_mutation = true;
-                }
-                "put" => {
-                    has_actix_attribute = true;
-                    qsync_props.is_mutation = true;
-                }
-                "delete" => {
-                    has_actix_attribute = true;
-                    qsync_props.is_mutation = true;
-                }
-                _ => {}
+                let args = args.unwrap();
+
+                qsync_props.is_mutation = args.mutate.unwrap_or_default();
+                if args.return_type.is_some() { qsync_props.return_type = args.return_type.unwrap(); }
             }
+            "get" => {
+                has_actix_attribute = true;
+                qsync_props.is_mutation = false;
+            }
+            "post" => {
+                has_actix_attribute = true;
+                qsync_props.is_mutation = true;
+            }
+            "patch" => {
+                has_actix_attribute = true;
+                qsync_props.is_mutation = true;
+            }
+            "put" => {
+                has_actix_attribute = true;
+                qsync_props.is_mutation = true;
+            }
+            "delete" => {
+                has_actix_attribute = true;
+                qsync_props.is_mutation = true;
+            }
+            _ => {}
         }
     }
 
@@ -192,7 +179,7 @@ fn extract_path_params_from_hook_endpoint_url(hook: &mut Hook) {
         panic!("cannot extract path params because endpoint_url is empty!");
     }
 
-    let re = Regex::new(r"\{[A-Za-z0-9_]+\}").unwrap();
+    let re = Regex::new(r"\{[A-Za-z0-9_]+}").unwrap();
     for path_param_text in re.find_iter(hook.endpoint_url.as_str()) {
         let path_param_text = path_param_text
             .as_str()
@@ -275,45 +262,11 @@ struct BuildState /*<'a>*/ {
 }
 
 fn generate_hook_name(input_path: &Path, fn_name: String) -> String {
-    let mut s: Vec<String> = vec![];
+    let mut hook_name: Vec<String> = file_path_to_vec_string(input_path);
 
-    let mut copy = false;
-    for path in input_path.components() {
-        let path_as_string = path.as_os_str().to_str().unwrap_or_default().to_string();
-        let path_as_string = path_as_string.trim_end_matches(".rs").to_string();
-        if copy {
-            s.push(path_as_string.clone());
-        }
-        if path_as_string.eq_ignore_ascii_case("services") {
-            copy = true;
-        }
-    }
-
-    let mut two: Vec<String> = s.iter().map(|s| s.to_pascal_case()).collect();
-
-    two.insert(0, "use".to_string());
-    two.insert(two.len(), fn_name.to_pascal_case());
-    two.join("")
-}
-
-fn generate_query_key_base(input_path: &Path) -> String {
-    let mut s: Vec<String> = vec![];
-
-    let mut copy = false;
-    for path in input_path.components() {
-        let path_as_string = path.as_os_str().to_str().unwrap_or_default().to_string();
-        let path_as_string = path_as_string.trim_end_matches(".rs").to_string();
-        if copy {
-            s.push(path_as_string.clone());
-        }
-        if path_as_string.eq_ignore_ascii_case("services") {
-            copy = true;
-        }
-    }
-
-    let two: Vec<String> = s.iter().map(|s| s.to_pascal_case()).collect();
-
-    two.join("")
+    hook_name.insert(0, "use".to_string());
+    hook_name.push(fn_name.to_pascal_case());
+    hook_name.join("")
 }
 
 fn process_service_file(input_path: PathBuf, state: &mut BuildState) {
@@ -374,7 +327,6 @@ fn process_service_file(input_path: PathBuf, state: &mut BuildState) {
                     is_mutation: qsync_props.is_mutation,
                     return_type: qsync_props.return_type,
                     hook_name: generate_hook_name(&input_path, exported_fn.sig.ident.to_string()),
-                    query_key_base: generate_query_key_base(&input_path),
                     body_params: vec![],
                     path_params: vec![],
                     query_params: vec![],
@@ -507,9 +459,9 @@ pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) 
         .types
         .push_str("\nimport { useAuth } from './hooks/useAuth'\n");
 
-    state
-        .types
-        .push_str("\n/* Placeholder for types which need to be defined */\ntype TODO = unknown\n");
+    // state
+    //     .types
+    //     .push_str("\n/* Placeholder for types which need to be defined */\ntype TODO = unknown\n");
 
     for input_path in input_paths {
         if !input_path.exists() {
@@ -568,54 +520,54 @@ pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) 
         println!("Note: Nothing is written in debug mode");
         println!("======================================");
     } else {
-        // Verify that the output file either doesn't exists or has been generated by qsync.
-        let original_file_path = Path::new(&output_path);
-        if original_file_path.exists() {
-            if !original_file_path.is_file() {
-                panic!("Specified output path is a directory but must be a file.")
-            }
-
-            let mut defined_hooks = Vec::<String>::new();
-            let file_content =
-                std::fs::read_to_string(original_file_path).expect("Couldn't open output file");
-
-            let hook_regex = regex::Regex::new(r"const\s+([a-zA-Z0-9_]+)").unwrap();
-            for hook in hook_regex.captures_iter(file_content.as_str()) {
-                defined_hooks.push(hook[1].to_string());
-            }
-            // now we add any hooks that weren't included in the file
-
-            let mut file_content = file_content.trim_end().to_string();
-            file_content.push('\n');
-
-            let mut added = 0;
-            let mut existing = state.hooks.len();
-
-            for hook in state
-                .hooks
-                .iter()
-                .filter(|&h| !defined_hooks.contains(&h.hook_name))
-            {
-                file_content.push('\n');
-                file_content.push_str(&hook.to_string());
-                added += 1;
-                existing -= 1;
-                file_content.push('\n');
-            }
-
-            std::fs::write(&output_path, file_content).expect("Unable to write to file");
-
-            println!(
-                "Successfully generated hooks ({} added, {} existing), see {:#?}",
-                added, existing, &output_path
-            )
-        } else {
+        // // Verify that the output file either doesn't exists or has been generated by qsync.
+        // let original_file_path = Path::new(&output_path);
+        // if original_file_path.exists() {
+        //     if !original_file_path.is_file() {
+        //         panic!("Specified output path is a directory but must be a file.")
+        //     }
+        //
+        //     let mut defined_hooks = Vec::<String>::new();
+        //     let file_content =
+        //         std::fs::read_to_string(original_file_path).expect("Couldn't open output file");
+        //
+        //     let hook_regex = regex::Regex::new(r"const\s+([a-zA-Z0-9_]+)").unwrap();
+        //     for hook in hook_regex.captures_iter(file_content.as_str()) {
+        //         defined_hooks.push(hook[1].to_string());
+        //     }
+        //     // now we add any hooks that weren't included in the file
+        //
+        //     let mut file_content = file_content.trim_end().to_string();
+        //     file_content.push('\n');
+        //
+        //     let mut added = 0;
+        //     let mut existing = state.hooks.len();
+        //
+        //     for hook in state
+        //         .hooks
+        //         .iter()
+        //         .filter(|&h| !defined_hooks.contains(&h.hook_name))
+        //     {
+        //         file_content.push('\n');
+        //         file_content.push_str(&hook.to_string());
+        //         added += 1;
+        //         existing -= 1;
+        //         file_content.push('\n');
+        //     }
+        //
+        //     std::fs::write(&output_path, file_content).expect("Unable to write to file");
+        //
+        //     println!(
+        //         "Successfully generated hooks ({} added, {} existing), see {:#?}",
+        //         added, existing, &output_path
+        //     )
+        // } else {
             let mut file: File = File::create(&output_path).expect("Unable to write to file");
             match file.write_all(state.types.as_bytes()) {
                 Ok(_) => println!("Successfully generated hooks, see {output_path:#?}"),
                 Err(_) => println!("Failed to generate types, an error occurred."),
             }
-        }
+        // }
     }
 
     if !state.unprocessed_files.is_empty() {

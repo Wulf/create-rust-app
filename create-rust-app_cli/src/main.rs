@@ -2,7 +2,6 @@ extern crate inflector;
 
 mod content;
 mod plugins;
-mod qsync;
 mod utils;
 
 use anyhow::Result;
@@ -16,6 +15,7 @@ use crate::project::CreationOptions;
 use content::project;
 use dialoguer::{console::Term, theme::ColorfulTheme, Input, MultiSelect, Select};
 use utils::{fs, logger};
+use qsync;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
 pub enum BackendFramework {

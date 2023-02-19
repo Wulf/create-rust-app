@@ -17,18 +17,13 @@ anyhow = "1.0.68"
 console = "0.15.5"
 dialoguer = "0.10.3"
 indoc = "1.0.8"
+walkdir = "2.3.2"
 rust-embed = "6.4.2"
 clap = {version = "4.1", features = ["wrap_help", "derive", "cargo"]}
 toml = "0.5.11"
 tsync = "1"
-
-# check cli version
 update-informer = "0.6.0"
-
-# for qsync exclusively
-regex = "1.7.1"
-syn = { version = "1.0.75", features = ["full", "extra-traits", "parsing"] }
-walkdir = "2.3.2"
+qsync = { path="qsync" }
 
 [[bin]]
 name = "create-rust-app"
