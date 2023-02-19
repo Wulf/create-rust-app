@@ -77,7 +77,7 @@ create-rust-app create -i <project_name>
   - Dockerfile to containerize your rust app into a single image
 
 - **Development plugin**
-  - View your database via the admin portal at `localhost:3000/admin` (still in development, editing functionality coming soon™)
+  - View your database via the admin portal at `localhost:3000/admin` (still in development)
   - A "devbox" on the frontend indicates when the backend is compiling or when the database is not reachable
   - Moreover, the devbox displays when migrations are pending + includes a "run migrations" button
   - In-browser compilation errors and migration checking:
