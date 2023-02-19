@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "create-rust-app",
-  "create-rust-app_cli"
+  "create-rust-app_cli",
+  "create-rust-app_cli/qsync"
 ]
 exclude = ["docs", "tests"]
