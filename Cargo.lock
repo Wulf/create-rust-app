@@ -3340,6 +3340,8 @@ dependencies = [
 [[package]]
 name = "qsync-macro"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9fbce39de2f1de1e1038a0a26c49a7da46d411f7882f3719c64849ef5f3f67d1"
 
 [[package]]
 name = "quick-error"

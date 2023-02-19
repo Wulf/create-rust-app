@@ -23,7 +23,7 @@ clap = {version = "4.1", features = ["wrap_help", "derive", "cargo"]}
 toml = "0.5.11"
 tsync = "1"
 update-informer = "0.6.0"
-qsync = { path="qsync" }
+qsync = { version="0.1.0" }
 
 [[bin]]
 name = "create-rust-app"

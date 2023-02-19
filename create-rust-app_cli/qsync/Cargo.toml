@@ -10,7 +10,7 @@ Inflector = "0.11.4"
 regex = "1.7.1"
 syn = { version = "1.0.75", features = ["full", "extra-traits", "parsing"] }
 walkdir = "2.3.2"
-qsync-macro = { path = "./qsync-macro" }
+qsync-macro = { version="0.1.0" }
 darling = "0.14.3"
 proc-macro2 = "1.0.51"
 
