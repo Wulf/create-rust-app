@@ -1,4 +1,4 @@
-name: CLI Continuous Integration (project compilation tests)
+name: CLI Continuous Integration (Compilation tests for variations of Poem + Postgres)
 on:
   workflow_dispatch:
   push:
