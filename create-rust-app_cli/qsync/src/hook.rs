@@ -225,20 +225,20 @@ impl Hook {
         let query_key_base = self
             .endpoint_url
             .trim_start_matches("/api/")
-            .split("/")
+            .split('/')
             .into_iter()
             .map(|t| {
                 // in actix-web, paths which have {} denote a path param
-                if t.starts_with("{") && t.ends_with("}") {
+                if t.starts_with('{') && t.ends_with('}') {
                     let path_param = t.chars().skip(1).take(t.len() - 2).collect::<String>();
                     format!("pathParams.{path_param}")
                 } else {
-                    format!("\"{t}\"").to_string()
+                    format!("\"{t}\"")
                 }
             })
             .collect::<Vec<_>>();
 
-        query_key.insert_str(0, &format!("{}", query_key_base.join(", ")));
+        query_key.insert_str(0, &query_key_base.join(", "));
 
         query_key
     }

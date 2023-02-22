@@ -113,13 +113,12 @@ pub async fn start(
         let ws_s = dev_server_events_s.clone();
         let migrations_dir = migrations_dir.clone();
         async move {
-            let exit_events = action
+            // no exit events
+            if !action
                 .events
                 .iter()
-                .filter(|e| e.metadata.contains_key("exit-watchexec"))
-                .collect::<Vec<_>>();
-
-            if !exit_events.is_empty() {
+                .any(|e| e.metadata.contains_key("exit-watchexec"))
+            {
                 println!("continuous backend compilation stopped.");
                 let mut m = state3.lock().await;
                 m.watchexec_running = false;
@@ -135,30 +134,26 @@ pub async fn start(
             // println!("=> ignoring {:#?}", files_to_ignore);
 
             let mut touched_migrations_dir = false;
-            let file_events = action
-                .events
-                .iter()
-                .filter(|e| {
-                    e.tags.iter().any(|t| match t {
-                        Tag::Path { path, file_type: _ } => {
-                            if path
-                                .to_str()
-                                .unwrap()
-                                .starts_with(migrations_dir.as_os_str().to_str().unwrap())
-                            {
-                                touched_migrations_dir = true;
-                            }
-
-                            !files_to_ignore.iter().any(|file_to_ignore| {
-                                path.to_str().unwrap().ends_with(file_to_ignore)
-                            })
+            
+            // no file events
+            if !action.events.iter().any(|e| {
+                e.tags.iter().any(|t| match t {
+                    Tag::Path { path, file_type: _ } => {
+                        if path
+                            .to_str()
+                            .unwrap()
+                            .starts_with(migrations_dir.as_os_str().to_str().unwrap())
+                        {
+                            touched_migrations_dir = true;
                         }
-                        _ => false,
-                    })
-                })
-                .collect::<Vec<_>>();
 
-            if !file_events.is_empty() {
+                        !files_to_ignore
+                            .iter()
+                            .any(|file_to_ignore| path.to_str().unwrap().ends_with(file_to_ignore))
+                    }
+                    _ => false,
+                })
+            }) {
                 // compile
                 ws_s.send(DevServerEvent::BackendCompiling(true)).ok();
                 if compile(project_dir, ws_s.clone()) {
@@ -249,7 +244,7 @@ fn compile(project_dir: &'static str, ws_s: Sender<DevServerEvent>) -> bool {
                     .duration_since(start_time)
                     .map(|d| d.as_secs_f32())
                     .map(|d| format!("{d:.2}"))
-                    .unwrap_or("?".to_string());
+                    .unwrap_or_else(|_| "?".to_string());
 
                 if finished.success {
                     println!("✅ Compiled ({compile_time_s} seconds)");

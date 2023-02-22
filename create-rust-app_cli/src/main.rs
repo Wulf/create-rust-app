@@ -14,7 +14,7 @@ use std::path::PathBuf;
 use crate::project::CreationOptions;
 use content::project;
 use dialoguer::{console::Term, theme::ColorfulTheme, Input, MultiSelect, Select};
-use qsync;
+
 use utils::{fs, logger};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
