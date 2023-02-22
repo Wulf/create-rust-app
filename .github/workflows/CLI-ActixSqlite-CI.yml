@@ -15,7 +15,6 @@ on:
       - "Cargo.toml"
 env:
   CARGO_TERM_COLOR: always
-  CARGO_INCREMENTAL: true
   
 concurrency:
   group:  CI-${{ github.ref }}
@@ -23,8 +22,8 @@ concurrency:
 
 jobs:
   # naming convention is: [backend]-[database]-[plugins]
-  Actix-Postgres-None:
-    name: Actix w/ Postgres and no plugins
+  Actix-Sqlite-None:
+    name: Actix w/ Sqlite and no plugins
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3.3.0
@@ -37,18 +36,15 @@ jobs:
       - uses: actions/cache@v3.2.5
         with:
           path: |
-            ./.cargo/.build
-            ./target
-            ~/.cargo
-          key: ${{ runner.os }}-cargo-cli-${{ hashFiles('**/Cargo.lock') }}
+            **/.cargo/.build
+            **/target
+          key: ${{ runner.os }}-cargo-cli-AS-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: 
-            cargo run --bin create-rust-app -- create -c -d postgres -b actix-web test-project
+            cargo run --bin create-rust-app -- create -c -d sqlite -b actix-web test-project
       - run: cd test-project
       - uses: actions-rs/cargo@v1.0.3
         with:
           command:
-            cargo fullstack
-
-
+            cargo build

@@ -1,0 +1,49 @@
+name: CLI Continuous Integration (project compilation tests)
+on:
+  workflow_dispatch:
+  push:
+    branches: 
+      - "main"
+    paths: 
+      - "**.rs"
+      - "Cargo.lock"
+      - "Cargo.toml"
+  pull_request:
+    paths: 
+      - "**.rs"
+      - "Cargo.lock"
+      - "Cargo.toml"
+env:
+  CARGO_TERM_COLOR: always
+  
+concurrency:
+  group:  CI-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # naming convention is: [backend]-[database]-[plugins]
+  Actix-Postgres-None:
+    name: Actix w/ Postgres and no plugins
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.5
+        with:
+          path: |
+            **/.cargo/.build
+            **/target
+          key: ${{ runner.os }}-cargo-cli-AP-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: run --bin create-rust-app -- create -c -d postgres -b actix-web test-project
+      - run: cd test-project
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: build
+
