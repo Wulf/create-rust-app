@@ -39,6 +39,7 @@ jobs:
             **/.cargo/.build
             **/target
           key: ${{ runner.os }}-cargo-cli-AS-${{ hashFiles('**/Cargo.lock') }}
+      - run: git config user.name test
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: 
@@ -68,6 +69,7 @@ jobs:
             **/.cargo/.build
             **/target
           key: ${{ runner.os }}-cargo-cli-AS-${{ hashFiles('**/Cargo.lock') }}
+      - run: git config user.name test
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
@@ -95,6 +97,7 @@ jobs:
             **/.cargo/.build
             **/target
           key: ${{ runner.os }}-cargo-cli-AS-${{ hashFiles('**/Cargo.lock') }}
+      - run: git config user.name test
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
@@ -122,6 +125,7 @@ jobs:
             **/.cargo/.build
             **/target
           key: ${{ runner.os }}-cargo-cli-AS-${{ hashFiles('**/Cargo.lock') }}
+      - run: git config user.name test
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
@@ -149,6 +153,7 @@ jobs:
             **/.cargo/.build
             **/target
           key: ${{ runner.os }}-cargo-cli-AS-${{ hashFiles('**/Cargo.lock') }}
+      - run: git config user.name test
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
@@ -176,6 +181,7 @@ jobs:
             **/.cargo/.build
             **/target
           key: ${{ runner.os }}-cargo-cli-AS-${{ hashFiles('**/Cargo.lock') }}
+      - run: git config user.name test
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
@@ -203,6 +209,7 @@ jobs:
             **/.cargo/.build
             **/target
           key: ${{ runner.os }}-cargo-cli-AS-${{ hashFiles('**/Cargo.lock') }}
+      - run: git config user.name test
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
