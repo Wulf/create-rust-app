@@ -39,8 +39,8 @@ jobs:
             **/.cargo/.build
             **/target
           key: ${{ runner.os }}-cargo-cli-PP-${{ hashFiles('**/Cargo.lock') }}
-      - run: git config user.name test
-      - run: git config user.email example@email.com
+      - run: git config --global user.name test
+      - run: git config --global user.email example@email.com
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
@@ -68,8 +68,8 @@ jobs:
             **/.cargo/.build
             **/target
           key: ${{ runner.os }}-cargo-cli-PP-${{ hashFiles('**/Cargo.lock') }}
-      - run: git config user.name test
-      - run: git config user.email example@email.com
+      - run: git config --global user.name test
+      - run: git config --global user.email example@email.com
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
@@ -97,8 +97,8 @@ jobs:
             **/.cargo/.build
             **/target
           key: ${{ runner.os }}-cargo-cli-PP-${{ hashFiles('**/Cargo.lock') }}
-      - run: git config user.name test
-      - run: git config user.email example@email.com
+      - run: git config --global user.name test
+      - run: git config --global user.email example@email.com
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
@@ -126,8 +126,8 @@ jobs:
             **/.cargo/.build
             **/target
           key: ${{ runner.os }}-cargo-cli-PP-${{ hashFiles('**/Cargo.lock') }}
-      - run: git config user.name test
-      - run: git config user.email example@email.com
+      - run: git config --global user.name test
+      - run: git config --global user.email example@email.com
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
@@ -155,8 +155,8 @@ jobs:
             **/.cargo/.build
             **/target
           key: ${{ runner.os }}-cargo-cli-PP-${{ hashFiles('**/Cargo.lock') }}
-      - run: git config user.name test
-      - run: git config user.email example@email.com
+      - run: git config --global user.name test
+      - run: git config --global user.email example@email.com
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
@@ -184,8 +184,8 @@ jobs:
             **/.cargo/.build
             **/target
           key: ${{ runner.os }}-cargo-cli-PP-${{ hashFiles('**/Cargo.lock') }}
-      - run: git config user.name test
-      - run: git config user.email example@email.com
+      - run: git config --global user.name test
+      - run: git config --global user.email example@email.com
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
