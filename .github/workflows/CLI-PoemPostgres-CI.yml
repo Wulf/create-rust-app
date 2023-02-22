@@ -47,3 +47,132 @@ jobs:
         with:
           command: build
   
+  Poem-Postgres-All:
+    needs: [Poem-Postgres-None]
+    name: Poem w/ Postgres and all valid plugins
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.5
+        with:
+          path: |
+            **/.cargo/.build
+            **/target
+          key: ${{ runner.os }}-cargo-cli-PP-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: run --bin create-rust-app -- create -c -d postgres -b poem --plugins=auth,container,graphql,storage test-project
+      - run: cd test-project
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: build
+
+  Poem-Postgres-Container:
+    needs: [Poem-Postgres-None]
+    name: Poem w/ Postgres and the container plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.5
+        with:
+          path: |
+            **/.cargo/.build
+            **/target
+          key: ${{ runner.os }}-cargo-cli-PP-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: run --bin create-rust-app -- create -c -d postgres -b poem --plugins=container test-project
+      - run: cd test-project
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: build
+
+  Poem-Postgres-Auth:
+    needs: [Poem-Postgres-None]
+    name: Poem w/ Postgres and the auth plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.5
+        with:
+          path: |
+            **/.cargo/.build
+            **/target
+          key: ${{ runner.os }}-cargo-cli-PP-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: run --bin create-rust-app -- create -c -d postgres -b poem --plugins=auth test-project
+      - run: cd test-project
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: build
+
+  Poem-Postgres-Storage:
+    needs: [Poem-Postgres-None]
+    name: Poem w/ Postgres and the storage plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.5
+        with:
+          path: |
+            **/.cargo/.build
+            **/target
+          key: ${{ runner.os }}-cargo-cli-PP-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: run --bin create-rust-app -- create -c -d postgres -b poem --plugins=storage test-project
+      - run: cd test-project
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: build
+
+  Poem-Postgres-GraphQL:
+    needs: [Poem-Postgres-None]
+    name: Poem w/ Postgres and the graphql plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.5
+        with:
+          path: |
+            **/.cargo/.build
+            **/target
+          key: ${{ runner.os }}-cargo-cli-PP-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: run --bin create-rust-app -- create -c -d postgres -b poem --plugins=graphql test-project
+      - run: cd test-project
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: build
