@@ -40,6 +40,7 @@ jobs:
             **/target
           key: ${{ runner.os }}-cargo-cli-PS-${{ hashFiles('**/Cargo.lock') }}
       - run: git config user.name test
+      - run: git config user.email example@email.com
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
@@ -69,6 +70,7 @@ jobs:
             **/target
           key: ${{ runner.os }}-cargo-cli-PS-${{ hashFiles('**/Cargo.lock') }}
       - run: git config user.name test
+      - run: git config user.email example@email.com
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
@@ -97,6 +99,7 @@ jobs:
             **/target
           key: ${{ runner.os }}-cargo-cli-PS-${{ hashFiles('**/Cargo.lock') }}
       - run: git config user.name test
+      - run: git config user.email example@email.com
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
@@ -125,6 +128,7 @@ jobs:
             **/target
           key: ${{ runner.os }}-cargo-cli-PS-${{ hashFiles('**/Cargo.lock') }}
       - run: git config user.name test
+      - run: git config user.email example@email.com
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
@@ -153,6 +157,7 @@ jobs:
             **/target
           key: ${{ runner.os }}-cargo-cli-PS-${{ hashFiles('**/Cargo.lock') }}
       - run: git config user.name test
+      - run: git config user.email example@email.com
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
@@ -181,6 +186,7 @@ jobs:
             **/target
           key: ${{ runner.os }}-cargo-cli-PS-${{ hashFiles('**/Cargo.lock') }}
       - run: git config user.name test
+      - run: git config user.email example@email.com
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
