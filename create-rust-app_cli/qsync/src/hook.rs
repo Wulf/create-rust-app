@@ -1,5 +1,4 @@
 use std::fmt::Write as _;
-use crate::utils;
 
 use super::params::is_primitive_type;
 use super::processor::HttpVerb;
@@ -203,7 +202,7 @@ impl Hook {
             }
         }
 
-        if (/* !self.path_params.is_empty() || */ !self.query_params.is_empty())
+        if (/* !self.path_params.is_empty() || */!self.query_params.is_empty())
             && !self.body_params.is_empty()
         {
             query_key.push_str(", ");
@@ -223,15 +222,21 @@ impl Hook {
             query_key.insert_str(0, ", ")
         }
 
-        let query_key_base = self.endpoint_url.trim_start_matches("/api/").split("/").into_iter().map(|t| {
-            // in actix-web, paths which have {} denote a path param
-            if t.starts_with("{") && t.ends_with("}") {
-                let path_param = t.chars().skip(1).take(t.len() - 2).collect::<String>();
-                format!("pathParams.{path_param}")
-            } else {
-                format!("\"{t}\"").to_string()
-            }
-        }).collect::<Vec<_>>();
+        let query_key_base = self
+            .endpoint_url
+            .trim_start_matches("/api/")
+            .split("/")
+            .into_iter()
+            .map(|t| {
+                // in actix-web, paths which have {} denote a path param
+                if t.starts_with("{") && t.ends_with("}") {
+                    let path_param = t.chars().skip(1).take(t.len() - 2).collect::<String>();
+                    format!("pathParams.{path_param}")
+                } else {
+                    format!("\"{t}\"").to_string()
+                }
+            })
+            .collect::<Vec<_>>();
 
         query_key.insert_str(0, &format!("{}", query_key_base.join(", ")));
 

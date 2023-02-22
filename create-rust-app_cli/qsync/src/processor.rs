@@ -1,13 +1,14 @@
 use super::hook::{Hook, HookBodyParam, HookPathParam, HookQueryParam};
 use super::params::generic_to_typsecript_type;
+use darling::FromMeta;
 use regex::Regex;
 use std::fs::File;
 use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
-use darling::FromMeta;
 
+use crate::utils::file_path_to_vec_string;
 use syn::FnArg;
 use syn::Pat;
 use syn::PatType;
@@ -15,7 +16,6 @@ use syn::PathArguments;
 use syn::Type;
 use syn::TypePath;
 use walkdir::WalkDir;
-use crate::utils::file_path_to_vec_string;
 
 extern crate inflector;
 use super::processor::inflector::Inflector;
@@ -46,7 +46,10 @@ fn has_qsync_attribute(
         let meta = attr.parse_meta().unwrap();
 
         // extract and compare against attribute's identifier (#[path::to::identifier])
-        let attr_identifier = meta.path().segments.last()
+        let attr_identifier = meta
+            .path()
+            .segments
+            .last()
             .map(|r| r.ident.to_string())
             .unwrap_or_default();
 
@@ -64,7 +67,9 @@ fn has_qsync_attribute(
                 let args = args.unwrap();
 
                 qsync_props.is_mutation = args.mutate.unwrap_or_default();
-                if args.return_type.is_some() { qsync_props.return_type = args.return_type.unwrap(); }
+                if args.return_type.is_some() {
+                    qsync_props.return_type = args.return_type.unwrap();
+                }
             }
             "get" => {
                 has_actix_attribute = true;
@@ -562,11 +567,11 @@ pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) 
         //         added, existing, &output_path
         //     )
         // } else {
-            let mut file: File = File::create(&output_path).expect("Unable to write to file");
-            match file.write_all(state.types.as_bytes()) {
-                Ok(_) => println!("Successfully generated hooks, see {output_path:#?}"),
-                Err(_) => println!("Failed to generate types, an error occurred."),
-            }
+        let mut file: File = File::create(&output_path).expect("Unable to write to file");
+        match file.write_all(state.types.as_bytes()) {
+            Ok(_) => println!("Successfully generated hooks, see {output_path:#?}"),
+            Err(_) => println!("Failed to generate types, an error occurred."),
+        }
         // }
     }
 
