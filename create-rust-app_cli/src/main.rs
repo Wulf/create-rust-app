@@ -461,7 +461,7 @@ fn configure_project(
         println!("Fatal: the current directory doesn't exist. This shouldn't be possible.");
         return Ok(());
     }
-
+ 
     if !fs::is_rust_project(&current_dir)? {
         // TODO: determine if the current directory is a create-rust-app project.
         println!("Fatal: the current directory is not a rust project.");
