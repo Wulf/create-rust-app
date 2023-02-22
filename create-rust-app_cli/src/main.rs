@@ -61,7 +61,7 @@ enum Commands {
             name = "non-interactive mode",
             help = "Configure project through interactive CLI arguments.",
             requires = "database",
-            requires = "backend framework",
+            requires = "backend framework"
         )]
         cli_mode: bool,
 
@@ -336,8 +336,7 @@ fn create_project(
                 }
 
                 features
-            }
-            else {
+            } else {
                 vec![]
             }
         }

@@ -134,7 +134,7 @@ pub async fn start(
             // println!("=> ignoring {:#?}", files_to_ignore);
 
             let mut touched_migrations_dir = false;
-            
+
             // no file events
             if !action.events.iter().any(|e| {
                 e.tags.iter().any(|t| match t {
