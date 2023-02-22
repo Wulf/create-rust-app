@@ -45,10 +45,10 @@ jobs:
         with:
           command: run
           args: --bin create-rust-app -- create -c -d postgres -b poem test-project
-      - run: cd test-project
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: build
+          args: --manifest-path=test-project/Cargo.toml
   
   Poem-Postgres-All:
     needs: [Poem-Postgres-None]
@@ -74,10 +74,10 @@ jobs:
         with:
           command: run
           args: --bin create-rust-app -- create -c -d postgres -b poem --plugins=auth,container,graphql,storage test-project
-      - run: cd test-project
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: build
+          args: --manifest-path=test-project/Cargo.toml
 
   Poem-Postgres-Container:
     needs: [Poem-Postgres-None]
@@ -103,10 +103,10 @@ jobs:
         with:
           command: run
           args: --bin create-rust-app -- create -c -d postgres -b poem --plugins=container test-project
-      - run: cd test-project
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: build
+          args: --manifest-path=test-project/Cargo.toml
 
   Poem-Postgres-Auth:
     needs: [Poem-Postgres-None]
@@ -132,10 +132,10 @@ jobs:
         with:
           command: run
           args: --bin create-rust-app -- create -c -d postgres -b poem --plugins=auth test-project
-      - run: cd test-project
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: build
+          args: --manifest-path=test-project/Cargo.toml
 
   Poem-Postgres-Storage:
     needs: [Poem-Postgres-None]
@@ -161,10 +161,10 @@ jobs:
         with:
           command: run
           args: --bin create-rust-app -- create -c -d postgres -b poem --plugins=storage test-project
-      - run: cd test-project
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: build
+          args: --manifest-path=test-project/Cargo.toml
 
   Poem-Postgres-GraphQL:
     needs: [Poem-Postgres-None]
@@ -189,8 +189,8 @@ jobs:
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: run
-          args: --bin create-rust-app -- create -c -d postgres -b poem --plugins=graphql test-project
-      - run: cd test-project
+          args: --bin create-rust-app -- create -c -d postgres -b poem --plugins=graphql,auth test-project
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: build
+          args: --manifest-path=test-project/Cargo.toml
