@@ -43,14 +43,12 @@ jobs:
       - run: git config --global user.email example@email.com
       - uses: actions-rs/cargo@v1.0.3
         with:
-          command: 
-            cargo run
+          command: run
           args: --bin create-rust-app -- create -c -d sqlite -b actix-web test-project
       - run: cd test-project
       - uses: actions-rs/cargo@v1.0.3
         with:
-          command:
-            cargo build
+          command: build
 
   Actix-Sqlite-All:
     needs: [Actix-Sqlite-None]
