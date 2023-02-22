@@ -41,7 +41,8 @@ jobs:
           key: ${{ runner.os }}-cargo-cli-PS-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/cargo@v1.0.3
         with:
-          command: run --bin create-rust-app -- create -c -d sqlite -b poem test-project
+          command: run
+          args: --bin create-rust-app -- create -c -d sqlite -b poem test-project
       - run: cd test-project
       - uses: actions-rs/cargo@v1.0.3
         with:
@@ -68,7 +69,8 @@ jobs:
           key: ${{ runner.os }}-cargo-cli-PS-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/cargo@v1.0.3
         with:
-          command: run --bin create-rust-app -- create -c -d sqlite -b poem --plugins=auth,container,graphql,storage test-project
+          command: run
+          args: --bin create-rust-app -- create -c -d sqlite -b poem --plugins=auth,container,graphql,storage test-project
       - run: cd test-project
       - uses: actions-rs/cargo@v1.0.3
         with:
@@ -94,7 +96,8 @@ jobs:
           key: ${{ runner.os }}-cargo-cli-PS-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/cargo@v1.0.3
         with:
-          command: run --bin create-rust-app -- create -c -d sqlite -b poem --plugins=container test-project
+          command: run
+          args: --bin create-rust-app -- create -c -d sqlite -b poem --plugins=container test-project
       - run: cd test-project
       - uses: actions-rs/cargo@v1.0.3
         with:
@@ -120,7 +123,8 @@ jobs:
           key: ${{ runner.os }}-cargo-cli-PS-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/cargo@v1.0.3
         with:
-          command: run --bin create-rust-app -- create -c -d sqlite -b poem --plugins=auth test-project
+          command: run
+          args: --bin create-rust-app -- create -c -d sqlite -b poem --plugins=auth test-project
       - run: cd test-project
       - uses: actions-rs/cargo@v1.0.3
         with:
@@ -146,7 +150,8 @@ jobs:
           key: ${{ runner.os }}-cargo-cli-PS-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/cargo@v1.0.3
         with:
-          command: run --bin create-rust-app -- create -c -d sqlite -b poem --plugins=storage test-project
+          command: run
+          args: --bin create-rust-app -- create -c -d sqlite -b poem --plugins=storage test-project
       - run: cd test-project
       - uses: actions-rs/cargo@v1.0.3
         with:
@@ -172,7 +177,8 @@ jobs:
           key: ${{ runner.os }}-cargo-cli-PS-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/cargo@v1.0.3
         with:
-          command: run --bin create-rust-app -- create -c -d sqlite -b poem --plugins=graphql test-project
+          command: run
+          args: --bin create-rust-app -- create -c -d sqlite -b poem --plugins=graphql test-project
       - run: cd test-project
       - uses: actions-rs/cargo@v1.0.3
         with:
