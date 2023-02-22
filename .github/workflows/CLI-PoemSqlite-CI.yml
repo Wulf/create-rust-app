@@ -17,7 +17,7 @@ env:
   CARGO_TERM_COLOR: always
   
 concurrency:
-  group:  CI-${{ github.ref }}
+  group:  CI-PS-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
