@@ -26,7 +26,7 @@ export const AccountPage = () => {
     const response = await fetch(`/api/auth/sessions/${id}`, {
       method: 'DELETE',
       headers: {
-        Authorization: `${auth.accessToken}`,
+        Authorization: `Bearer ${auth.accessToken}`,
       },
     })
 
@@ -46,7 +46,7 @@ export const AccountPage = () => {
     const response = await fetch(`/api/auth/sessions`, {
       method: 'DELETE',
       headers: {
-        Authorization: `${auth.accessToken}`,
+        Authorization: `Bearer ${auth.accessToken}`,
       },
     })
 
@@ -71,7 +71,7 @@ export const AccountPage = () => {
       await fetch(`/api/auth/sessions?page=${page}&page_size=${pageSize}`, {
         method: 'GET',
         headers: {
-          Authorization: `${auth.accessToken}`,
+          Authorization: `Bearer ${auth.accessToken}`,
         },
       })
     ).json()
@@ -91,7 +91,7 @@ export const AccountPage = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `${auth.accessToken}`,
+          Authorization: `Bearer ${auth.accessToken}`,
         },
         body: JSON.stringify({
           old_password: originalPassword,
