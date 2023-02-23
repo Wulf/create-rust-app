@@ -122,6 +122,7 @@ pub struct CreationOptions {
     pub cra_enabled_features: Vec<String>,
     pub backend_framework: BackendFramework,
     pub backend_database: BackendDatabase,
+    pub cli_mode: bool,
 }
 
 pub fn remove_non_framework_files(
@@ -483,12 +484,18 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         std::process::exit(1);
     }
 
+    // check if a git user name & email are configured, if not either ask for one or fail if in cli-mode    
     logger::command_msg("git config user.name");
-
     let git_config_user_name = git::check_config(&project_dir, "user.name");
-
     if !git_config_user_name {
         logger::message("You do not have a git user name set.");
+        
+        // if being created in cli-only mode, don't ask for a new user.name, 
+        // just tell them how to set it and exit with status code 1
+        if creation_options.cli_mode {
+            logger::error("Running in non-interactive mode and git user.name not set.\nYou can set it with this command:\n\t`git config --global user.name <name>`");
+            std::process::exit(1);
+        } 
 
         let mut valid_user_name = false;
         let mut invalid_input = false;
@@ -514,10 +521,17 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         }
     }
 
+    logger::command_msg("git config user.email");
     let git_config_user_email = git::check_config(&project_dir, "user.email");
-
     if !git_config_user_email {
         logger::message("You do not have a git user email set.");
+
+        // if being created in cli-only mode, don't ask for a new user.email, 
+        // just tell them how to set it and exit with status code 1
+        if creation_options.cli_mode {
+            logger::error("Running in non-interactive mode and git user.email not set.\nYou can set it with this command:\n\t`git config --global user.email <email>`");
+            std::process::exit(1);
+        } 
 
         let mut valid_user_email = false;
         let mut invalid_input = false;

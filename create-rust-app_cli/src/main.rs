@@ -59,7 +59,7 @@ enum Commands {
             short = 'c',
             long = "cli",
             name = "non-interactive mode",
-            help = "Configure project through interactive CLI arguments.",
+            help = "Configure project through CLI arguments, not the interactive TUI.",
             requires = "database",
             requires = "backend framework"
         )]
@@ -360,6 +360,7 @@ fn create_project(
             cra_enabled_features: cra_enabled_features.clone(),
             backend_framework,
             backend_database,
+            cli_mode,
         },
     )?;
 
