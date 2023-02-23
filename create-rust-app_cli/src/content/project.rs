@@ -230,10 +230,11 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
             Err(err) => logger::exit("std::fs::canonicalize():", err),
         };
 
-        let proceed = !creation_options.cli_mode && Confirm::with_theme(&ColorfulTheme::default())
-            .with_prompt("Delete directory contents?")
-            .default(false)
-            .interact()?;
+        let proceed = !creation_options.cli_mode
+            && Confirm::with_theme(&ColorfulTheme::default())
+                .with_prompt("Delete directory contents?")
+                .default(false)
+                .interact()?;
 
         if proceed {
             match std::fs::remove_dir_all(&project_dir) {
@@ -259,18 +260,18 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         style(&format!("{:?}", creation_options.backend_framework)).yellow()
     ));
 
-    // check if a git user name & email are configured, if not either ask for one or fail if in cli-mode    
+    // check if a git user name & email are configured, if not either ask for one or fail if in cli-mode
     logger::command_msg("git config user.name");
     let git_config_user_name = git::check_config(&project_dir, "user.name");
     if !git_config_user_name {
         logger::message("You do not have a git user name set.");
-        
-        // if being created in cli-only mode, don't ask for a new user.name, 
+
+        // if being created in cli-only mode, don't ask for a new user.name,
         // just tell them how to set it and exit with status code 1
         if creation_options.cli_mode {
             logger::error("Running in non-interactive mode and git user.name not set.\nYou can set it with this command:\n\t`git config --global user.name <name>`");
             std::process::exit(1);
-        } 
+        }
 
         let mut valid_user_name = false;
         let mut invalid_input = false;
@@ -301,12 +302,12 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
     if !git_config_user_email {
         logger::message("You do not have a git user email set.");
 
-        // if being created in cli-only mode, don't ask for a new user.email, 
+        // if being created in cli-only mode, don't ask for a new user.email,
         // just tell them how to set it and exit with status code 1
         if creation_options.cli_mode {
             logger::error("Running in non-interactive mode and git user.email not set.\nYou can set it with this command:\n\t`git config --global user.email <email>`");
             std::process::exit(1);
-        } 
+        }
 
         let mut valid_user_email = false;
         let mut invalid_input = false;
