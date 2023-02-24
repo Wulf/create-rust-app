@@ -1,0 +1,225 @@
+name: CLI Continuous Integration (Compilation tests for variations of Actix + Sqlite)
+on:
+  workflow_dispatch:
+  push:
+    branches: 
+      - "main"
+    paths: 
+      - "**.rs"
+      - "Cargo.lock"
+      - "Cargo.toml"
+  pull_request:
+    paths: 
+      - "**.rs"
+      - "Cargo.lock"
+      - "Cargo.toml"
+env:
+  CARGO_TERM_COLOR: always
+  
+concurrency:
+  group:  CI-AS-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # naming convention is: [backend]-[database]-[plugins]
+  Actix-Sqlite-None:
+    name: Actix w/ Sqlite and no plugins
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.5
+        with:
+          path: |
+            **/.cargo/.build
+            **/target
+          key: ${{ runner.os }}-cargo-cli-AS-${{ hashFiles('**/Cargo.lock') }}
+      - run: git config --global user.name test
+      - run: git config --global user.email example@email.com
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: run
+          args: --bin create-rust-app -- create -c -d sqlite -b actix-web test-project
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: build
+          args: --manifest-path=test-project/Cargo.toml
+
+  Actix-Sqlite-All:
+    needs: [Actix-Sqlite-None]
+    name: Actix w/ Sqlite and all valid plugins
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.5
+        with:
+          path: |
+            **/.cargo/.build
+            **/target
+          key: ${{ runner.os }}-cargo-cli-AS-${{ hashFiles('**/Cargo.lock') }}
+      - run: git config --global user.name test
+      - run: git config --global user.email example@email.com
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: run
+          args: --bin create-rust-app -- create -c -d sqlite -b actix-web --plugins=auth,container,graphql,storage,utoipa test-project
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: build
+          args: --manifest-path=test-project/Cargo.toml
+  
+  Actix-Sqlite-Container:
+    needs: [Actix-Sqlite-None]
+    name: Actix w/ Sqlite and the container plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.5
+        with:
+          path: |
+            **/.cargo/.build
+            **/target
+          key: ${{ runner.os }}-cargo-cli-AS-${{ hashFiles('**/Cargo.lock') }}
+      - run: git config --global user.name test
+      - run: git config --global user.email example@email.com
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: run
+          args: --bin create-rust-app -- create -c -d sqlite -b actix-web --plugins=container test-project
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: build
+          args: --manifest-path=test-project/Cargo.toml
+
+  Actix-Sqlite-Auth:
+    needs: [Actix-Sqlite-None]
+    name: Actix w/ Sqlite and the auth plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.5
+        with:
+          path: |
+            **/.cargo/.build
+            **/target
+          key: ${{ runner.os }}-cargo-cli-AS-${{ hashFiles('**/Cargo.lock') }}
+      - run: git config --global user.name test
+      - run: git config --global user.email example@email.com
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: run
+          args: --bin create-rust-app -- create -c -d sqlite -b actix-web --plugins=auth test-project
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: build
+          args: --manifest-path=test-project/Cargo.toml
+
+  Actix-Sqlite-Storage:
+    needs: [Actix-Sqlite-None]
+    name: Actix w/ Sqlite and the storage plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.5
+        with:
+          path: |
+            **/.cargo/.build
+            **/target
+          key: ${{ runner.os }}-cargo-cli-AS-${{ hashFiles('**/Cargo.lock') }}
+      - run: git config --global user.name test
+      - run: git config --global user.email example@email.com
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: run
+          args: --bin create-rust-app -- create -c -d sqlite -b actix-web --plugins=storage test-project
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: build
+          args: --manifest-path=test-project/Cargo.toml
+
+  Actix-Sqlite-GraphQL:
+    needs: [Actix-Sqlite-None]
+    name: Actix w/ Sqlite and the graphql plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.5
+        with:
+          path: |
+            **/.cargo/.build
+            **/target
+          key: ${{ runner.os }}-cargo-cli-AS-${{ hashFiles('**/Cargo.lock') }}
+      - run: git config --global user.name test
+      - run: git config --global user.email example@email.com
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: run
+          args: --bin create-rust-app -- create -c -d sqlite -b actix-web --plugins=graphql,auth test-project
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: build
+          args: --manifest-path=test-project/Cargo.toml
+
+  Actix-Sqlite-Utoipa:
+    needs: [Actix-Sqlite-None]
+    name: Actix w/ Sqlite and the utoipa plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions/cache@v3.2.5
+        with:
+          path: |
+            **/.cargo/.build
+            **/target
+          key: ${{ runner.os }}-cargo-cli-AS-${{ hashFiles('**/Cargo.lock') }}
+      - run: git config --global user.name test
+      - run: git config --global user.email example@email.com
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: run
+          args: --bin create-rust-app -- create -c -d sqlite -b actix-web --plugins=auth,utoipa test-project
+      - uses: actions-rs/cargo@v1.0.3
+        with:
+          command: build
+          args: --manifest-path=test-project/Cargo.toml
