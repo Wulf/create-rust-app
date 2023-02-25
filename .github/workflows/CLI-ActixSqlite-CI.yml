@@ -33,7 +33,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - uses: actions/cache@v3.2.5
+      - uses: actions/cache@v3.2.6
         with:
           path: |
             **/.cargo/.build
@@ -62,7 +62,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - uses: actions/cache@v3.2.5
+      - uses: actions/cache@v3.2.6
         with:
           path: |
             **/.cargo/.build
@@ -91,7 +91,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - uses: actions/cache@v3.2.5
+      - uses: actions/cache@v3.2.6
         with:
           path: |
             **/.cargo/.build
@@ -120,7 +120,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - uses: actions/cache@v3.2.5
+      - uses: actions/cache@v3.2.6
         with:
           path: |
             **/.cargo/.build
@@ -149,7 +149,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - uses: actions/cache@v3.2.5
+      - uses: actions/cache@v3.2.6
         with:
           path: |
             **/.cargo/.build
@@ -178,7 +178,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - uses: actions/cache@v3.2.5
+      - uses: actions/cache@v3.2.6
         with:
           path: |
             **/.cargo/.build
@@ -207,7 +207,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - uses: actions/cache@v3.2.5
+      - uses: actions/cache@v3.2.6
         with:
           path: |
             **/.cargo/.build
