@@ -236,8 +236,8 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
                 .default(false)
                 .interact()?;
 
-            if proceed {
-                match std::fs::remove_dir_all(&project_dir) {
+        if proceed {
+            match std::fs::remove_dir_all(&project_dir) {
                 Ok(_) => {}
                 Err(err) => logger::exit("std::fs::remove_dir_all():", err),
             }
