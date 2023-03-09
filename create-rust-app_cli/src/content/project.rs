@@ -260,6 +260,12 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         style(&format!("{:?}", creation_options.backend_framework)).yellow()
     ));
 
+    logger::message("Creating Project Directory");
+    match std::fs::create_dir_all(&project_dir) {
+        Ok(_) => {}
+        Err(err) => logger::exit("std::fs::create_dir_all():", err),
+    }
+
     // check if a git user name & email are configured, if not either ask for one or fail if in cli-mode
     logger::command_msg("git config user.name");
     let git_config_user_name = git::check_config(&project_dir, "user.name");
@@ -331,11 +337,6 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
                 invalid_input = true;
             }
         }
-    }
-
-    match std::fs::create_dir_all(&project_dir) {
-        Ok(_) => {}
-        Err(err) => logger::exit("std::fs::create_dir_all():", err),
     }
 
     logger::command_msg("cargo init");
