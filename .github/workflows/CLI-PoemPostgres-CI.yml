@@ -15,6 +15,7 @@ on:
       - "Cargo.toml"
 env:
   CARGO_TERM_COLOR: always
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
   
 concurrency:
   group:  CI-PP-${{ github.ref }}
@@ -28,11 +29,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3.3.0
       - uses: rui314/setup-mold@v1
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup install stable
+      - run: rustup update
       - uses: actions/cache@v3.2.5
         with:
           path: |
@@ -59,11 +57,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3.3.0
       - uses: rui314/setup-mold@v1
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup install stable
+      - run: rustup update
       - uses: actions/cache@v3.2.5
         with:
           path: |
@@ -90,11 +85,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3.3.0
       - uses: rui314/setup-mold@v1
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup install stable
+      - run: rustup update
       - uses: actions/cache@v3.2.5
         with:
           path: |
@@ -121,11 +113,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3.3.0
       - uses: rui314/setup-mold@v1
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup install stable
+      - run: rustup update
       - uses: actions/cache@v3.2.5
         with:
           path: |
@@ -152,11 +141,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3.3.0
       - uses: rui314/setup-mold@v1
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup install stable
+      - run: rustup update
       - uses: actions/cache@v3.2.5
         with:
           path: |
@@ -183,11 +169,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3.3.0
       - uses: rui314/setup-mold@v1
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup install stable
+      - run: rustup update
       - uses: actions/cache@v3.2.5
         with:
           path: |

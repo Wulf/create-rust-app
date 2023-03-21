@@ -15,6 +15,7 @@ on:
       - "Cargo.toml"
 env:
   CARGO_TERM_COLOR: always
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
   
 concurrency:
   group:  CI-AP-${{ github.ref }}
@@ -28,11 +29,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3.3.0
       - uses: rui314/setup-mold@v1
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup install stable
+      - run: rustup update
       - uses: actions/cache@v3.2.5
         with:
           path: |
@@ -46,7 +44,7 @@ jobs:
           command: run 
           args: --bin create-rust-app -- create -c -d postgres -b actix-web test-project
       - run: cd test-project && echo "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> backend/schema.rs
-      - run: cargo dsync --manifest-path=test-project/Cargo.toml
+      - run: cd test-project && cargo dsync --manifest-path=test-project/Cargo.toml
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: build
@@ -59,11 +57,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3.3.0
       - uses: rui314/setup-mold@v1
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup install stable
+      - run: rustup update
       - uses: actions/cache@v3.2.5
         with:
           path: |
@@ -90,11 +85,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3.3.0
       - uses: rui314/setup-mold@v1
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup install stable
+      - run: rustup update
       - uses: actions/cache@v3.2.5
         with:
           path: |
@@ -121,11 +113,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3.3.0
       - uses: rui314/setup-mold@v1
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup install stable
+      - run: rustup update
       - uses: actions/cache@v3.2.5
         with:
           path: |
@@ -152,11 +141,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3.3.0
       - uses: rui314/setup-mold@v1
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup install stable
+      - run: rustup update
       - uses: actions/cache@v3.2.5
         with:
           path: |
@@ -183,11 +169,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3.3.0
       - uses: rui314/setup-mold@v1
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup install stable
+      - run: rustup update
       - uses: actions/cache@v3.2.5
         with:
           path: |
@@ -214,11 +197,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3.3.0
       - uses: rui314/setup-mold@v1
-      - uses: actions-rs/toolchain@v1.0.7
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - run: rustup install stable
+      - run: rustup update
       - uses: actions/cache@v3.2.5
         with:
           path: |
