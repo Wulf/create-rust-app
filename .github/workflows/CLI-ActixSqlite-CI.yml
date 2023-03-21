@@ -45,10 +45,12 @@ jobs:
         with:
           command: run
           args: --bin create-rust-app -- create -c -d sqlite -b actix-web test-project
+      - run: cd test-project
+      - run: echo "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs
+      - run: cargo dsync
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: build
-          args: --manifest-path=test-project/Cargo.toml
 
   Actix-Sqlite-All:
     needs: [Actix-Sqlite-None]
@@ -74,10 +76,12 @@ jobs:
         with:
           command: run
           args: --bin create-rust-app -- create -c -d sqlite -b actix-web --plugins=auth,container,graphql,storage,utoipa test-project
+      - run: cd test-project
+      - run: echo "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs
+      - run: cargo dsync
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: build
-          args: --manifest-path=test-project/Cargo.toml
   
   Actix-Sqlite-Container:
     needs: [Actix-Sqlite-None]
@@ -103,10 +107,12 @@ jobs:
         with:
           command: run
           args: --bin create-rust-app -- create -c -d sqlite -b actix-web --plugins=container test-project
+      - run: cd test-project
+      - run: echo "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs
+      - run: cargo dsync
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: build
-          args: --manifest-path=test-project/Cargo.toml
 
   Actix-Sqlite-Auth:
     needs: [Actix-Sqlite-None]
@@ -132,10 +138,12 @@ jobs:
         with:
           command: run
           args: --bin create-rust-app -- create -c -d sqlite -b actix-web --plugins=auth test-project
+      - run: cd test-project
+      - run: echo "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs
+      - run: cargo dsync
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: build
-          args: --manifest-path=test-project/Cargo.toml
 
   Actix-Sqlite-Storage:
     needs: [Actix-Sqlite-None]
@@ -161,10 +169,12 @@ jobs:
         with:
           command: run
           args: --bin create-rust-app -- create -c -d sqlite -b actix-web --plugins=storage test-project
+      - run: cd test-project
+      - run: echo "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs
+      - run: cargo dsync
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: build
-          args: --manifest-path=test-project/Cargo.toml
 
   Actix-Sqlite-GraphQL:
     needs: [Actix-Sqlite-None]
@@ -190,10 +200,12 @@ jobs:
         with:
           command: run
           args: --bin create-rust-app -- create -c -d sqlite -b actix-web --plugins=graphql,auth test-project
+      - run: cd test-project
+      - run: echo "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs
+      - run: cargo dsync
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: build
-          args: --manifest-path=test-project/Cargo.toml
 
   Actix-Sqlite-Utoipa:
     needs: [Actix-Sqlite-None]
@@ -219,7 +231,9 @@ jobs:
         with:
           command: run
           args: --bin create-rust-app -- create -c -d sqlite -b actix-web --plugins=auth,utoipa test-project
+      - run: cd test-project
+      - run: echo "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs
+      - run: cargo dsync
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: build
-          args: --manifest-path=test-project/Cargo.toml
