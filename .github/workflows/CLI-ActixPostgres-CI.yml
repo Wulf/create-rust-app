@@ -46,10 +46,11 @@ jobs:
           command: run 
           args: --bin create-rust-app -- create -c -d postgres -b actix-web test-project
       - run: cd test-project && echo "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> backend/schema.rs
-      - run: cargo dsync
+      - run: cargo dsync --manifest-path=test-project/Cargo.toml
       - uses: actions-rs/cargo@v1.0.3
         with:
           command: build
+          args: --manifest-path=test-project/Cargo.toml
 
   Actix-Postgres-All:
     needs: [Actix-Postgres-None]
