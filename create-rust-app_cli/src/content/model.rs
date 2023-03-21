@@ -2,17 +2,20 @@ use crate::inflector::Inflector;
 use anyhow::Result;
 use indoc::indoc;
 
+#[allow(dead_code)]
 pub struct Model {
     pub config: ModelConfig,
     pub file_contents: String,
 }
 
+#[allow(dead_code)]
 pub struct ModelConfig {
     pub model_name: String,
     pub table_name: String,
     pub file_name: String,
 }
 
+#[allow(dead_code)]
 pub fn create(resource_name: &str) -> Result<Model> {
     let resource = generate(resource_name);
 
@@ -25,6 +28,7 @@ pub fn create(resource_name: &str) -> Result<Model> {
     Ok(resource)
 }
 
+#[allow(dead_code)]
 fn config(resource_name: &str) -> ModelConfig {
     let model_name = resource_name.to_pascal_case();
     let file_name = model_name.to_snake_case();
@@ -37,6 +41,7 @@ fn config(resource_name: &str) -> ModelConfig {
     }
 }
 
+#[allow(dead_code)]
 fn generate(resource_name: &str) -> Model {
     let config = config(resource_name);
 
