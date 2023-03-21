@@ -1398,7 +1398,7 @@ dependencies = [
  "console",
  "dialoguer",
  "indoc",
- "qsync 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "qsync 0.1.0",
  "rust-embed",
  "toml",
  "tsync",
@@ -3323,6 +3323,8 @@ dependencies = [
 [[package]]
 name = "qsync"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a07d6ab3db2f16dffb3853a95ed543a09c205de301b704ab35327ac32416b10"
 dependencies = [
  "Inflector",
  "darling",
@@ -3335,9 +3337,7 @@ dependencies = [
 
 [[package]]
 name = "qsync"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3a07d6ab3db2f16dffb3853a95ed543a09c205de301b704ab35327ac32416b10"
+version = "0.1.1"
 dependencies = [
  "Inflector",
  "darling",
