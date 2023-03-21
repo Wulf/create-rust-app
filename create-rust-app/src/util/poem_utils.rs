@@ -124,24 +124,31 @@ pub async fn render_views(uri: &Uri) -> impl IntoResponse {
 
     let content = content_result.unwrap();
 
-    template_response(content)
+    template_response(uri, content)
 }
 
-fn template_response(content: String) -> Response {
+fn template_response(uri: &Uri, content: String) -> Response {
     let mut content = content;
     #[cfg(debug_assertions)]
     {
-        let inject: &str = r##"
+        let uri = Uri::from_str(req.connection_info().host());
+        let hostname = match &uri {
+            Ok(uri) => uri.host().unwrap_or("localhost"),
+            Err(_) => "localhost",
+        };
+        let inject: &str = &format!(
+            r##"
         <!-- development mode -->
         <script type="module">
-            import RefreshRuntime from 'http://localhost:21012/@react-refresh'
+            import RefreshRuntime from 'http://{hostname}:21012/@react-refresh'
             RefreshRuntime.injectIntoGlobalHook(window)
-            window.$RefreshReg$ = () => {}
+            window.$RefreshReg$ = () => {{}}
             window.$RefreshSig$ = () => (type) => type
             window.__vite_plugin_react_preamble_installed__ = true
         </script>
-        <script type="module" src="http://localhost:21012/src/dev.tsx"></script>
-        "##;
+        <script type="module" src="http://{hostname}:21012/src/dev.tsx"></script>
+        "##
+        );
 
         if content.contains("<body>") {
             content = content.replace("<body>", &format!("<body>{inject}"));

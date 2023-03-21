@@ -155,7 +155,7 @@ pub fn replace(file_path: &str, from: &str, to: &str) -> Result<()> {
 
 pub fn add_rust_file(file_directory: &str, file_name: &str, file_contents: &str) -> Result<()> {
     let file_path = PathBuf::from(format!("{file_directory}/{file_name}.rs"));
-    let mod_file_path = PathBuf::from(format!("{file_directory}/storage"));
+    let mod_file_path = PathBuf::from(format!("{file_directory}/mod.rs"));
     let file_directory = PathBuf::from(file_directory);
 
     ensure_directory(&file_directory, true)?;

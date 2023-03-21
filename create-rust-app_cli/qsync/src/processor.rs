@@ -35,10 +35,9 @@ fn has_qsync_attribute(
     is_debug: bool,
     attributes: &[syn::Attribute],
 ) -> Option<QsyncAttributeProps> {
-    let mut qsync_props = QsyncAttributeProps {
-        is_mutation: false,
-        return_type: "TODO".to_string(),
-    };
+    let mut is_mutation: Option<bool> = None;
+    let mut return_type = "TODO".to_string();
+
     let mut has_actix_attribute = false;
     let mut has_qsync_attribute = false;
 
@@ -66,37 +65,52 @@ fn has_qsync_attribute(
                 }
                 let args = args.unwrap();
 
-                qsync_props.is_mutation = args.mutate.unwrap_or_default();
+                if args.mutate.is_some() {
+                    is_mutation = args.mutate;
+                }
                 if args.return_type.is_some() {
-                    qsync_props.return_type = args.return_type.unwrap();
+                    return_type = args.return_type.unwrap();
                 }
             }
             "get" => {
                 has_actix_attribute = true;
-                qsync_props.is_mutation = false;
+                if is_mutation.is_none() {
+                    is_mutation = Some(false);
+                }
             }
             "post" => {
                 has_actix_attribute = true;
-                qsync_props.is_mutation = true;
+                if is_mutation.is_none() {
+                    is_mutation = Some(true);
+                }
             }
             "patch" => {
                 has_actix_attribute = true;
-                qsync_props.is_mutation = true;
+                if is_mutation.is_none() {
+                    is_mutation = Some(true);
+                }
             }
             "put" => {
                 has_actix_attribute = true;
-                qsync_props.is_mutation = true;
+                if is_mutation.is_none() {
+                    is_mutation = Some(true);
+                }
             }
             "delete" => {
                 has_actix_attribute = true;
-                qsync_props.is_mutation = true;
+                if is_mutation.is_none() {
+                    is_mutation = Some(true);
+                }
             }
             _ => {}
         }
     }
 
     if has_actix_attribute && has_qsync_attribute {
-        Some(qsync_props)
+        Some(QsyncAttributeProps {
+            is_mutation: is_mutation.unwrap_or_default(),
+            return_type: return_type,
+        })
     } else {
         None
     }
