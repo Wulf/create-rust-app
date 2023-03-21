@@ -100,7 +100,13 @@ impl tera::Function for InjectBundle {
                         #[cfg(debug_assertions)]
                         {
                             inject = format!(
-                                r#"<script type="module" src="http://localhost:21012/bundles/{bundle_name}"></script>"#
+                                r#"<script>
+                                // create a script tag for the vite dev server
+                                const script = document.createElement('script');
+                                script.type = 'module';
+                                script.src = `http://${{window.location.hostname}}:21012/bundles/{bundle_name}`;
+                                document.head.appendChild(script);
+                                </script>"#
                             );
                         }
 

@@ -1,8 +1,10 @@
+use std::str::FromStr;
 use std::sync::Mutex;
 
 use super::template_utils::SinglePageApplication;
 use crate::util::template_utils::{to_template_name, DEFAULT_TEMPLATE, TEMPLATES};
 use actix_files::NamedFile;
+use actix_http::Uri;
 use actix_web::http::StatusCode;
 use actix_web::{web, HttpRequest, HttpResponse, Scope};
 use tera::Context;
@@ -23,13 +25,13 @@ pub fn render_single_page_application(route: &str, view: &str) -> Scope {
 }
 
 async fn render_spa_handler(
-    _req: HttpRequest,
+    req: HttpRequest,
     spa_info: web::Data<SinglePageApplication>,
 ) -> HttpResponse {
     let content = TEMPLATES
         .render(spa_info.view_name.as_str(), &Context::new())
         .unwrap();
-    template_response(content)
+    template_response(req, content)
 }
 
 // used to count number of refresh requests sent when viteJS dev server is down
@@ -50,10 +52,11 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
     let path = req.path();
 
     #[cfg(debug_assertions)]
-    if path.eq("/__vite_ping") {
-        println!("The vite dev server seems to be down...");
-    }
     {
+        if path.eq("/__vite_ping") {
+            println!("The vite dev server seems to be down...");
+        }
+
         // Catch viteJS ping requests and try to handle them gracefully
         // Request the browser to refresh the page (maybe the server is up but the browser just can't reconnect)
 
@@ -130,24 +133,32 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
 
     let content = content_result.unwrap();
 
-    template_response(content)
+    template_response(req, content)
 }
 
-fn template_response(content: String) -> HttpResponse {
+fn template_response(req: HttpRequest, content: String) -> HttpResponse {
     let mut content = content;
     #[cfg(debug_assertions)]
     {
-        let inject: &str = r##"
+        let uri = Uri::from_str(req.connection_info().host());
+        let hostname = match &uri {
+            Ok(uri) => uri.host().unwrap_or("localhost"),
+            Err(_) => "localhost",
+        };
+
+        let inject: &str = &format!(
+            r##"
         <!-- development mode -->
         <script type="module">
-            import RefreshRuntime from 'http://localhost:21012/@react-refresh'
+            import RefreshRuntime from 'http://{hostname}:21012/@react-refresh'
             RefreshRuntime.injectIntoGlobalHook(window)
-            window.$RefreshReg$ = () => {}
+            window.$RefreshReg$ = () => {{}}
             window.$RefreshSig$ = () => (type) => type
             window.__vite_plugin_react_preamble_installed__ = true
         </script>
-        <script type="module" src="http://localhost:21012/src/dev.tsx"></script>
-        "##;
+        <script type="module" src="http://{hostname}:21012/src/dev.tsx"></script>
+        "##
+        );
 
         if content.contains("<body>") {
             content = content.replace("<body>", &format!("<body>{inject}"));

@@ -44,7 +44,7 @@ export default defineConfig(async ({ command, mode }) => ({
 
     server: {
         port: 21012,
-        host: '127.0.0.1',
+        host: '0.0.0.0',
         proxy: {
             // with options
             '/api': {
