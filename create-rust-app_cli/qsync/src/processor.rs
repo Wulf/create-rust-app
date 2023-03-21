@@ -109,7 +109,7 @@ fn has_qsync_attribute(
     if has_actix_attribute && has_qsync_attribute {
         Some(QsyncAttributeProps {
             is_mutation: is_mutation.unwrap_or_default(),
-            return_type: return_type,
+            return_type,
         })
     } else {
         None
