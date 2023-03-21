@@ -238,9 +238,9 @@ fn extract_endpoint_information(
 
         if !matches!(verb, HttpVerb::Unknown) {
             for token in attr.clone().tokens {
-                if let syn::__private::quote::__private::TokenTree::Group(g) = token {
+                if let proc_macro2::TokenTree::Group(g) = token {
                     for x in g.stream() {
-                        if let syn::__private::quote::__private::TokenTree::Literal(lit) = x {
+                        if let proc_macro2::TokenTree::Literal(lit) = x {
                             path = lit.to_string();
                         }
                     }
