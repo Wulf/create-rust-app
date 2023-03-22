@@ -1338,7 +1338,7 @@ dependencies = [
 
 [[package]]
 name = "create-rust-app"
-version = "9.1.0"
+version = "9.1.1"
 dependencies = [
  "actix-files",
  "actix-http",
@@ -1390,7 +1390,7 @@ dependencies = [
 
 [[package]]
 name = "create-rust-app_cli"
-version = "9.1.0"
+version = "9.1.1"
 dependencies = [
  "Inflector",
  "anyhow",
