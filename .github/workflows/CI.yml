@@ -26,7 +26,7 @@ jobs:
     name: Build and Initialize profile.dev Cache
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.0
       - uses: rui314/setup-mold@v1
       - uses: actions-rs/toolchain@v1.0.7
         with:
@@ -49,7 +49,7 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.0
       - uses: rui314/setup-mold@v1
       - uses: actions-rs/toolchain@v1.0.7
         with:
@@ -72,7 +72,7 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.0
       - uses: rui314/setup-mold@v1
       - uses: actions-rs/toolchain@v1.0.7
         with:
@@ -97,7 +97,7 @@ jobs:
     name: Test Suite and Initialize profile.test Cache
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.0
       - uses: rui314/setup-mold@v1
       - uses: actions-rs/toolchain@v1.0.7
         with:
@@ -121,7 +121,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.0
       - uses: actions-rs/toolchain@v1.0.7
         with:
           profile: minimal
