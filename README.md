@@ -84,7 +84,6 @@ create-rust-app create <project_name>
     <a href="https://user-images.githubusercontent.com/4259838/218256539-b94ecba1-abe6-4e42-b4f4-4d80b6d4079b.png"><img src="https://user-images.githubusercontent.com/4259838/218256539-b94ecba1-abe6-4e42-b4f4-4d80b6d4079b.png" width="650px" /></a>
     <a href="https://user-images.githubusercontent.com/4259838/218256539-b94ecba1-abe6-4e42-b4f4-4d80b6d4079b.png"><img src="https://user-images.githubusercontent.com/4259838/218256528-4b6ca2a4-ffae-4c9e-bc20-c4a483355b01.png" width="650px" /></a>
 
-
 - **Storage plugin**
   - Adds `Storage` extractor which allows you to upload/download files from an S3-compatible object store
   - Seamlessly add single or multiple attachments to your models using `Attachment::*`!
@@ -117,6 +116,12 @@ create-rust-app create <project_name>
   - Find the playground at `localhost:3000/swagger-ui`
   - Requires the backend be Actix (for now ;) )
   - check out [this page](https://github.com/juhaku/utoipa/tree/master/examples) to see how to document your own API endpoints with a variety of backends
+
+- **Tasks Plugin**
+  - For running background jobs, currently only supports actix-web and postgresql
+  - Uses [`fang`](https://github.com/ayrat555/fang) under the hood and all it's features are exposed. 
+  - Add a task to the queue with `create_rust_app::tasks::queue()`
+  - Run the queue with `cargo run --bin tasks`
 
 ### 2. Code-gen to reduce boilerplate
 

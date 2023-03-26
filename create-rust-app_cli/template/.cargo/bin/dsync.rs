@@ -29,7 +29,10 @@ pub fn main() {
             ("user_roles", TableOptions::default().ignore()),
             ("user_sessions", TableOptions::default().ignore()),
             ("users", TableOptions::default().ignore()),
-        ]),
+
+            // plugin_tasks
+            ("fang_tasks", TableOptions::default().ignore()),
+         ]),
     });
 }
 

@@ -54,7 +54,7 @@ pub fn add_dependency_msg(name: &str) {
 }
 
 pub fn project_created_msg(install_config: crate::plugins::InstallConfig) {
-    let project_dir = install_config.project_dir;
+    let project_name = install_config.project_name;
 
     command_msg("cargo watch --help\t# checking cargo-watch installation");
 
@@ -111,7 +111,7 @@ pub fn project_created_msg(install_config: crate::plugins::InstallConfig) {
     message("  1. Change to your project directory");
     message(&format!(
         "     $ {}",
-        style(format!("cd {project_dir:#?}")).cyan()
+        style(format!("cd {project_name:#?}")).cyan()
     ));
     message("  2. Open `.env` and set the DATABASE_URL");
     message(&format!("     $ {}", style("vim .env").cyan()));
