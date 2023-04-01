@@ -112,9 +112,10 @@ pub async fn start(
         let state3 = state3.clone();
         let ws_s = dev_server_events_s.clone();
         let migrations_dir = migrations_dir.clone();
+
         async move {
             // no exit events
-            if !action
+            if action
                 .events
                 .iter()
                 .any(|e| e.metadata.contains_key("exit-watchexec"))
@@ -131,12 +132,11 @@ pub async fn start(
             let files_to_ignore: Vec<String> = ignored_files.clone();
             ignored_files.clear();
             drop(ignored_files);
-            // println!("=> ignoring {:#?}", files_to_ignore);
 
             let mut touched_migrations_dir = false;
 
             // no file events
-            if !action.events.iter().any(|e| {
+            if action.events.iter().any(|e| {
                 e.tags.iter().any(|t| match t {
                     Tag::Path { path, file_type: _ } => {
                         if path

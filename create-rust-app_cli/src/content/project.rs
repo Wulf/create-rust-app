@@ -44,7 +44,7 @@ fn get_current_cra_lib_version() -> String {
     "9".to_string()
 }
 
-fn add_bins_to_cargo_toml(project_dir: &std::path::PathBuf) -> Result<(), std::io::Error> {
+fn add_bins_to_cargo_toml(project_dir: &std::path::PathBuf, creations_options: &CreationOptions) -> Result<(), std::io::Error> {
     let mut path = std::path::PathBuf::from(project_dir);
     path.push("Cargo.toml");
 
@@ -77,6 +77,16 @@ fn add_bins_to_cargo_toml(project_dir: &std::path::PathBuf) -> Result<(), std::i
 
     let updated_toml = toml::to_string(&parsed_toml).unwrap();
 
+    let queue_bin = if creations_options.cra_enabled_features.contains(&"plugin_tasks".to_string()) {
+        r##"
+[[bin]]
+name = "queue"
+path = "backend/queue.rs"
+"##
+    } else {
+        ""
+    };
+
     let append_to_toml = format!(
         r#"
 [[bin]]
@@ -102,11 +112,10 @@ path = ".cargo/bin/frontend.rs"
 [[bin]]
 name = "{project_name}"
 path = "backend/main.rs"
-
+{queue_bin}
 [profile.dev]
 debug-assertions=true
-"#
-    );
+"#);
 
     let mut final_toml = String::default();
 
@@ -294,7 +303,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
     src_folder.push("src");
     std::fs::remove_dir(src_folder)?;
 
-    add_bins_to_cargo_toml(&project_dir)?;
+    add_bins_to_cargo_toml(&project_dir, &creation_options)?;
 
     let framework = creation_options.backend_framework;
     let database = creation_options.backend_database;

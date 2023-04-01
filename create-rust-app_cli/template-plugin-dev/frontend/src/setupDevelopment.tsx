@@ -167,6 +167,7 @@ const DevBox = () => {
         color: 'white',
         overflow: 'scroll',
         maxHeight: 'calc(100vh - 200px)',
+        zIndex: 9999999999999999
       }}
     >
       {/* 

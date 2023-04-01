@@ -3,6 +3,7 @@ pub mod container;
 pub mod dev;
 pub mod graphql;
 pub mod storage;
+pub mod tasks;
 pub mod utoipa;
 
 use crate::{project, BackendFramework};
@@ -12,6 +13,7 @@ use std::path::PathBuf;
 
 #[derive(Clone)]
 pub struct InstallConfig {
+    pub project_name: String,
     pub project_dir: PathBuf,
     pub backend_framework: BackendFramework,
     pub backend_database: BackendDatabase,
@@ -19,6 +21,7 @@ pub struct InstallConfig {
     pub plugin_auth: bool,
     pub plugin_container: bool,
     pub plugin_storage: bool,
+    pub plugin_tasks: bool,
     pub plugin_graphql: bool,
     pub plugin_utoipa: bool,
 }

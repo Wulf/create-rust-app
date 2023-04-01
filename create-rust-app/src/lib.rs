@@ -20,6 +20,9 @@ extern crate diesel;
 #[cfg(feature = "plugin_auth")]
 pub mod auth;
 
+#[cfg(feature = "plugin_tasks")]
+pub mod tasks;
+
 #[cfg(all(feature = "plugin_dev", debug_assertions))]
 pub mod dev;
 #[cfg(all(feature = "plugin_dev", debug_assertions))]
@@ -61,7 +64,18 @@ pub struct AppData {
     /// wrapper for Amazon S3 cloud file storage service accessed by chosen web framework
     ///
     /// see [`Storage`]
-    pub storage: storage::Storage,
+    pub storage: Storage,
+}
+
+#[cfg(debug_assertions)]
+fn load_env_vars() {
+    static START: std::sync::Once = std::sync::Once::new();
+
+    START.call_once(|| {
+        dotenv::dotenv().unwrap_or_else(|_| {
+            panic!("ERROR: Could not load environment variables from dotenv file");
+        });
+    });
 }
 
 /// ensures required environment variables are present,
@@ -73,13 +87,10 @@ pub fn setup() -> AppData {
     // Only load dotenv in development
     #[cfg(debug_assertions)]
     {
-        if dotenv::dotenv().is_err() {
-            panic!("ERROR: Could not load environment variables from dotenv file");
-        }
+        load_env_vars();
 
-        #[cfg(feature = "backend_actix-web")]
-        env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
-        // diesel_migrations::embed_migrations!();
+        // #[cfg(feature = "backend_actix-web")]
+        // env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
     }
 
     #[cfg(feature = "plugin_auth")]
@@ -95,7 +106,7 @@ pub fn setup() -> AppData {
         mailer: Mailer::new(),
         database: Database::new(),
         #[cfg(feature = "plugin_storage")]
-        storage: storage::Storage::new(),
+        storage: Storage::new(),
     }
 }
 
