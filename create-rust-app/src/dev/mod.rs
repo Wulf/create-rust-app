@@ -198,6 +198,9 @@ fn get_features(project_dir: &'static str) -> Vec<String> {
         .unwrap_or_else(|_| panic!("Could not find \"{}\"", project_dir));
     // .expect(&format!("Could not find \"{project_dir}\""));
     let deps = cargo_toml.dependencies;
+    if let Some(workspace) = cargo_toml.workspace { // if the manifest has a workspace table, also read dependencies in there
+        deps.extend(workspace.dependencies.iter());
+    }
     let dep = deps.get("create-rust-app").unwrap_or_else(|| {
         panic!(
             "Expected \"{}\" to list 'create-rust-app' as a dependency.",
