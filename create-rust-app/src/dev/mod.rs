@@ -197,7 +197,11 @@ fn get_features(project_dir: &'static str) -> Vec<String> {
     let cargo_toml = Manifest::from_path(PathBuf::from_iter([project_dir, "Cargo.toml"]))
         .unwrap_or_else(|_| panic!("Could not find \"{}\"", project_dir));
     // .expect(&format!("Could not find \"{project_dir}\""));
+    #[cfg(not(feature = "plugin_workspace_support"))]
+    let deps = cargo_toml.dependencies;
+    #[cfg(feature = "plugin_workspace_support")]
     let mut deps = cargo_toml.dependencies;
+    #[cfg(feature = "plugin_workspace_support")]
     if let Some(workspace) = cargo_toml.workspace {
         // if the manifest has a workspace table, also read dependencies in there
         deps.extend(workspace.dependencies);

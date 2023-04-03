@@ -110,6 +110,7 @@ plugin_storage = [ "aws-config", "aws-types", "aws-endpoint", "aws-sdk-s3", "tok
 plugin_graphql = []
 plugin_utoipa = ["utoipa", "utoipa-swagger-ui", "backend_actix-web"]
 plugin_tasks = ["fang"]
+plugin_workspace_support = []
 backend_poem = ["poem", "anyhow", "mime_guess", "tokio"]
 backend_actix-web = ["actix-web", "actix-http", "actix-files", "actix-multipart", "actix-web-httpauth","derive_more", "futures", "env_logger"]
 backend_axum = ["axum", "axum/ws", "tokio"]
