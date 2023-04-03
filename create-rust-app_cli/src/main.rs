@@ -379,7 +379,7 @@ fn create_project(
     //
 
     let install_config = plugins::InstallConfig {
-        project_name: project_name.clone(),
+        project_name,
         project_dir: PathBuf::from("."),
         backend_framework,
         backend_database,

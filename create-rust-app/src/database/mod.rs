@@ -1,5 +1,5 @@
 use diesel::r2d2::{self, ConnectionManager, PooledConnection};
-use diesel::PgConnection;
+
 use once_cell::sync::OnceCell;
 
 #[cfg(feature = "database_postgres")]
@@ -8,6 +8,7 @@ type DbCon = diesel::PgConnection;
 #[cfg(feature = "database_sqlite")]
 type DbCon = diesel::SqliteConnection;
 
+#[allow(dead_code)]
 #[cfg(feature = "database_postgres")]
 pub type DieselBackend = diesel::pg::Pg;
 

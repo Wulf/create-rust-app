@@ -226,7 +226,6 @@ impl Hook {
             .endpoint_url
             .trim_start_matches("/api/")
             .split('/')
-            .into_iter()
             .map(|t| {
                 // in actix-web, paths which have {} denote a path param
                 if t.starts_with('{') && t.ends_with('}') {

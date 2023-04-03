@@ -54,7 +54,9 @@ impl tera::Function for InjectBundle {
                         {
                             let manifest_entry = VITE_MANIFEST
                                 .get(&format!("bundles/{bundle_name}"))
-                                .expect(&format!("could not get bundle `{bundle_name}`"));
+                                .unwrap_or_else(|| {
+                                    panic!("{}", "could not get bundle `{bundle_name}`")
+                                });
                             let entry_file = format!(
                                 r#"<script type="module" src="/{file}"></script>"#,
                                 file = manifest_entry.file
@@ -63,7 +65,7 @@ impl tera::Function for InjectBundle {
                                 .css
                                 .as_ref()
                                 .unwrap_or(&vec![])
-                                .into_iter()
+                                .iter()
                                 .map(|css_file| {
                                     format!(
                                         r#"<link rel="stylesheet" href="/{file}" />"#,
@@ -76,7 +78,7 @@ impl tera::Function for InjectBundle {
                                 .dynamicImports
                                 .as_ref()
                                 .unwrap_or(&vec![])
-                                .into_iter()
+                                .iter()
                                 .map(|dyn_script_file| {
                                     // TODO: make this deferred or async -- look this up!~
                                     format!(
