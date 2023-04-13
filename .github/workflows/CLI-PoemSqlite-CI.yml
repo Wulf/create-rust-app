@@ -26,7 +26,7 @@ jobs:
     name: Poem w/ Sqlite and no plugins
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.1
       - uses: rui314/setup-mold@v1
       - uses: actions-rs/toolchain@v1.0.7
         with:
@@ -56,7 +56,7 @@ jobs:
     name: Poem w/ Sqlite and all valid plugins
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.1
       - uses: rui314/setup-mold@v1
       - uses: actions-rs/toolchain@v1.0.7
         with:
@@ -85,7 +85,7 @@ jobs:
     name: Poem w/ Sqlite and the container plugin
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.1
       - uses: rui314/setup-mold@v1
       - uses: actions-rs/toolchain@v1.0.7
         with:
@@ -114,7 +114,7 @@ jobs:
     name: Poem w/ Sqlite and the auth plugin
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.1
       - uses: rui314/setup-mold@v1
       - uses: actions-rs/toolchain@v1.0.7
         with:
@@ -143,7 +143,7 @@ jobs:
     name: Poem w/ Sqlite and the storage plugin
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.1
       - uses: rui314/setup-mold@v1
       - uses: actions-rs/toolchain@v1.0.7
         with:
@@ -172,7 +172,7 @@ jobs:
     name: Poem w/ Sqlite and the graphql plugin
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.1
       - uses: rui314/setup-mold@v1
       - uses: actions-rs/toolchain@v1.0.7
         with:
