@@ -526,9 +526,9 @@ fn configure_project(
                 };
 
                 qsync::process(
-                    qsync_input_files.unwrap_or_else(|| vec![PathBuf::from("backend/services")]),
+                    qsync_input_files.unwrap_or_else(|| vec![PathBuf::from("backend/services")]),// BUG:
                     qsync_output_file
-                        .unwrap_or_else(|| PathBuf::from("frontend/src/api.generated.ts")),
+                        .unwrap_or_else(|| PathBuf::from("frontend/src/api.generated.ts")),// BUG:
                     qsync_debug,
                 );
             }

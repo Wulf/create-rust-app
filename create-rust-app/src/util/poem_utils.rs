@@ -88,14 +88,14 @@ pub async fn render_views(uri: &Uri) -> impl IntoResponse {
         #[cfg(debug_assertions)]
         {
             // dev asset serving
-            let asset_path = &format!("./frontend{path}");
+            let asset_path = &format!("./frontend{path}");// BUG:
             if std::path::PathBuf::from(asset_path).is_file() {
                 println!("ASSET_FILE {path} => {asset_path}");
 
                 return file_response(asset_path).await;
             }
 
-            let public_path = &format!("./frontend/public{path}");
+            let public_path = &format!("./frontend/public{path}");// BUG:
             if std::path::PathBuf::from(public_path).is_file() {
                 println!("PUBLIC_FILE {path} => {public_path}");
 
@@ -106,7 +106,7 @@ pub async fn render_views(uri: &Uri) -> impl IntoResponse {
         #[cfg(not(debug_assertions))]
         {
             // production asset serving
-            let static_path = &format!("./frontend/dist{path}");
+            let static_path = &format!("./frontend/dist{path}");// BUG:
             if std::path::PathBuf::from(static_path).is_file() {
                 return file_response(static_path).await;
             }
