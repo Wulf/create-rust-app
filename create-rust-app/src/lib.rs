@@ -11,9 +11,6 @@ compile_error!(
 // #[cfg(not(any(feature = "backend_poem", feature = "backend_actix-web")))]
 // compile_error!("Please enable one of the backend features (options: 'backend_actix-web', 'backend-poem')");
 
-#[cfg(feature = "plugin_auth")]
-use mailer::EmailTemplates;
-
 mod util;
 pub use util::*;
 
@@ -47,6 +44,8 @@ pub use storage::{Attachment, AttachmentBlob, AttachmentData, Storage};
 
 mod mailer;
 pub use mailer::Mailer;
+#[cfg(feature = "plugin_auth")]
+pub use mailer::{DefaultMailTemplates, EmailTemplates};
 
 // #[cfg(debug_assertions)]
 // #[macro_use]
