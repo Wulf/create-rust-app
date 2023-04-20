@@ -18,11 +18,11 @@ Please visit this link to reset your password:
     let html = format!(
         r#"
 <p>(This is an automated message.)</p>
-<br>
+
 <p>Hello,</p>
-<br>
-<p>Someone requested a password reset for the account associated with this email.</p>
-<p>Please visit this link to reset your password:</p>
+
+<p>Someone requested a password reset for the account associated with this email.
+Please visit this link to reset your password:</p>
 <p><a href="{link}">{link}</a></p>
 <p>(valid for 24 hours)</p>
 "#

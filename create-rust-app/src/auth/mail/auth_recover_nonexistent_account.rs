@@ -17,11 +17,11 @@ If this was intentional, you can register for a new account using the link below
     let html = format!(
         r#"
 <p>(This is an automated message.)</p>
-<br>
+
 <p>Hello,<p>
-<br>
-<p>Someone requested a password reset for the account associated with this email, but no account exists!</p>
-<p>If this was intentional, you can register for a new account using the link below:</p>
+
+<p>Someone requested a password reset for the account associated with this email, but no account exists!
+If this was intentional, you can register for a new account using the link below:</p>
 <p><a href="{link}">{link}</a></p>
 "#
     );

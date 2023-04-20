@@ -13,9 +13,9 @@ Your account has been activated!
     .to_string();
     let html = r#"
 <p>(This is an automated message.)</p>
-<br>
+
 <p>Hello,</p>
-<br>
+
 <p>Your account has been activated!</p>
 "#
     .to_string();

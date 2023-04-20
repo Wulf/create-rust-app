@@ -16,9 +16,9 @@ Please follow the link below to complete your registration:
     let html = format!(
         r#"
 <p>(This is an automated message.)</p>
-<br>
+
 <p>Hello,</p>
-<br>
+
 <p>Please follow the link below to complete your registration:</p>
 <p><a href="{link}">{link}</a></p>
 "#

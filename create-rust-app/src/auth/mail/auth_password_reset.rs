@@ -14,9 +14,9 @@ Your password was successfully reset!
 
     let html = r#"
 <p>(This is an automated message.)</p>
-<br>
+
 <p>Hello,</p>
-<br>
+
 <p>Your password was successfully reset!</p>
 "#
     .to_string();
