@@ -11,6 +11,9 @@ compile_error!(
 // #[cfg(not(any(feature = "backend_poem", feature = "backend_actix-web")))]
 // compile_error!("Please enable one of the backend features (options: 'backend_actix-web', 'backend-poem')");
 
+#[cfg(feature = "plugin_auth")]
+use mailer::EmailTemplates;
+
 mod util;
 pub use util::*;
 
@@ -67,6 +70,17 @@ pub struct AppData {
     pub storage: Storage,
 }
 
+#[cfg(feature = "plugin_auth")]
+impl AppData {
+    pub fn with_custom_email_templates<T: EmailTemplates + 'static>(
+        mut self,
+        templates: T,
+    ) -> Self {
+        self.mailer = Mailer::new(Box::new(templates));
+        self
+    }
+}
+
 #[cfg(debug_assertions)]
 fn load_env_vars() {
     static START: std::sync::Once = std::sync::Once::new();
@@ -103,7 +117,7 @@ pub fn setup() -> AppData {
     }
 
     AppData {
-        mailer: Mailer::new(),
+        mailer: Mailer::default(),
         database: Database::new(),
         #[cfg(feature = "plugin_storage")]
         storage: Storage::new(),

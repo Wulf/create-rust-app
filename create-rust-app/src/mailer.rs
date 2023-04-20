@@ -1,7 +1,31 @@
+#[cfg(feature = "plugin_auth")]
+use crate::auth::mail::{
+    auth_activated, auth_password_changed, auth_password_reset, auth_recover_existent_account,
+    auth_recover_nonexistent_account, auth_register,
+};
+#[cfg(feature = "plugin_auth")]
+use dyn_clone::{clone_trait_object, DynClone};
+
 use lettre::message::{Message, MultiPart};
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::transport::stub::StubTransport;
 use lettre::{SmtpTransport, Transport};
+
+// the DyncClone trait bound is for cloning, and the
+// Send trait bound is for thread-safety
+#[cfg(feature = "plugin_auth")]
+/// A trait that defines the behavior of an email template
+pub trait EmailTemplates: DynClone + Send {
+    fn send_activated(&self, mailer: &Mailer, to_email: &str);
+    fn send_password_changed(&self, mailer: &Mailer, to_email: &str);
+    fn send_password_reset(&self, mailer: &Mailer, to_email: &str);
+    fn send_recover_existent_account(&self, mailer: &Mailer, to_email: &str, link: &str);
+    fn send_recover_nonexistent_account(&self, mailer: &Mailer, to_email: &str, link: &str);
+    fn send_register(&self, mailer: &Mailer, to_email: &str, link: &str);
+}
+
+#[cfg(feature = "plugin_auth")]
+clone_trait_object!(EmailTemplates);
 
 #[derive(Clone)]
 /// struct used to handle sending emails
@@ -29,9 +53,17 @@ pub struct Mailer {
     ///
     /// set by the `SEND_MAIL` environment variable
     pub actually_send: bool,
+    #[cfg(feature = "plugin_auth")]
+    // Structure containing email templates to be used for various purposes
+    pub templates: Box<dyn EmailTemplates>,
 }
 
 impl Default for Mailer {
+    #[cfg(feature = "plugin_auth")]
+    fn default() -> Self {
+        Self::new(Box::new(DefaultMailTemplates::default()))
+    }
+    #[cfg(not(feature = "plugin_auth"))]
     fn default() -> Self {
         Self::new()
     }
@@ -43,6 +75,7 @@ impl Mailer {
     ///
     /// allows webservers to send emails to users for purposes
     /// like marketing, user authentification, etc.
+    #[cfg(not(feature = "plugin_auth"))]
     pub fn new() -> Self {
         Mailer::check_environment_variables();
 
@@ -56,13 +89,36 @@ impl Mailer {
         let actually_send: bool = std::env::var("SEND_MAIL")
             .unwrap_or_else(|_| "false".to_string())
             .eq_ignore_ascii_case("true");
-
         Mailer {
             from_address,
             smtp_server,
             smtp_username,
             smtp_password,
             actually_send,
+        }
+    }
+
+    #[cfg(feature = "plugin_auth")]
+    pub fn new(templates: Box<dyn EmailTemplates>) -> Self {
+        Mailer::check_environment_variables();
+
+        let from_address: String = std::env::var("SMTP_FROM_ADDRESS")
+            .unwrap_or_else(|_| "create-rust-app@localhost".to_string());
+        let smtp_server: String = std::env::var("SMTP_SERVER").unwrap_or_else(|_| "".to_string());
+        let smtp_username: String =
+            std::env::var("SMTP_USERNAME").unwrap_or_else(|_| "".to_string());
+        let smtp_password: String =
+            std::env::var("SMTP_PASSWORD").unwrap_or_else(|_| "".to_string());
+        let actually_send: bool = std::env::var("SEND_MAIL")
+            .unwrap_or_else(|_| "false".to_string())
+            .eq_ignore_ascii_case("true");
+        Mailer {
+            from_address,
+            smtp_server,
+            smtp_username,
+            smtp_password,
+            actually_send,
+            templates,
         }
     }
 
@@ -156,5 +212,58 @@ message:
                 result, to, self.from_address, text
             );
         }
+    }
+}
+
+#[cfg(feature = "plugin_auth")]
+#[derive(Clone)]
+pub struct DefaultMailTemplates {
+    pub base_url: String,
+}
+#[cfg(feature = "plugin_auth")]
+impl DefaultMailTemplates {
+    pub fn new(base_url: &str) -> Self {
+        Self {
+            base_url: base_url.to_string(),
+        }
+    }
+}
+#[cfg(feature = "plugin_auth")]
+impl Default for DefaultMailTemplates {
+    fn default() -> Self {
+        Self::new("http://localhost:3000/")
+    }
+}
+#[cfg(feature = "plugin_auth")]
+impl EmailTemplates for DefaultMailTemplates {
+    fn send_activated(&self, mailer: &Mailer, to_email: &str) {
+        auth_activated::send(mailer, to_email);
+    }
+    fn send_password_changed(&self, mailer: &Mailer, to_email: &str) {
+        auth_password_changed::send(mailer, to_email);
+    }
+    fn send_password_reset(&self, mailer: &Mailer, to_email: &str) {
+        auth_password_reset::send(mailer, to_email);
+    }
+    fn send_recover_existent_account(&self, mailer: &Mailer, to_email: &str, url_path: &str) {
+        auth_recover_existent_account::send(
+            mailer,
+            to_email,
+            format!("{base_url}{url_path}", base_url = self.base_url).as_str(),
+        );
+    }
+    fn send_recover_nonexistent_account(&self, mailer: &Mailer, to_email: &str, url_path: &str) {
+        auth_recover_nonexistent_account::send(
+            mailer,
+            to_email,
+            format!("{base_url}{url_path}", base_url = self.base_url).as_str(),
+        );
+    }
+    fn send_register(&self, mailer: &Mailer, to_email: &str, url_path: &str) {
+        auth_register::send(
+            mailer,
+            to_email,
+            format!("{base_url}{url_path}", base_url = self.base_url).as_str(),
+        );
     }
 }
