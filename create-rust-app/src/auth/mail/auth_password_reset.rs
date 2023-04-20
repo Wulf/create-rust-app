@@ -2,7 +2,7 @@ use crate::Mailer;
 
 #[allow(dead_code)]
 pub fn send(mailer: &Mailer, to_email: &str) {
-    let subject = "Your password was reset)";
+    let subject = "Your password was reset";
     let text = r#"
 (This is an automated message.)
 
@@ -13,11 +13,11 @@ Your password was successfully reset!
     .to_string();
 
     let html = r#"
-(This is an automated message.)
-
-Hello,
-
-Your password was successfully reset!
+<p>(This is an automated message.)</p>
+<br>
+<p>Hello,</p>
+<br>
+<p>Your password was successfully reset!</p>
 "#
     .to_string();
 
