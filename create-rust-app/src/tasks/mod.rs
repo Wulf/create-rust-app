@@ -1,6 +1,6 @@
+use crate::Database;
 use fang::Queue;
 use once_cell::sync::OnceCell;
-use crate::Database;
 // re-export setup for tasks
 pub use crate::setup;
 
@@ -13,8 +13,6 @@ pub fn queue() -> &'static Queue {
     QUEUE.get_or_init(|| {
         let db = Database::new();
 
-        Queue::builder()
-            .connection_pool(db.pool.clone())
-            .build()
+        Queue::builder().connection_pool(db.pool.clone()).build()
     })
 }

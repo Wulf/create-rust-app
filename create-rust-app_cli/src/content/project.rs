@@ -44,7 +44,10 @@ fn get_current_cra_lib_version() -> String {
     "9".to_string()
 }
 
-fn add_bins_to_cargo_toml(project_dir: &std::path::PathBuf, creations_options: &CreationOptions) -> Result<(), std::io::Error> {
+fn add_bins_to_cargo_toml(
+    project_dir: &std::path::PathBuf,
+    creations_options: &CreationOptions,
+) -> Result<(), std::io::Error> {
     let mut path = std::path::PathBuf::from(project_dir);
     path.push("Cargo.toml");
 
@@ -77,7 +80,10 @@ fn add_bins_to_cargo_toml(project_dir: &std::path::PathBuf, creations_options: &
 
     let updated_toml = toml::to_string(&parsed_toml).unwrap();
 
-    let queue_bin = if creations_options.cra_enabled_features.contains(&"plugin_tasks".to_string()) {
+    let queue_bin = if creations_options
+        .cra_enabled_features
+        .contains(&"plugin_tasks".to_string())
+    {
         r##"
 [[bin]]
 name = "queue"
@@ -115,7 +121,8 @@ path = "backend/main.rs"
 {queue_bin}
 [profile.dev]
 debug-assertions=true
-"#);
+"#
+    );
 
     let mut final_toml = String::default();
 
