@@ -68,117 +68,117 @@ jobs:
           args: --bin create-rust-app -- create -c -d postgres -b actix-web --plugins=auth,container,graphql,storage,utoipa test-project
       - run: cd test-project && printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs && cargo dsync && cargo check
 
-  Actix-Postgres-Container:
-    needs: [Actix-Postgres-None]
-    name: Actix w/ Postgres and the container plugin
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3.3.0
-      - uses: rui314/setup-mold@v1
-      - run: rustup install stable
-      - run: rustup update
-      - uses: actions/cache@v3.2.5
-        with:
-          path: |
-            **/.cargo/.build
-            **/target
-          key: ${{ runner.os }}-cargo-cli-AP-${{ hashFiles('**/Cargo.lock') }}
-      - run: git config --global user.name test
-      - run: git config --global user.email example@email.com
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: run
-          args: --bin create-rust-app -- create -c -d postgres -b actix-web --plugins=container test-project
-      - run: cd test-project && printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs && cargo dsync && cargo check
-
-  Actix-Postgres-Auth:
-    needs: [Actix-Postgres-None]
-    name: Actix w/ Postgres and the auth plugin
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3.3.0
-      - uses: rui314/setup-mold@v1
-      - run: rustup install stable
-      - run: rustup update
-      - uses: actions/cache@v3.2.5
-        with:
-          path: |
-            **/.cargo/.build
-            **/target
-          key: ${{ runner.os }}-cargo-cli-AP-${{ hashFiles('**/Cargo.lock') }}
-      - run: git config --global user.name test
-      - run: git config --global user.email example@email.com
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: run
-          args: --bin create-rust-app -- create -c -d postgres -b actix-web --plugins=auth test-project
-      - run: cd test-project && printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs && cargo dsync && cargo check
-
-  Actix-Postgres-Storage:
-    needs: [Actix-Postgres-None]
-    name: Actix w/ Postgres and the storage plugin
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3.3.0
-      - uses: rui314/setup-mold@v1
-      - run: rustup install stable
-      - run: rustup update
-      - uses: actions/cache@v3.2.5
-        with:
-          path: |
-            **/.cargo/.build
-            **/target
-          key: ${{ runner.os }}-cargo-cli-AP-${{ hashFiles('**/Cargo.lock') }}
-      - run: git config --global user.name test
-      - run: git config --global user.email example@email.com
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: run
-          args: --bin create-rust-app -- create -c -d postgres -b actix-web --plugins=storage test-project
-      - run: cd test-project && printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs && cargo dsync && cargo check
-
-  Actix-Postgres-GraphQL:
-    needs: [Actix-Postgres-None]
-    name: Actix w/ Postgres and the graphql plugin
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3.3.0
-      - uses: rui314/setup-mold@v1
-      - run: rustup install stable
-      - run: rustup update
-      - uses: actions/cache@v3.2.5
-        with:
-          path: |
-            **/.cargo/.build
-            **/target
-          key: ${{ runner.os }}-cargo-cli-AP-${{ hashFiles('**/Cargo.lock') }}
-      - run: git config --global user.name test
-      - run: git config --global user.email example@email.com
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: run
-          args: --bin create-rust-app -- create -c -d postgres -b actix-web --plugins=graphql,auth test-project
-      - run: cd test-project && printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs && cargo dsync && cargo check
-
-  Actix-Postgres-Utoipa:
-    needs: [Actix-Postgres-None]
-    name: Actix w/ Postgres and the utoipa plugin
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3.3.0
-      - uses: rui314/setup-mold@v1
-      - run: rustup install stable
-      - run: rustup update
-      - uses: actions/cache@v3.2.5
-        with:
-          path: |
-            **/.cargo/.build
-            **/target
-          key: ${{ runner.os }}-cargo-cli-AP-${{ hashFiles('**/Cargo.lock') }}
-      - run: git config --global user.name test
-      - run: git config --global user.email example@email.com
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: run
-          args: --bin create-rust-app -- create -c -d postgres -b actix-web --plugins=auth,utoipa test-project
-      - run: cd test-project && printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs && cargo dsync && cargo check
+  # Actix-Postgres-Container:
+  #   needs: [Actix-Postgres-None]
+  #   name: Actix w/ Postgres and the container plugin
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3.3.0
+  #     - uses: rui314/setup-mold@v1
+  #     - run: rustup install stable
+  #     - run: rustup update
+  #     - uses: actions/cache@v3.2.5
+  #       with:
+  #         path: |
+  #           **/.cargo/.build
+  #           **/target
+  #         key: ${{ runner.os }}-cargo-cli-AP-${{ hashFiles('**/Cargo.lock') }}
+  #     - run: git config --global user.name test
+  #     - run: git config --global user.email example@email.com
+  #     - uses: actions-rs/cargo@v1.0.3
+  #       with:
+  #         command: run
+  #         args: --bin create-rust-app -- create -c -d postgres -b actix-web --plugins=container test-project
+  #     - run: cd test-project && printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs && cargo dsync && cargo check
+  #
+  # Actix-Postgres-Auth:
+  #   needs: [Actix-Postgres-None]
+  #   name: Actix w/ Postgres and the auth plugin
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3.3.0
+  #     - uses: rui314/setup-mold@v1
+  #     - run: rustup install stable
+  #     - run: rustup update
+  #     - uses: actions/cache@v3.2.5
+  #       with:
+  #         path: |
+  #           **/.cargo/.build
+  #           **/target
+  #         key: ${{ runner.os }}-cargo-cli-AP-${{ hashFiles('**/Cargo.lock') }}
+  #     - run: git config --global user.name test
+  #     - run: git config --global user.email example@email.com
+  #     - uses: actions-rs/cargo@v1.0.3
+  #       with:
+  #         command: run
+  #         args: --bin create-rust-app -- create -c -d postgres -b actix-web --plugins=auth test-project
+  #     - run: cd test-project && printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs && cargo dsync && cargo check
+  #
+  # Actix-Postgres-Storage:
+  #   needs: [Actix-Postgres-None]
+  #   name: Actix w/ Postgres and the storage plugin
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3.3.0
+  #     - uses: rui314/setup-mold@v1
+  #     - run: rustup install stable
+  #     - run: rustup update
+  #     - uses: actions/cache@v3.2.5
+  #       with:
+  #         path: |
+  #           **/.cargo/.build
+  #           **/target
+  #         key: ${{ runner.os }}-cargo-cli-AP-${{ hashFiles('**/Cargo.lock') }}
+  #     - run: git config --global user.name test
+  #     - run: git config --global user.email example@email.com
+  #     - uses: actions-rs/cargo@v1.0.3
+  #       with:
+  #         command: run
+  #         args: --bin create-rust-app -- create -c -d postgres -b actix-web --plugins=storage test-project
+  #     - run: cd test-project && printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs && cargo dsync && cargo check
+  #
+  # Actix-Postgres-GraphQL:
+  #   needs: [Actix-Postgres-None]
+  #   name: Actix w/ Postgres and the graphql plugin
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3.3.0
+  #     - uses: rui314/setup-mold@v1
+  #     - run: rustup install stable
+  #     - run: rustup update
+  #     - uses: actions/cache@v3.2.5
+  #       with:
+  #         path: |
+  #           **/.cargo/.build
+  #           **/target
+  #         key: ${{ runner.os }}-cargo-cli-AP-${{ hashFiles('**/Cargo.lock') }}
+  #     - run: git config --global user.name test
+  #     - run: git config --global user.email example@email.com
+  #     - uses: actions-rs/cargo@v1.0.3
+  #       with:
+  #         command: run
+  #         args: --bin create-rust-app -- create -c -d postgres -b actix-web --plugins=graphql,auth test-project
+  #     - run: cd test-project && printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs && cargo dsync && cargo check
+  #
+  # Actix-Postgres-Utoipa:
+  #   needs: [Actix-Postgres-None]
+  #   name: Actix w/ Postgres and the utoipa plugin
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3.3.0
+  #     - uses: rui314/setup-mold@v1
+  #     - run: rustup install stable
+  #     - run: rustup update
+  #     - uses: actions/cache@v3.2.5
+  #       with:
+  #         path: |
+  #           **/.cargo/.build
+  #           **/target
+  #         key: ${{ runner.os }}-cargo-cli-AP-${{ hashFiles('**/Cargo.lock') }}
+  #     - run: git config --global user.name test
+  #     - run: git config --global user.email example@email.com
+  #     - uses: actions-rs/cargo@v1.0.3
+  #       with:
+  #         command: run
+  #         args: --bin create-rust-app -- create -c -d postgres -b actix-web --plugins=auth,utoipa test-project
+  #     - run: cd test-project && printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs && cargo dsync && cargo check
