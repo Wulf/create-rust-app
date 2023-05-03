@@ -62,8 +62,7 @@ jobs:
       - uses: actions/cache@v3.2.5
         with:
           path: |
-            **/.cargo/.build
-            **/target
+            */.cargo/.build
           key: ${{ runner.os }}-cargo-cli-AP-${{ hashFiles('**/Cargo.lock') }}
       - run: git config --global user.name test
       - run: git config --global user.email example@email.com
@@ -71,7 +70,13 @@ jobs:
         with:
           command: run
           args: --bin create-rust-app -- create -c -d postgres -b actix-web --plugins=auth,container,graphql,storage,utoipa test-project
-      - run: cd test-project && printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs && cargo dsync && cargo check
+      - name: test test-project
+        working-directory: ./test-project
+        run: |
+          printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs 
+          sed -i 's\create-rust-app = {\create-rust-app = { path = "../create-rust-app", \' ./Cargo.toml 
+          cargo dsync 
+          cargo check
 
   # Actix-Postgres-Container:
   #   needs: [Actix-Postgres-None]
