@@ -116,6 +116,7 @@ create-rust-app create <project_name>
   - Find the playground at `localhost:3000/swagger-ui`
   - Requires the backend be Actix (for now ;) )
   - check out [this page](https://github.com/juhaku/utoipa/tree/master/examples) to see how to document your own API endpoints with a variety of backends
+  - Has a soft dependency on the Auth plugin
 
 - **Tasks Plugin**
   - For running background jobs, currently only supports actix-web and postgresql
