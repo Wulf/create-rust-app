@@ -54,7 +54,7 @@ create-rust-app create <project_name>
     - The `/views` folder contains all templates
     - The `/frontend/bundles` folder contains all the bundles which can be included in your views via `{{bundle(name="MyBundle.tsx")}}`
   - Automatically route to your single page application(s)
-    - Use `create_rust_app::render_single_page_application("/app","your_spa.html")`
+    - Use `create_rust_app::render_single_page_application("/app","your_spa.html")` (if you're using Poem, the parameters are slightly different, an example is provided in the function's documentation)
 - React frontend (or install your own framework!)
   - Typescript, with backend type definition generation (run `cargo tsync` in your project folder; see codegen section below)
   - Routing (via `react-router-dom`)
@@ -116,6 +116,7 @@ create-rust-app create <project_name>
   - Find the playground at `localhost:3000/swagger-ui`
   - Requires the backend be Actix (for now ;) )
   - check out [this page](https://github.com/juhaku/utoipa/tree/master/examples) to see how to document your own API endpoints with a variety of backends
+  - Has a soft dependency on the Auth plugin
 
 - **Tasks Plugin**
   - For running background jobs, currently only supports actix-web and postgresql
