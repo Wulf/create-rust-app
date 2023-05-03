@@ -47,11 +47,15 @@ static REQUEST_REFRESH_COUNT: Mutex<i32> = Mutex::new(0);
 ///
 /// then, that compiled html is sent to the client
 #[handler]
-pub async fn render_views(uri: &Uri) -> impl IntoResponse {
-    let path = uri.path();
+pub async fn render_views(req: Request) -> impl IntoResponse {
+    let path = req.path();
 
     #[cfg(debug_assertions)]
     {
+        if path.eq("/__vite_ping") {
+            println!("The vite dev server seems to be down...");
+        }
+
         // Catch viteJS ping requests and try to handle them gracefully
         // Request the browser to refresh the page (maybe the server is up but the browser just can't reconnect)
 
@@ -124,14 +128,17 @@ pub async fn render_views(uri: &Uri) -> impl IntoResponse {
 
     let content = content_result.unwrap();
 
-    template_response(uri, content)
+    template_response(req, content)
 }
 
-fn template_response(uri: &Uri, content: String) -> Response {
+fn template_response(_req: Request, content: String) -> Response {
+    #[cfg(not(debug_assertions))]
+    let content = content;
+    #[cfg(debug_assertions)]
     let mut content = content;
     #[cfg(debug_assertions)]
     {
-        let uri = Uri::from_str(req.connection_info().host());
+        let uri = Uri::from_str(_req.connection_info().host());
         let hostname = match &uri {
             Ok(uri) => uri.host().unwrap_or("localhost"),
             Err(_) => "localhost",
