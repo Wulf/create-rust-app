@@ -141,7 +141,7 @@ fn template_response(_uri: &Uri, content: String) -> Response {
     let mut content = content;
     #[cfg(debug_assertions)]
     {
-        let hostname = uri.host().unwrap_or("localhost");
+        let hostname = _uri.host().unwrap_or("localhost");
         let inject: &str = &format!(
             r##"
         <!-- development mode -->

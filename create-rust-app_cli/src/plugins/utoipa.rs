@@ -25,7 +25,7 @@ impl Plugin for Utoipa {
                 add_dependency(
                     &install_config.project_dir,
                     "utoipa",
-                    r#"utoipa = { version="2", features=["actix_extras", "chrono", "openapi_extensions"] }"#,
+                    r#"utoipa = { version="3", features=["actix_extras", "chrono", "openapi_extensions"] }"#,
                 )?;
                 add_dependency(
                     &install_config.project_dir,
@@ -37,7 +37,7 @@ impl Plugin for Utoipa {
                 add_dependency(
                     &install_config.project_dir,
                     "utoipa",
-                    r#"utoipa = { version="2", features=["chrono", "openapi_extensions"] }"#,
+                    r#"utoipa = { version="3", features=["chrono", "openapi_extensions"] }"#,
                 )?;
                 add_dependency(
                     &install_config.project_dir,
