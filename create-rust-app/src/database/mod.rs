@@ -1,4 +1,3 @@
-use diesel::PgConnection;
 use diesel::r2d2::{self, ConnectionManager, PooledConnection};
 use once_cell::sync::OnceCell;
 

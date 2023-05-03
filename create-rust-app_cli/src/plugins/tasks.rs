@@ -2,12 +2,12 @@ use anyhow::Result;
 use indoc::indoc;
 use rust_embed::RustEmbed;
 
-use crate::{BackendDatabase, BackendFramework};
 use crate::content::cargo_toml::add_dependency;
 use crate::plugins::InstallConfig;
 use crate::plugins::Plugin;
 use crate::utils::fs;
 use crate::utils::logger::add_file_msg;
+use crate::{BackendDatabase, BackendFramework};
 
 pub struct Tasks {}
 
@@ -26,15 +26,11 @@ impl Plugin for Tasks {
         // ===============================
 
         if install_config.backend_database != BackendDatabase::Postgres {
-            return Err(anyhow::anyhow!(
-                "The tasks plugin only supports Postgres"
-            ));
+            return Err(anyhow::anyhow!("The tasks plugin only supports Postgres"));
         }
 
         if install_config.backend_framework != BackendFramework::ActixWeb {
-            return Err(anyhow::anyhow!(
-                "The tasks plugin only supports actix-web"
-            ));
+            return Err(anyhow::anyhow!("The tasks plugin only supports actix-web"));
         }
 
         // ===============================
@@ -106,12 +102,7 @@ impl Plugin for Tasks {
         // Add dependencies
         // ===============================
 
-        add_dependency(
-            &install_config.project_dir,
-            "fang",
-            r#"fang = "0.10.3""#,
-        )?;
-
+        add_dependency(&install_config.project_dir, "fang", r#"fang = "0.10.3""#)?;
 
         Ok(())
     }
