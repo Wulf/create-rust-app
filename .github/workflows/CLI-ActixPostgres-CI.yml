@@ -43,7 +43,11 @@ jobs:
         with:
           command: run 
           args: --bin create-rust-app -- create -c -d postgres -b actix-web test-project
-      - run: cd test-project && printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs && cargo dsync && cargo check
+      - run: cd test-project 
+      - run: printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs 
+      - run: sed -i 's\create-rust-app = {\create-rust-app = { path = "../create-rust-app", \' ./Cargo.toml 
+      - run: cargo dsync 
+      - run: cargo check
 
   Actix-Postgres-All:
     needs: [Actix-Postgres-None]
