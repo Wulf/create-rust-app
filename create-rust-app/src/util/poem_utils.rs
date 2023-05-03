@@ -3,7 +3,7 @@ use std::sync::Mutex;
 use poem::http::{StatusCode, Uri};
 use poem::middleware::{AddData, AddDataEndpoint};
 use poem::web::Data;
-use poem::{handler, Body, EndpointExt, IntoResponse, Response, Route};
+use poem::{handler, Body, EndpointExt, IntoResponse, Request, Response, Route};
 use tera::Context;
 
 use crate::util::template_utils::{to_template_name, DEFAULT_TEMPLATE, TEMPLATES};
