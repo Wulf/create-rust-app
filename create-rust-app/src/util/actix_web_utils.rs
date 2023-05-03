@@ -1,9 +1,12 @@
+#[cfg(debug_assertions)]
 use std::str::FromStr;
+#[cfg(debug_assertions)]
 use std::sync::Mutex;
 
 use super::template_utils::SinglePageApplication;
 use crate::util::template_utils::{to_template_name, DEFAULT_TEMPLATE, TEMPLATES};
 use actix_files::NamedFile;
+#[cfg(debug_assertions)]
 use actix_http::Uri;
 use actix_web::http::StatusCode;
 use actix_web::{web, HttpRequest, HttpResponse, Scope};
@@ -136,11 +139,14 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
     template_response(req, content)
 }
 
-fn template_response(req: HttpRequest, content: String) -> HttpResponse {
+fn template_response(_req: HttpRequest, content: String) -> HttpResponse {
+    #[cfg(not(debug_assertions))]
+    let content = content;
+    #[cfg(debug_assertions)]
     let mut content = content;
     #[cfg(debug_assertions)]
     {
-        let uri = Uri::from_str(req.connection_info().host());
+        let uri = Uri::from_str(_req.connection_info().host());
         let hostname = match &uri {
             Ok(uri) => uri.host().unwrap_or("localhost"),
             Err(_) => "localhost",

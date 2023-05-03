@@ -8,10 +8,10 @@ type DbCon = diesel::PgConnection;
 #[cfg(feature = "database_sqlite")]
 type DbCon = diesel::SqliteConnection;
 
-#[cfg(feature = "database_postgres")]
+#[cfg(all(feature = "database_postgres", debug_assertions))]
 pub type DieselBackend = diesel::pg::Pg;
 
-#[cfg(feature = "database_sqlite")]
+#[cfg(all(feature = "database_sqlite", debug_assertions))]
 pub type DieselBackend = diesel::sqlite::Sqlite;
 
 pub type Pool = r2d2::Pool<ConnectionManager<DbCon>>;
