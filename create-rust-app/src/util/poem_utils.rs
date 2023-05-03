@@ -27,11 +27,14 @@ pub fn render_single_page_application(view: &str) -> AddDataEndpoint<Route, Sing
 }
 
 #[handler]
-async fn render_spa_handler(spa_info: Data<&SinglePageApplication>) -> impl IntoResponse {
+async fn render_spa_handler(
+    req: Request,
+    spa_info: Data<&SinglePageApplication>,
+) -> impl IntoResponse {
     let content = TEMPLATES
         .render(spa_info.view_name.as_str(), &Context::new())
         .unwrap();
-    template_response(content)
+    template_response(req, content)
 }
 
 // used to count number of refresh requests sent when viteJS dev server is down
