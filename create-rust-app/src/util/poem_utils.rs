@@ -3,7 +3,7 @@ use std::sync::Mutex;
 use poem::http::{StatusCode, Uri};
 use poem::middleware::{AddData, AddDataEndpoint};
 use poem::web::Data;
-use poem::{handler, Body, EndpointExt, IntoResponse, Request, Response, Route};
+use poem::{handler, Body, EndpointExt, IntoResponse, Response, Route};
 use tera::Context;
 
 use crate::util::template_utils::{to_template_name, DEFAULT_TEMPLATE, TEMPLATES};
@@ -28,13 +28,13 @@ pub fn render_single_page_application(view: &str) -> AddDataEndpoint<Route, Sing
 
 #[handler]
 async fn render_spa_handler(
-    req: Request,
+    uri: &Uri,
     spa_info: Data<&SinglePageApplication>,
 ) -> impl IntoResponse {
     let content = TEMPLATES
         .render(spa_info.view_name.as_str(), &Context::new())
         .unwrap();
-    template_response(req, content)
+    template_response(uri, content)
 }
 
 // used to count number of refresh requests sent when viteJS dev server is down
@@ -50,8 +50,8 @@ static REQUEST_REFRESH_COUNT: Mutex<i32> = Mutex::new(0);
 ///
 /// then, that compiled html is sent to the client
 #[handler]
-pub async fn render_views(req: Request) -> impl IntoResponse {
-    let path = req.path();
+pub async fn render_views(uri: &Uri) -> impl IntoResponse {
+    let path = uri.path();
 
     #[cfg(debug_assertions)]
     {
@@ -131,21 +131,17 @@ pub async fn render_views(req: Request) -> impl IntoResponse {
 
     let content = content_result.unwrap();
 
-    template_response(req, content)
+    template_response(uri, content)
 }
 
-fn template_response(_req: Request, content: String) -> Response {
+fn template_response(_uri: &Uri, content: String) -> Response {
     #[cfg(not(debug_assertions))]
     let content = content;
     #[cfg(debug_assertions)]
     let mut content = content;
     #[cfg(debug_assertions)]
     {
-        let uri = Uri::from_str(_req.connection_info().host());
-        let hostname = match &uri {
-            Ok(uri) => uri.host().unwrap_or("localhost"),
-            Err(_) => "localhost",
-        };
+        let hostname = uri.host().unwrap_or("localhost");
         let inject: &str = &format!(
             r##"
         <!-- development mode -->
