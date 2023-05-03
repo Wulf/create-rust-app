@@ -1,4 +1,5 @@
 use diesel::r2d2::{self, ConnectionManager, PooledConnection};
+use diesel::PgConnection;
 use once_cell::sync::OnceCell;
 
 #[cfg(feature = "database_postgres")]

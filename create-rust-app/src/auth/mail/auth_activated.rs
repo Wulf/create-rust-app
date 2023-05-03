@@ -2,7 +2,7 @@ use crate::Mailer;
 
 #[allow(dead_code)]
 pub fn send(mailer: &Mailer, to_email: &str) {
-    let subject = "Account activated)";
+    let subject = "Account activated";
     let text = r#"
 (This is an automated message.)
 
@@ -12,11 +12,11 @@ Your account has been activated!
 "#
     .to_string();
     let html = r#"
-(This is an automated message.)
+<p>(This is an automated message.)</p>
 
-Hello,
+<p>Hello,</p>
 
-Your account has been activated!
+<p>Your account has been activated!</p>
 "#
     .to_string();
 

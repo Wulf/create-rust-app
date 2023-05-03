@@ -44,6 +44,8 @@ pub use storage::{Attachment, AttachmentBlob, AttachmentData, Storage};
 
 mod mailer;
 pub use mailer::Mailer;
+#[cfg(feature = "plugin_auth")]
+pub use mailer::{DefaultMailTemplates, EmailTemplates};
 
 // #[cfg(debug_assertions)]
 // #[macro_use]
@@ -65,6 +67,17 @@ pub struct AppData {
     ///
     /// see [`Storage`]
     pub storage: Storage,
+}
+
+#[cfg(feature = "plugin_auth")]
+impl AppData {
+    pub fn with_custom_email_templates<T: EmailTemplates + 'static>(
+        mut self,
+        templates: T,
+    ) -> Self {
+        self.mailer = Mailer::new(Box::new(templates));
+        self
+    }
 }
 
 #[cfg(debug_assertions)]
@@ -103,7 +116,7 @@ pub fn setup() -> AppData {
     }
 
     AppData {
-        mailer: Mailer::new(),
+        mailer: Mailer::default(),
         database: Database::new(),
         #[cfg(feature = "plugin_storage")]
         storage: Storage::new(),

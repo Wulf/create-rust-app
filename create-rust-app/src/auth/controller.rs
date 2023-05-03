@@ -529,11 +529,9 @@ pub fn register(
     )
     .unwrap();
 
-    mail::auth_register::send(
-        mailer,
-        &user.email,
-        &format!("http://localhost:3000/activate?token={token}"),
-    );
+    mailer
+        .templates
+        .send_register(mailer, &user.email, &format!("activate?token={token}"));
 
     Ok(())
 }
@@ -598,7 +596,7 @@ pub fn activate(
         return Err((500, "Could not activate user."));
     }
 
-    mail::auth_activated::send(mailer, &user.email);
+    mailer.templates.send_activated(mailer, &user.email);
 
     Ok(())
 }
@@ -642,11 +640,15 @@ pub fn forgot_password(
         )
         .unwrap();
 
-        let link = &format!("http://localhost:3000/reset?token={reset_token}");
-        mail::auth_recover_existent_account::send(mailer, &user.email, link);
+        let link = &format!("reset?token={reset_token}");
+        mailer
+            .templates
+            .send_recover_existent_account(mailer, &user.email, link);
     } else {
-        let link = &"http://localhost:300/register".to_string();
-        mail::auth_recover_nonexistent_account::send(mailer, &item.email, link);
+        let link = &"register".to_string();
+        mailer
+            .templates
+            .send_recover_nonexistent_account(mailer, &item.email, link);
     }
 
     Ok(())
@@ -718,7 +720,7 @@ pub fn change_password(
         return Err((500, "Could not update password"));
     }
 
-    mail::auth_password_changed::send(mailer, &user.email);
+    mailer.templates.send_password_changed(mailer, &user.email);
 
     Ok(())
 }
@@ -794,7 +796,7 @@ pub fn reset_password(
         return Err((500, "Could not update password"));
     }
 
-    mail::auth_password_reset::send(mailer, &user.email);
+    mailer.templates.send_password_reset(mailer, &user.email);
 
     Ok(())
 }
