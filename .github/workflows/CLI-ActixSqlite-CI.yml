@@ -51,7 +51,7 @@ jobs:
           cargo check
 
   Actix-Sqlite-All:
-    needs: [Actix-Sqlite-None]
+    # needs: [Actix-Sqlite-None]
     name: Actix w/ Sqlite and all valid plugins
     runs-on: ubuntu-latest
     steps:

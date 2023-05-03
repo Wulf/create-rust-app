@@ -52,7 +52,7 @@ jobs:
 
  
   Poem-Sqlite-All:
-    needs: [Poem-Sqlite-None]
+    # needs: [Poem-Sqlite-None]
     name: Poem w/ Sqlite and all valid plugins
     runs-on: ubuntu-latest
     steps:

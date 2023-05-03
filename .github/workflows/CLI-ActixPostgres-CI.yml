@@ -51,7 +51,7 @@ jobs:
           cargo check
 
   Actix-Postgres-All:
-    needs: [Actix-Postgres-None]
+    # needs: [Actix-Postgres-None]
     name: Actix w/ Postgres and all valid plugins
     runs-on: ubuntu-latest
     steps:

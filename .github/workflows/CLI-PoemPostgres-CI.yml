@@ -51,7 +51,7 @@ jobs:
           cargo check
   
   Poem-Postgres-All:
-    needs: [Poem-Postgres-None]
+    # needs: [Poem-Postgres-None]
     name: Poem w/ Postgres and all valid plugins
     runs-on: ubuntu-latest
     steps:
