@@ -64,7 +64,7 @@ jobs:
         with:
           path: |
             .cargo/.build
-          key: ${{ runner.os }}-cargo-cli-PS-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-cli-PS-all-${{ hashFiles('**/Cargo.lock') }}
       - run: git config --global user.name test
       - run: git config --global user.email example@email.com
       - uses: actions-rs/cargo@v1.0.3
