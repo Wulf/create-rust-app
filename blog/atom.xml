@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://create-rust-app.dev/blog</id>
+    <title>Create Rust App Blog</title>
+    <updated>2021-10-23T00:00:00.000Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://create-rust-app.dev/blog"/>
+    <subtitle>Create Rust App Blog</subtitle>
+    <icon>https://create-rust-app.dev/img/favicon.ico</icon>
+    <entry>
+        <title type="html"><![CDATA[Initial Commit]]></title>
+        <id>initial-commit</id>
+        <link href="https://create-rust-app.dev/blog/initial-commit"/>
+        <updated>2021-10-23T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[create-rust-app's documentation site]]></summary>
+        <content type="html"><![CDATA[<p><code>create-rust-app</code>'s documentation site 🚀</p>]]></content>
+        <author>
+            <name>Wulf</name>
+            <uri>https://github.com/wulf</uri>
+        </author>
+        <category label="create-rust-app" term="create-rust-app"/>
+    </entry>
+</feed>

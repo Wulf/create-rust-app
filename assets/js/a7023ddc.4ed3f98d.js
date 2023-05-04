@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkcreate_rust_app_docs=self.webpackChunkcreate_rust_app_docs||[]).push([[713],{3457:function(a){a.exports=JSON.parse('{"/blog/tags/create-rust-app":{"allTagsPath":"/blog/tags","slug":"/blog/tags/create-rust-app","name":"create-rust-app","count":1,"permalink":"/blog/tags/create-rust-app"}}')}}]);

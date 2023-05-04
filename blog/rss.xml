@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+    <channel>
+        <title>Create Rust App Blog</title>
+        <link>https://create-rust-app.dev/blog</link>
+        <description>Create Rust App Blog</description>
+        <lastBuildDate>Sat, 23 Oct 2021 00:00:00 GMT</lastBuildDate>
+        <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+        <generator>https://github.com/jpmonette/feed</generator>
+        <language>en</language>
+        <item>
+            <title><![CDATA[Initial Commit]]></title>
+            <link>https://create-rust-app.dev/blog/initial-commit</link>
+            <guid>initial-commit</guid>
+            <pubDate>Sat, 23 Oct 2021 00:00:00 GMT</pubDate>
+            <description><![CDATA[create-rust-app's documentation site]]></description>
+            <content:encoded><![CDATA[<p><code>create-rust-app</code>'s documentation site 🚀</p>]]></content:encoded>
+            <category>create-rust-app</category>
+        </item>
+    </channel>
+</rss>

@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkcreate_rust_app_docs=self.webpackChunkcreate_rust_app_docs||[]).push([[233],{5745:e=>{e.exports=JSON.parse('{"name":"docusaurus-plugin-content-pages","id":"default"}')}}]);
