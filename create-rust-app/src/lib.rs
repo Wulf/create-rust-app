@@ -8,10 +8,10 @@ compile_error!(
     "feature \"database_sqlite\" and feature \"database_postgres\" cannot be enabled at the same time"
 );
 
-#[cfg(not(any(feature = "backend_poem", feature = "backend_actix-web")))]
-compile_error!(
-    "Please enable one of the backend features (options: 'backend_actix-web', 'backend-poem')"
-);
+// #[cfg(not(any(feature = "backend_poem", feature = "backend_actix-web")))]
+// compile_error!(
+//     "Please enable one of the backend features (options: 'backend_actix-web', 'backend-poem')"
+// );
 
 mod util;
 pub use util::*;
