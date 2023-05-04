@@ -132,7 +132,7 @@ impl Attachment {
     #[allow(clippy::too_many_arguments)]
     #[cfg(feature = "backend_poem")]
     pub async fn attach(
-        pool: std::sync::Arc<crate::database::Pool>,
+        pool: std::sync::Arc<&crate::database::Pool>,
         storage: &Storage,
         name: String,
         record_type: String,
@@ -250,7 +250,7 @@ impl Attachment {
     #[allow(clippy::too_many_arguments)]
     #[cfg(feature = "backend_poem")]
     pub async fn detach(
-        pool: std::sync::Arc<crate::database::Pool>,
+        pool: std::sync::Arc<&crate::database::Pool>,
         storage: &Storage,
         item_id: ID,
     ) -> Result<(), String> {
