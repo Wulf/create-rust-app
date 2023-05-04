@@ -8,8 +8,10 @@ compile_error!(
     "feature \"database_sqlite\" and feature \"database_postgres\" cannot be enabled at the same time"
 );
 
-// #[cfg(not(any(feature = "backend_poem", feature = "backend_actix-web")))]
-// compile_error!("Please enable one of the backend features (options: 'backend_actix-web', 'backend-poem')");
+#[cfg(not(any(feature = "backend_poem", feature = "backend_actix-web")))]
+compile_error!(
+    "Please enable one of the backend features (options: 'backend_actix-web', 'backend-poem')"
+);
 
 mod util;
 pub use util::*;
@@ -123,7 +125,6 @@ pub fn setup() -> AppData {
     }
 }
 
-#[cfg(feature = "backend_poem")]
 #[cfg(feature = "backend_poem")]
 /// TODO: documentation
 pub async fn not_found(_: poem::error::NotFoundError) -> poem::Response {
