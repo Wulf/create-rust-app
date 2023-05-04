@@ -129,9 +129,10 @@ impl Attachment {
     }
 
     /// in poem, we need to pass in the pool itself because the Connection is not Send+Sync which poem handlers require
+    #[allow(clippy::too_many_arguments)]
     #[cfg(feature = "backend_poem")]
     pub async fn attach(
-        pool: std::sync::Arc<crate::database::Pool>,
+        pool: std::sync::Arc<&crate::database::Pool>,
         storage: &Storage,
         name: String,
         record_type: String,
@@ -159,7 +160,7 @@ impl Attachment {
             if existing.is_ok() {
                 // one already exists, we need to delete it
                 if overwrite_existing {
-                    Attachment::detach(pool.clone(), &storage, existing.unwrap().id).await.map_err(|_| {
+                    Attachment::detach(pool.clone(), storage, existing.unwrap().id).await.map_err(|_| {
                         format!("Could not detach the existing attachment for '{name}' attachment on '{record_type}'", name=name.clone(), record_type=record_type.clone())
                     })?;
                 } else {
@@ -210,9 +211,7 @@ impl Attachment {
         if upload_result.is_err() {
             // attempt to delete the attachment
             // if it fails, it fails
-            Attachment::detach(pool.clone(), storage, attached.id)
-                .await
-                .map_err(|err| err.to_string())?;
+            Attachment::detach(pool.clone(), storage, attached.id).await?;
         }
 
         upload_result
@@ -248,9 +247,10 @@ impl Attachment {
     }
 
     /// in poem, we need to pass in the pool itself because the Connection is not Send+Sync which poem handlers require
+    #[allow(clippy::too_many_arguments)]
     #[cfg(feature = "backend_poem")]
     pub async fn detach(
-        pool: std::sync::Arc<crate::database::Pool>,
+        pool: std::sync::Arc<&crate::database::Pool>,
         storage: &Storage,
         item_id: ID,
     ) -> Result<(), String> {

@@ -15,7 +15,7 @@ use lettre::{SmtpTransport, Transport};
 // Send trait bound is for thread-safety
 #[cfg(feature = "plugin_auth")]
 /// A trait that defines the behavior of an email template
-pub trait EmailTemplates: DynClone + Send {
+pub trait EmailTemplates: DynClone + Sync + Send {
     fn send_activated(&self, mailer: &Mailer, to_email: &str);
     fn send_password_changed(&self, mailer: &Mailer, to_email: &str);
     fn send_password_reset(&self, mailer: &Mailer, to_email: &str);
@@ -55,13 +55,13 @@ pub struct Mailer {
     pub actually_send: bool,
     #[cfg(feature = "plugin_auth")]
     // Structure containing email templates to be used for various purposes
-    pub templates: Box<dyn EmailTemplates>,
+    pub templates: Box<dyn EmailTemplates + Sync + Send>,
 }
 
 impl Default for Mailer {
     #[cfg(feature = "plugin_auth")]
     fn default() -> Self {
-        Self::new(Box::new(DefaultMailTemplates::default()))
+        Self::new(Box::<DefaultMailTemplates>::default())
     }
     #[cfg(not(feature = "plugin_auth"))]
     fn default() -> Self {
@@ -99,7 +99,7 @@ impl Mailer {
     }
 
     #[cfg(feature = "plugin_auth")]
-    pub fn new(templates: Box<dyn EmailTemplates>) -> Self {
+    pub fn new(templates: Box<dyn EmailTemplates + Sync + Send>) -> Self {
         Mailer::check_environment_variables();
 
         let from_address: String = std::env::var("SMTP_FROM_ADDRESS")

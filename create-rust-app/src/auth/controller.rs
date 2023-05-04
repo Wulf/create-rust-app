@@ -1,8 +1,8 @@
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 
 use crate::auth::{
-    mail, AccessTokenClaims, Auth, PaginationParams, Permission, Role, User, UserChangeset,
-    UserSession, UserSessionChangeset, UserSessionJson, UserSessionResponse, ID,
+    AccessTokenClaims, Auth, PaginationParams, Permission, Role, User, UserChangeset, UserSession,
+    UserSessionChangeset, UserSessionJson, UserSessionResponse, ID,
 };
 use crate::{Database, Mailer};
 

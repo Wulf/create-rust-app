@@ -130,7 +130,7 @@ async fn login(
 
     match result {
         Ok((access_token, refresh_token)) => {
-            let mut cookie = Cookie::new(COOKIE_NAME, refresh_token.clone());
+            let mut cookie = Cookie::new(COOKIE_NAME, refresh_token);
             cookie.set_secure(true);
             cookie.set_http_only(true);
             cookie.set_same_site(SameSite::Strict);
@@ -162,7 +162,7 @@ async fn logout(db: Data<&Database>, cookie_jar: &CookieJar) -> Result<impl Into
         .get(COOKIE_NAME)
         .map(|cookie| String::from(cookie.value_str()));
 
-    let result = controller::logout(db.0, refresh_token.as_ref().map(|t| t.as_str()));
+    let result = controller::logout(db.0, refresh_token.as_deref());
 
     match result {
         Ok(_) => {
@@ -194,7 +194,7 @@ async fn refresh(db: Data<&Database>, cookie_jar: &CookieJar) -> Result<impl Int
         .get(COOKIE_NAME)
         .map(|cookie| String::from(cookie.value_str()));
 
-    let result = controller::refresh(db.0, refresh_token.as_ref().map(|t| t.as_str()));
+    let result = controller::refresh(db.0, refresh_token.as_deref());
 
     match result {
         Ok((access_token, refresh_token)) => {

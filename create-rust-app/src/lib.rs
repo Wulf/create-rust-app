@@ -9,7 +9,9 @@ compile_error!(
 );
 
 // #[cfg(not(any(feature = "backend_poem", feature = "backend_actix-web")))]
-// compile_error!("Please enable one of the backend features (options: 'backend_actix-web', 'backend-poem')");
+// compile_error!(
+//     "Please enable one of the backend features (options: 'backend_actix-web', 'backend-poem')"
+// );
 
 mod util;
 pub use util::*;
@@ -122,9 +124,6 @@ pub fn setup() -> AppData {
         storage: Storage::new(),
     }
 }
-
-#[cfg(feature = "backend_poem")]
-use poem;
 
 #[cfg(feature = "backend_poem")]
 /// TODO: documentation

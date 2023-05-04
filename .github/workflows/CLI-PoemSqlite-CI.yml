@@ -46,7 +46,7 @@ jobs:
         working-directory: ./test-project
         run: |
           printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamp,\n        updated_at -> Timestamp,\n    }\n}" >> ./backend/schema.rs 
-          sed -i 's\create-rust-app = {\create-rust-app = { path = "../create-rust-app", \' ./Cargo.toml 
+          sed -i 's/create-rust-app = {/create-rust-app = { path = "..\/create-rust-app", /' ./Cargo.toml 
           cargo dsync 
           cargo check
 
@@ -75,7 +75,7 @@ jobs:
         working-directory: ./test-project
         run: |
           printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamp,\n        updated_at -> Timestamp,\n    }\n}" >> ./backend/schema.rs 
-          sed -i 's\create-rust-app = {\create-rust-app = { path = "../create-rust-app", \' ./Cargo.toml 
+          sed -i 's/create-rust-app]/create-rust-app]\npath = "..\/create-rust-app"/' Cargo.toml 
           cargo dsync 
           cargo check
 
