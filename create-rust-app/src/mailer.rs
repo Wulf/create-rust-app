@@ -61,7 +61,7 @@ pub struct Mailer {
 impl Default for Mailer {
     #[cfg(feature = "plugin_auth")]
     fn default() -> Self {
-        Self::new(Box::new(DefaultMailTemplates::default()))
+        Self::new(Box::<DefaultMailTemplates>::default())
     }
     #[cfg(not(feature = "plugin_auth"))]
     fn default() -> Self {
