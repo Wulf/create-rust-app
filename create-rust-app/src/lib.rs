@@ -124,8 +124,6 @@ pub fn setup() -> AppData {
 }
 
 #[cfg(feature = "backend_poem")]
-use poem;
-
 #[cfg(feature = "backend_poem")]
 /// TODO: documentation
 pub async fn not_found(_: poem::error::NotFoundError) -> poem::Response {

@@ -17,7 +17,7 @@ use super::template_utils::SinglePageApplication;
 ///  app = app.nest("/my-spa", create_rust_app::render_single_page_application("spa.html"));
 /// ```
 pub fn render_single_page_application(view: &str) -> AddDataEndpoint<Route, SinglePageApplication> {
-    let view = view.strip_prefix("/").unwrap_or(view);
+    let view = view.strip_prefix('/').unwrap_or(view);
 
     Route::new()
         .at("*", poem::get(render_spa_handler))
@@ -69,7 +69,7 @@ pub async fn render_views(uri: &Uri) -> impl IntoResponse {
             }
             let mut count = REQUEST_REFRESH_COUNT.lock().unwrap();
             if *count < 3 {
-                *count = 1 + *count;
+                *count += 1;
                 println!("The vite dev server seems to be down... refreshing page ({count}).");
                 return poem::web::Redirect::temporary(".").into_response();
             } else {
