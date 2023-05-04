@@ -211,8 +211,7 @@ impl Attachment {
         if upload_result.is_err() {
             // attempt to delete the attachment
             // if it fails, it fails
-            Attachment::detach(pool.clone(), storage, attached.id)
-                .await?;
+            Attachment::detach(pool.clone(), storage, attached.id).await?;
         }
 
         upload_result
