@@ -15,7 +15,7 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@docusaurus/core": "2.0.1",
+    "@docusaurus/core": "2.4.1",
     "@docusaurus/preset-classic": "2.0.1",
     "@mdx-js/react": "^1.6.21",
     "@algolia/client-search": "^4.9.0",
