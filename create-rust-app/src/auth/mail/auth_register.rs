@@ -2,7 +2,7 @@ use crate::Mailer;
 
 #[allow(dead_code)]
 pub fn send(mailer: &Mailer, to_email: &str, link: &str) {
-    let subject = "Registration Confirmation)";
+    let subject = "Registration Confirmation";
     let text = format!(
         r#"
 (This is an automated message.)
@@ -15,12 +15,12 @@ Please follow the link below to complete your registration:
     );
     let html = format!(
         r#"
-(This is an automated message.)
+<p>(This is an automated message.)</p>
 
-Hello,
+<p>Hello,</p>
 
-Please follow the link below to complete your registration:
-{link}
+<p>Please follow the link below to complete your registration:</p>
+<p><a href="{link}">{link}</a></p>
 "#
     );
 

@@ -17,7 +17,7 @@ use super::template_utils::SinglePageApplication;
 ///  app = app.nest("/my-spa", create_rust_app::render_single_page_application("spa.html"));
 /// ```
 pub fn render_single_page_application(view: &str) -> AddDataEndpoint<Route, SinglePageApplication> {
-    let view = view.strip_prefix("/").unwrap_or(view);
+    let view = view.strip_prefix('/').unwrap_or(view);
 
     Route::new()
         .at("*", poem::get(render_spa_handler))
@@ -27,11 +27,14 @@ pub fn render_single_page_application(view: &str) -> AddDataEndpoint<Route, Sing
 }
 
 #[handler]
-async fn render_spa_handler(spa_info: Data<&SinglePageApplication>) -> impl IntoResponse {
+async fn render_spa_handler(
+    uri: &Uri,
+    spa_info: Data<&SinglePageApplication>,
+) -> impl IntoResponse {
     let content = TEMPLATES
         .render(spa_info.view_name.as_str(), &Context::new())
         .unwrap();
-    template_response(content)
+    template_response(uri, content)
 }
 
 // used to count number of refresh requests sent when viteJS dev server is down
@@ -52,6 +55,10 @@ pub async fn render_views(uri: &Uri) -> impl IntoResponse {
 
     #[cfg(debug_assertions)]
     {
+        if path.eq("/__vite_ping") {
+            println!("The vite dev server seems to be down...");
+        }
+
         // Catch viteJS ping requests and try to handle them gracefully
         // Request the browser to refresh the page (maybe the server is up but the browser just can't reconnect)
 
@@ -62,7 +69,7 @@ pub async fn render_views(uri: &Uri) -> impl IntoResponse {
             }
             let mut count = REQUEST_REFRESH_COUNT.lock().unwrap();
             if *count < 3 {
-                *count = 1 + *count;
+                *count += 1;
                 println!("The vite dev server seems to be down... refreshing page ({count}).");
                 return poem::web::Redirect::temporary(".").into_response();
             } else {
@@ -127,15 +134,14 @@ pub async fn render_views(uri: &Uri) -> impl IntoResponse {
     template_response(uri, content)
 }
 
-fn template_response(uri: &Uri, content: String) -> Response {
+fn template_response(_uri: &Uri, content: String) -> Response {
+    #[cfg(not(debug_assertions))]
+    let content = content;
+    #[cfg(debug_assertions)]
     let mut content = content;
     #[cfg(debug_assertions)]
     {
-        let uri = Uri::from_str(req.connection_info().host());
-        let hostname = match &uri {
-            Ok(uri) => uri.host().unwrap_or("localhost"),
-            Err(_) => "localhost",
-        };
+        let hostname = _uri.host().unwrap_or("localhost");
         let inject: &str = &format!(
             r##"
         <!-- development mode -->

@@ -15,7 +15,7 @@ pub mod controller;
 mod endpoints;
 pub use endpoints::*;
 
-mod mail;
+pub(crate) mod mail;
 mod permissions;
 mod schema;
 mod user;

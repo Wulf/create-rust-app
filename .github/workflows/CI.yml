@@ -16,6 +16,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
+  CARGO_INCREMENTAL: true
   
 concurrency:
   group:  CI-${{ github.ref }}

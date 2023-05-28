@@ -64,7 +64,7 @@ impl tera::Function for InjectBundle {
                             let manifest_entry = VITE_MANIFEST
                                 .get(&format!("bundles/{bundle_name}"))
                                 .unwrap_or_else(|| {
-                                    panic!("{}", "could not get bundle `{bundle_name}`")
+                                    panic!("could not get bundle `{}`", bundle_name)
                                 });
                             let entry_file = format!(
                                 r#"<script type="module" src="/{file}"></script>"#,

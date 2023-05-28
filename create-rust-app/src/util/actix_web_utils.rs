@@ -1,6 +1,4 @@
 #[cfg(debug_assertions)]
-use actix_http::Uri;
-#[cfg(debug_assertions)]
 use std::str::FromStr;
 #[cfg(debug_assertions)]
 use std::sync::Mutex;
@@ -8,7 +6,8 @@ use std::sync::Mutex;
 use super::template_utils::SinglePageApplication;
 use crate::util::template_utils::{to_template_name, DEFAULT_TEMPLATE, TEMPLATES};
 use actix_files::NamedFile;
-
+#[cfg(debug_assertions)]
+use actix_http::Uri;
 use actix_web::http::StatusCode;
 use actix_web::{web, HttpRequest, HttpResponse, Scope};
 use tera::Context;

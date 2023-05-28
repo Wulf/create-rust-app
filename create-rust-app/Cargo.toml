@@ -8,7 +8,13 @@ readme = "../README.md"
 repository = "https://github.com/Wulf/create-rust-app"
 license = "MIT OR Apache-2.0"
 keywords = ["react", "typescript", "generation", "backend", "frontend"]
-categories = ["command-line-utilities", "development-tools", "web-programming", "config", "database"]
+categories = [
+  "command-line-utilities",
+  "development-tools",
+  "web-programming",
+  "config",
+  "database",
+]
 
 [dependencies]
 ##
@@ -17,10 +23,14 @@ categories = ["command-line-utilities", "development-tools", "web-programming", 
 dotenv = "0.15.0" # + plugin_dev
 serde_json = "1.0.93"
 lettre = "0.10.2"
-tera = { version="1.17.0" }
-lazy_static = { version="1.4.0" }
+tera = { version = "1.17.0" }
+lazy_static = { version = "1.4.0" }
 serde = { version = "1.0.152", features = ["derive"] }
-diesel = { version="2.0.0-rc.1", default-features = false, features = ["uuid", "r2d2", "chrono"] } # + plugin_dev, plugin_auth
+diesel = { version = "2.0.0-rc.1", default-features = false, features = [
+  "uuid",
+  "r2d2",
+  "chrono",
+] } # + plugin_dev, plugin_auth
 once_cell = "1.17.1"
 
 ##
@@ -35,84 +45,151 @@ libsqlite3-sys = { version = "0.25", optional = true, features = ["bundled"] }
 ##
 
 # plugin_auth
-rust-argon2 = { optional=true, version="1.0" }
-rand = { optional=true, version="0.8.5" }
-jsonwebtoken = { optional=true, version="8.2.0" }
-tsync = { optional=true, version="1.6.0" }
-chrono = { optional=true, version = "0.4.23", default-features = false, features = ["clock", "serde"] }
+rust-argon2 = { optional = true, version = "1.0" }
+rand = { optional = true, version = "0.8.5" }
+jsonwebtoken = { optional = true, version = "8.2.0" }
+tsync = { optional = true, version = "1.6.0" }
+chrono = { optional = true, version = "0.4.23", default-features = false, features = [
+  "clock",
+  "serde",
+] }
+dyn-clone = { optional = true, version = "1.0" } # needed to allow the Mailer struct to be cloned
 
 # plugin_dev
-diesel_migrations = { optional=true, version="2.0.0" }
-cargo_metadata = { optional=true, version="0.15.2" }
-watchexec = { optional=true, version="2.2.0" }
+diesel_migrations = { optional = true, version = "2.0.0" }
+cargo_metadata = { optional = true, version = "0.15.2" }
+watchexec = { optional = true, version = "2.2.0" }
 #### tracing = { optional=true, version="0.1" }
 #### tracing-subscriber = { optional=true, version="0.3.16", features=["env-filter"] }
-reqwest = { optional=true, version="0.11.13" }
-clearscreen = { optional=true, version="2.0.0" }
-open = { optional=true, version="3.2.0" }
-cargo_toml = { optional=true, version = "0.14.0" }
+reqwest = { optional = true, version = "0.11.13" }
+clearscreen = { optional = true, version = "2.0.0" }
+open = { optional = true, version = "3.2.0" }
+cargo_toml = { optional = true, version = "0.14.0" }
 
 # plugin_storage
-aws-config = { optional=true, version="0.14.0" }
-aws-types = { optional=true, version="0.8.0" }
-aws-endpoint = { optional=true, version="0.14.0" }
-aws-sdk-s3 = { optional=true, version="0.8.0" }
-http = { optional=true, version="0.2.6" }
-diesel_derives = { optional=true, version="2.0.1" }
-uuid = { optional=true, version="1.2.2", features=["v4", "serde"] }
-md5 = { optional=true, version="0.7.0" }
-base64 = { optional=true, version="0.21.0" }
+aws-config = { optional = true, version = "0.14.0" }
+aws-types = { optional = true, version = "0.8.0" }
+aws-endpoint = { optional = true, version = "0.14.0" }
+aws-sdk-s3 = { optional = true, version = "0.8.0" }
+http = { optional = true, version = "0.2.6" }
+diesel_derives = { optional = true, version = "2.0.1" }
+uuid = { optional = true, version = "1.2.2", features = ["v4", "serde"] }
+md5 = { optional = true, version = "0.7.0" }
+base64 = { optional = true, version = "0.21.0" }
 
 # plugin_utoipa dependencies
-utoipa = { optional=true, version="3", features=["actix_extras", "chrono", "openapi_extensions"] }
-utoipa-swagger-ui = { optional=true, version="3", features=["actix-web"]}
+utoipa = { optional = true, version = "3", features = [
+  "actix_extras",
+  "chrono",
+  "openapi_extensions",
+] }
+utoipa-swagger-ui = { optional = true, version = "3", features = ["actix-web"] }
 
 # plugin_tasks
-fang = { optional=true, version = "0.10.3" }
+fang = { optional = true, version = "0.10.3" }
 
 ##
 ## BACKENDS
 ##
 
 # poem dependencies
-poem = { optional=true, version="1.3.52", features=["anyhow", "cookie", "static-files"] }
+poem = { optional = true, version = "1.3.52", features = [
+  "anyhow",
+  "cookie",
+  "static-files",
+] }
 
 # actix_web dependencies
-actix-multipart = { optional=true, version="0.4.0" }
-actix-files = { optional=true, version="0.6.2" }
-actix-http = { optional=true, version="3.0.4" }
-actix-web = { optional=true, version="4.2.1" }
-actix-web-httpauth = { optional=true, version="0.8.0" }
-derive_more = { optional=true, version="0.99.17" }
-futures = { optional=true, version="0.3.25" }
-env_logger = { optional=true, version= "0.10.0" }
+actix-multipart = { optional = true, version = "0.4.0" }
+actix-files = { optional = true, version = "0.6.2" }
+actix-http = { optional = true, version = "3.0.4" }
+actix-web = { optional = true, version = "4.2.1" }
+actix-web-httpauth = { optional = true, version = "0.8.0" }
+derive_more = { optional = true, version = "0.99.17" }
+futures = { optional = true, version = "0.3.25" }
+env_logger = { optional = true, version = "0.10.0" }
 
 # axum dependencies (not yet released; only used for plugin_dev)
 
-axum = { optional=true, version="0.6.1" }
+axum = { optional = true, version = "0.6.1" }
 
 ##
 ## MISC - here, we list deps which are required by multiple features but are not required in all configurations
 ##
 
-mime_guess = { optional=true, version="2.0.4" } # backend_poem, plugin_storage
-anyhow = { optional=true, version="1.0.57" } # backend_poem, plugin_auth, plugin_dev
-tokio = { optional=true, version = "1", features = ["full"] } # backend_poem, backend_axum, plugin_storage
+mime_guess = { optional = true, version = "2.0.4" } # backend_poem, plugin_storage
+anyhow = { optional = true, version = "1.0.57" } # backend_poem, plugin_auth, plugin_dev
+tokio = { optional = true, version = "1", features = [
+  "full",
+] } # backend_poem, backend_axum, plugin_storage
 async-priority-channel = "0.1.0"
-futures-util = { optional=true, version = "0.3.25" } # plugin_dev, TODO:plugin_storage?
+futures-util = { optional = true, version = "0.3.25" } # plugin_dev, TODO:plugin_storage?
 
 [features]
-default = ["backend_actix-web", "database_postgres", "plugin_auth", "plugin_container", "plugin_dev", "plugin_graphql", "plugin_storage", "plugin_utoipa"]
-plugin_dev = ["backend_axum", "cargo_toml", "open", "reqwest", "anyhow", "clearscreen", "watchexec", "cargo_metadata", "diesel_migrations", "futures-util"]
+default = [
+  "backend_actix-web",
+  "database_postgres",
+  "plugin_auth",
+  "plugin_container",
+  "plugin_dev",
+  "plugin_graphql",
+  "plugin_storage",
+  "plugin_utoipa",
+]
+plugin_dev = [
+  "backend_axum",
+  "cargo_toml",
+  "open",
+  "reqwest",
+  "anyhow",
+  "clearscreen",
+  "watchexec",
+  "cargo_metadata",
+  "diesel_migrations",
+  "futures-util",
+]
 plugin_container = []
-plugin_auth = ["anyhow", "rust-argon2", "rand", "jsonwebtoken", "chrono", "tsync"]
-plugin_storage = [ "aws-config", "aws-types", "aws-endpoint", "aws-sdk-s3", "tokio", "http", "diesel_derives", "uuid", "md5", "mime_guess", "base64" ] # note: might need to add "futures-util"?
+plugin_auth = [
+  "anyhow",
+  "rust-argon2",
+  "rand",
+  "jsonwebtoken",
+  "chrono",
+  "tsync",
+  "dyn-clone",
+]
+plugin_storage = [
+  "aws-config",
+  "aws-types",
+  "aws-endpoint",
+  "aws-sdk-s3",
+  "tokio",
+  "http",
+  "diesel_derives",
+  "uuid",
+  "md5",
+  "mime_guess",
+  "base64",
+] # note: might need to add "futures-util"?
 plugin_graphql = []
 plugin_utoipa = ["utoipa", "utoipa-swagger-ui", "backend_actix-web"]
 plugin_tasks = ["fang"]
 plugin_workspace_support = []
 backend_poem = ["poem", "anyhow", "mime_guess", "tokio"]
-backend_actix-web = ["actix-web", "actix-http", "actix-files", "actix-multipart", "actix-web-httpauth","derive_more", "futures", "env_logger"]
+backend_actix-web = [
+  "actix-web",
+  "actix-http",
+  "actix-files",
+  "actix-multipart",
+  "actix-web-httpauth",
+  "derive_more",
+  "futures",
+  "env_logger",
+]
 backend_axum = ["axum", "axum/ws", "tokio"]
-database_sqlite = ["diesel/sqlite", "diesel/returning_clauses_for_sqlite_3_35", "libsqlite3-sys/bundled"]
+database_sqlite = [
+  "diesel/sqlite",
+  "diesel/returning_clauses_for_sqlite_3_35",
+  "libsqlite3-sys/bundled",
+]
 database_postgres = ["diesel/postgres"]
