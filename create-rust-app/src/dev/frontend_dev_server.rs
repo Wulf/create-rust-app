@@ -24,8 +24,7 @@ pub async fn start(
     let mut child_process = Command::new(NPM)
         .args(["run", "start:dev"])
         .env("DEV_SERVER_PORT", dev_port.to_string())
-        .current_dir(PathBuf::from_iter([project_dir, "frontend"])) // error occuring here for some
-                                                                    // reason when using workspaces
+        .current_dir(PathBuf::from_iter([project_dir, "frontend"]))
         .spawn()
         .unwrap();
 
