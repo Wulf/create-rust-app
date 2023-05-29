@@ -123,7 +123,7 @@ tokio = { optional = true, version = "1", features = [
   "full",
 ] } # backend_poem, backend_axum, plugin_storage
 async-priority-channel = "0.1.0"
-futures-util = { optional = true, version = "0.3.25" } # plugin_dev, TODO:plugin_storage?
+futures-util = { optional = true, version = "0.3.28" } # plugin_dev, TODO:plugin_storage?
 
 [features]
 default = [
