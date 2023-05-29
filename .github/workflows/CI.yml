@@ -33,7 +33,7 @@ jobs:
       - run: rustup install stable
       - run: rustup update
       - run: rustup component add clippy
-      - uses: actions/cache@v3.2.6
+      - uses: actions/cache@v3.3.1
         with:
           path: |
             ./.cargo/.build
@@ -55,7 +55,7 @@ jobs:
       - run: rustup install stable
       - run: rustup update
       - run: rustup component add clippy
-      - uses: actions/cache@v3.2.6
+      - uses: actions/cache@v3.3.1
         with:
           path: |
             ./.cargo/.build
@@ -77,7 +77,7 @@ jobs:
       - uses: rui314/setup-mold@v1
       - run: rustup install stable
       - run: rustup update
-      - uses: actions/cache@v3.2.5
+      - uses: actions/cache@v3.3.1
         with:
           path: |
             ./.cargo/.build
