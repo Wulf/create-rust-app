@@ -27,11 +27,11 @@ jobs:
     name: Poem w/ Postgres and no plugins
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.2
       - uses: rui314/setup-mold@v1
       - run: rustup install stable
       - run: rustup update
-      - uses: actions/cache@v3.2.5
+      - uses: actions/cache@v3.3.1
         with:
           path: |
             .cargo/.build
@@ -55,11 +55,11 @@ jobs:
     name: Poem w/ Postgres and all valid plugins
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.3.0
+      - uses: actions/checkout@v3.5.2
       - uses: rui314/setup-mold@v1
       - run: rustup install stable
       - run: rustup update
-      - uses: actions/cache@v3.2.5
+      - uses: actions/cache@v3.3.1
         with:
           path: |
             .cargo/.build
@@ -83,11 +83,11 @@ jobs:
   #   name: Poem w/ Postgres and the container plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.3.0
+  #     - uses: actions/checkout@v3.5.2
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
-  #     - uses: actions/cache@v3.2.5
+  #     - uses: actions/cache@v3.3.1
   #       with:
   #         path: |
   #           **/.cargo/.build
@@ -106,11 +106,11 @@ jobs:
   #   name: Poem w/ Postgres and the auth plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.3.0
+  #     - uses: actions/checkout@v3.5.2
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
-  #     - uses: actions/cache@v3.2.5
+  #     - uses: actions/cache@v3.3.1
   #       with:
   #         path: |
   #           **/.cargo/.build
@@ -129,11 +129,11 @@ jobs:
   #   name: Poem w/ Postgres and the storage plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.3.0
+  #     - uses: actions/checkout@v3.5.2
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
-  #     - uses: actions/cache@v3.2.5
+  #     - uses: actions/cache@v3.3.1
   #       with:
   #         path: |
   #           **/.cargo/.build
@@ -152,11 +152,11 @@ jobs:
   #   name: Poem w/ Postgres and the graphql plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.3.0
+  #     - uses: actions/checkout@v3.5.2
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
-  #     - uses: actions/cache@v3.2.5
+  #     - uses: actions/cache@v3.3.1
   #       with:
   #         path: |
   #           **/.cargo/.build
