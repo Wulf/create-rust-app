@@ -17,7 +17,7 @@
   "dependencies": {
     "@docusaurus/core": "2.0.1",
     "@docusaurus/preset-classic": "2.0.1",
-    "@mdx-js/react": "^1.6.21",
+    "@mdx-js/react": "^2.3.0",
     "@algolia/client-search": "^4.9.0",
     "webpack": "^5.50.0",
     "clsx": "^1.2.1",
