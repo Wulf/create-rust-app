@@ -43,7 +43,7 @@
     "@vitejs/plugin-react": "^3.0.1",
     "ansi-to-react": "^6.1.6",
     "concurrently": "^7.6.0",
-    "glob": "^8.1.0",
+    "glob": "^10.3.0",
     "reconnecting-websocket": "4.4.0",
     "vite": "^4.1.1"
   },
