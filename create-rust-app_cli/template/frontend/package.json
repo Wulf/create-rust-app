@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.30.0",
-    "@types/node": "^18.13.0",
+    "@types/node": "^20.4.6",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@vitejs/plugin-react": "^3.0.1",
