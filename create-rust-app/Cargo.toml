@@ -57,7 +57,7 @@ dyn-clone = { optional = true, version = "1.0" } # needed to allow the Mailer st
 
 # plugin_dev
 diesel_migrations = { optional = true, version = "2.1.0" }
-cargo_metadata = { optional = true, version = "0.15.4" }
+cargo_metadata = { optional = true, version = "0.17.0" }
 watchexec = { optional = true, version = "2.3.0" }
 #### tracing = { optional=true, version="0.1" }
 #### tracing-subscriber = { optional=true, version="0.3.16", features=["env-filter"] }
