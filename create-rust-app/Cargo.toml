@@ -73,7 +73,7 @@ aws-types = { optional = true, version = "0.8.0" }
 aws-sdk-s3 = { optional = true, version = "0.8.0" }
 http = { optional = true, version = "0.2.9" }
 diesel_derives = { optional = true, version = "2.1.0" }
-uuid = { optional = true, version = "1.3.3", features = ["v4", "serde"] }
+uuid = { optional = true, version = "1.4.1", features = ["v4", "serde"] }
 md5 = { optional = true, version = "0.7.0" }
 base64 = { optional = true, version = "0.21.2" }
 
