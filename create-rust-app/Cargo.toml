@@ -85,7 +85,7 @@ utoipa = { optional = true, version = "3", features = [
 ] }
 
 # plugin_tasks
-fang = { optional = true, version = "0.10.3" }
+fang = { optional = true, version = "0.10.4" }
 
 ##
 ## BACKENDS

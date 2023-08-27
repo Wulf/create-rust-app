@@ -1370,14 +1370,14 @@ dependencies = [
 
 [[package]]
 name = "diesel-derive-enum"
-version = "2.0.1"
+version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b10c03b954333d05bfd5be1d8a74eae2c9ca77b86e0f1c3a1ea29c49da1d6c2"
+checksum = "81c5131a2895ef64741dad1d483f358c2a229a3a2d1b256778cdc5e146db64d4"
 dependencies = [
  "heck 0.4.1",
  "proc-macro2",
  "quote",
- "syn 1.0.109",
+ "syn 2.0.18",
 ]
 
 [[package]]
@@ -1575,9 +1575,9 @@ checksum = "4443176a9f2c162692bd3d352d745ef9413eec5782a80d8fd6f8a1ac692a07f7"
 
 [[package]]
 name = "fang"
-version = "0.10.3"
+version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "889184a3a3baaeadd99dd297c49475e27204fd0394cb61f04b402e825d6823db"
+checksum = "5f1f1f5613f9e50155d8cfa8af17bfb2373da33cb6b2283674a32203b5ccfbfa"
 dependencies = [
  "async-recursion",
  "async-trait",
@@ -1587,6 +1587,7 @@ dependencies = [
  "diesel",
  "diesel-derive-enum",
  "dotenvy",
+ "fang-derive-error",
  "hex",
  "log",
  "postgres-types",
@@ -1599,6 +1600,16 @@ dependencies = [
  "typed-builder",
  "typetag",
  "uuid",
+]
+
+[[package]]
+name = "fang-derive-error"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9f5641b79902b8b40295f05db8a94277897f58f23645dc32057a0b8423496f2"
+dependencies = [
+ "quote",
+ "syn 2.0.18",
 ]
 
 [[package]]
