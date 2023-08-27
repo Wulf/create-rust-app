@@ -51,15 +51,14 @@ impl Plugin for Dev {
 
         fs::append(
             "frontend/src/dev.tsx",
-            indoc! {r##"
-            // Sets up the development environment.
-            //
-            // Note: When running `cargo frontend` and `cargo backend` individually, "DEV_SERVER_PORT" is not set.
-            //       Use `cargo fullstack` for the full development experience.
-            if (import.meta.env.DEV_SERVER_PORT) {
-                import('./setupDevelopment')
-            }
-        "##},
+            indoc! {r#"// Sets up the development environment.
+//
+// Note: When running `cargo frontend` and `cargo backend` individually, "DEV_SERVER_PORT" is not set.
+//       Use `cargo fullstack` for the full development experience.
+if (import.meta.env.DEV_SERVER_PORT) {
+    import('./setupDevelopment')
+}
+"#},
         )?;
 
         match install_config.backend_framework {

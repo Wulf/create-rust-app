@@ -70,7 +70,7 @@ pub async fn start(
     let app = Router::new()
         .route("/", get(|| async {
             // Let user know the server is running
-            Html(r###"
+            Html(r#"
                 <html style="background-color: #171717; height: 100%; width: 100%;">
                     <head><title>Create Rust App: Development Server</title></head>
                     <body style="text-align: center; color: white; fony-family: sans-serif; padding: 50px;">
@@ -78,7 +78,7 @@ pub async fn start(
                         <h3>Create Rust App: Development Server</h3>
                     </body>
                 </html>
-            "###)
+            "#)
         }))
         .route("/vitejs-down", get(vitejs_down_handler))
         .route("/vitejs-up", get(vitejs_up_handler))

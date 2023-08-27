@@ -85,7 +85,7 @@ import { GraphQLPage } from './containers/GraphQLPage'"#,
         fs::replace(
             "frontend/bundles/index.tsx",
             "ReactDOM.createRoot",
-            r##"import {ApolloProvider} from "@apollo/client";
+            r#"import {ApolloProvider} from "@apollo/client";
 import {useAuthenticatedApolloClient} from "../src/hooks/useAuthenticatedApolloClient";
 
 const AuthenticatedApolloProvider = (props: { children: React.ReactNode }) => {
@@ -96,7 +96,7 @@ const AuthenticatedApolloProvider = (props: { children: React.ReactNode }) => {
     </ApolloProvider>
 }
 
-ReactDOM.createRoot"##,
+ReactDOM.createRoot"#,
         )?;
 
         fs::replace(
@@ -108,18 +108,18 @@ ReactDOM.createRoot"##,
 
         fs::replace(
             "frontend/package.json",
-            r##""dependencies": {"##,
-            r##""dependencies": {
+            r#""dependencies": {"#,
+            r#""dependencies": {
     "@apollo/client": "^3.5.10",
     "graphql-ws": "^5.6.4",
-    "graphql": "^16.3.0","##,
+    "graphql": "^16.3.0","#,
         )?;
 
         fs::replace("backend/main.rs", "mod mail;", "mod mail;\nmod graphql;")?;
 
         // update auth plugin's logout button
-        let old_logout_link = r##"{ auth.isAuthenticated && <a className="NavButton" onClick={() => auth.logout()}>Logout</a> }"##;
-        let new_logout_link = r##"{ auth.isAuthenticated && <a className="NavButton" onClick={() => { auth.logout(); apollo.resetStore(); }}>Logout</a> }"##;
+        let old_logout_link = r#"{ auth.isAuthenticated && <a className="NavButton" onClick={() => auth.logout()}>Logout</a> }"#;
+        let new_logout_link = r#"{ auth.isAuthenticated && <a className="NavButton" onClick={() => { auth.logout(); apollo.resetStore(); }}>Logout</a> }"#;
         fs::replace("frontend/src/App.tsx", old_logout_link, new_logout_link)?;
 
         // make sure auth plugin is wrapped on top

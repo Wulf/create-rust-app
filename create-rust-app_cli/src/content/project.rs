@@ -84,11 +84,11 @@ fn add_bins_to_cargo_toml(
         .cra_enabled_features
         .contains(&"plugin_tasks".to_string())
     {
-        r##"
+        r#"
 [[bin]]
 name = "queue"
 path = "backend/queue.rs"
-"##
+"#
     } else {
         ""
     };
