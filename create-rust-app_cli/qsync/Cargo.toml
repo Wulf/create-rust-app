@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 Inflector = "0.11.4"
-regex = "1.8.3"
+regex = "1.9.4"
 syn = { version = "1", features = ["full", "extra-traits", "parsing"] }
 walkdir = "2.3.3"
 qsync-macro = { version = "0.1.0" }
