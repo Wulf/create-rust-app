@@ -36,6 +36,8 @@ pub fn main() {
                 // plugin_tasks
                 ("fang_tasks", TableOptions::default().ignore()),
             ]),
+            model_path: "crate::models::".to_string(),
+            schema_path: "crate::schema::".to_string(),
         },
     );
 }
