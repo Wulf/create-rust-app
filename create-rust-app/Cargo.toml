@@ -31,7 +31,7 @@ diesel = { version = "2.1.0", default-features = false, features = [
   "r2d2",
   "chrono",
 ] } # + plugin_dev, plugin_auth
-once_cell = "1.17.1"
+once_cell = "1.18.0"
 
 ##
 ## Database
