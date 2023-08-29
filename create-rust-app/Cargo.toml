@@ -25,7 +25,7 @@ serde_json = "1.0.96"
 lettre = "0.10.4"
 tera = { version = "1.18.1" }
 lazy_static = { version = "1.4.0" }
-serde = { version = "1.0.163", features = ["derive"] }
+serde = { version = "1.0.164", features = ["derive"] }
 diesel = { version = "2.1.0", default-features = false, features = [
   "uuid",
   "r2d2",
