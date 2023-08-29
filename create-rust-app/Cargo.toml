@@ -92,7 +92,7 @@ fang = { optional = true, version = "0.10.3" }
 ##
 
 # poem dependencies
-poem = { optional = true, version = "1.3.55", features = [
+poem = { optional = true, version = "1.3.57", features = [
   "anyhow",
   "cookie",
   "static-files",
