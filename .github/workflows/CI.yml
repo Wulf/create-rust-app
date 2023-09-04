@@ -28,7 +28,7 @@ jobs:
     name: Clippy with debug-assertions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.6.0
+      - uses: actions/checkout@v4.0.0
       - uses: rui314/setup-mold@v1
       - run: rustup install stable
       - run: rustup update
@@ -50,7 +50,7 @@ jobs:
     name: Clippy without debug-assertions
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.6.0
+      - uses: actions/checkout@v4.0.0
       - uses: rui314/setup-mold@v1
       - run: rustup install stable
       - run: rustup update
@@ -73,7 +73,7 @@ jobs:
     name: Test Suite and Initialize profile.test Cache
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.6.0
+      - uses: actions/checkout@v4.0.0
       - uses: rui314/setup-mold@v1
       - run: rustup install stable
       - run: rustup update
@@ -94,7 +94,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.6.0
+      - uses: actions/checkout@v4.0.0
       - run: rustup install stable
       - run: rustup update
       - run: rustup component add rustfmt

@@ -27,7 +27,7 @@ jobs:
     name: Poem w/ Sqlite and no plugins
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.6.0
+      - uses: actions/checkout@v4.0.0
       - uses: rui314/setup-mold@v1
       - run: rustup install stable
       - run: rustup update
@@ -56,7 +56,7 @@ jobs:
     name: Poem w/ Sqlite and all valid plugins
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.6.0
+      - uses: actions/checkout@v4.0.0
       - uses: rui314/setup-mold@v1
       - run: rustup install stable
       - run: rustup update
@@ -84,7 +84,7 @@ jobs:
   #   name: Poem w/ Sqlite and the container plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.6.0
+  #     - uses: actions/checkout@v4.0.0
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
@@ -107,7 +107,7 @@ jobs:
   #   name: Poem w/ Sqlite and the auth plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.6.0
+  #     - uses: actions/checkout@v4.0.0
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
@@ -130,7 +130,7 @@ jobs:
   #   name: Poem w/ Sqlite and the storage plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.6.0
+  #     - uses: actions/checkout@v4.0.0
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
@@ -153,7 +153,7 @@ jobs:
   #   name: Poem w/ Sqlite and the graphql plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.6.0
+  #     - uses: actions/checkout@v4.0.0
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
