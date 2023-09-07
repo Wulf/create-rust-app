@@ -31,7 +31,7 @@ jobs:
       - uses: rui314/setup-mold@v1
       - run: rustup install stable
       - run: rustup update
-      - uses: actions/cache@v3.3.1
+      - uses: actions/cache@v3.3.2
         with:
           path: |
             .cargo/.build
@@ -59,7 +59,7 @@ jobs:
       - uses: rui314/setup-mold@v1
       - run: rustup install stable
       - run: rustup update
-      - uses: actions/cache@v3.3.1
+      - uses: actions/cache@v3.3.2
         with:
           path: |
             .cargo/.build
@@ -87,7 +87,7 @@ jobs:
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
-  #     - uses: actions/cache@v3.3.1
+  #     - uses: actions/cache@v3.3.2
   #       with:
   #         path: |
   #           **/.cargo/.build
@@ -110,7 +110,7 @@ jobs:
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
-  #     - uses: actions/cache@v3.3.1
+  #     - uses: actions/cache@v3.3.2
   #       with:
   #         path: |
   #           **/.cargo/.build
@@ -133,7 +133,7 @@ jobs:
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
-  #     - uses: actions/cache@v3.3.1
+  #     - uses: actions/cache@v3.3.2
   #       with:
   #         path: |
   #           **/.cargo/.build
@@ -156,7 +156,7 @@ jobs:
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
-  #     - uses: actions/cache@v3.3.1
+  #     - uses: actions/cache@v3.3.2
   #       with:
   #         path: |
   #           **/.cargo/.build
@@ -179,7 +179,7 @@ jobs:
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
-  #     - uses: actions/cache@v3.3.1
+  #     - uses: actions/cache@v3.3.2
   #       with:
   #         path: |
   #           **/.cargo/.build
