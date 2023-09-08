@@ -44,8 +44,13 @@ pub fn error(msg: &str) {
     message(&format!("{} {}", style("ERROR: ").red(), msg))
 }
 
-pub fn exit(msg: &str, err: std::io::Error) -> ! {
-    eprintln!("{msg}: {err:?}");
+pub fn exit_code(msg: &str, code: i32) -> ! {
+    error(msg);
+    std::process::exit(code);
+}
+
+pub fn exit_error(msg: &str, err: std::io::Error) -> ! {
+    error(format!("{msg}: {err:?}").as_str());
     std::process::exit(1);
 }
 

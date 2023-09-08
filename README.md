@@ -75,6 +75,27 @@ create-rust-app create <project_name>
   - Follows OWASP security best practices
   - RBAC permissions out of the box (assign roles and permissions to users)
 
+- **Social authentication (OIDC) plugin**
+  - Adds Oauth2-based authentication (requires auth plugin)
+  - Just configure some OIDC providers: 
+  
+  ```rust
+  app.app_data(Data::new(AuthConfig {
+    oidc_providers: vec![GOOGLE(
+    "client_id",
+    "client_secret",
+    "/success/redirect",
+    "/error/redirect",
+    )],
+  }))
+  ```
+  
+  Then, redirect your users to start the flow!
+  
+  ```jsx
+  <a href={"/api/auth/google"}>Login with Google</a>
+  ```
+
 - **Container plugin**
   - Dockerfile to containerize your rust app into a single image
 

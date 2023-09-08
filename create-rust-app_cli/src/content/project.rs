@@ -295,7 +295,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
 
         project_dir = match std::fs::canonicalize(project_dir) {
             Ok(p) => p,
-            Err(err) => logger::exit("std::fs::canonicalize():", err),
+            Err(err) => logger::exit_error("std::fs::canonicalize():", err),
         };
 
         let proceed = !creation_options.cli_mode
@@ -307,7 +307,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         if proceed {
             match std::fs::remove_dir_all(&project_dir) {
                 Ok(_) => {}
-                Err(err) => logger::exit("std::fs::remove_dir_all():", err),
+                Err(err) => logger::exit_error("std::fs::remove_dir_all():", err),
             }
         } else {
             std::process::exit(0);
@@ -331,7 +331,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
     logger::message("Creating Project Directory");
     match std::fs::create_dir_all(&project_dir) {
         Ok(_) => {}
-        Err(err) => logger::exit("std::fs::create_dir_all():", err),
+        Err(err) => logger::exit_error("std::fs::create_dir_all():", err),
     }
 
     logger::command_msg("cargo init");

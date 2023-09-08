@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod auth_oidc;
 pub mod container;
 pub mod dev;
 pub mod graphql;
@@ -19,6 +20,7 @@ pub struct InstallConfig {
     pub backend_database: BackendDatabase,
     pub plugin_dev: bool,
     pub plugin_auth: bool,
+    pub plugin_auth_oidc: bool,
     pub plugin_container: bool,
     pub plugin_storage: bool,
     pub plugin_tasks: bool,

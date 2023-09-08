@@ -4,7 +4,7 @@ use crate::auth::{
     AccessTokenClaims, Auth, PaginationParams, Permission, Role, User, UserChangeset, UserSession,
     UserSessionChangeset, UserSessionJson, UserSessionResponse, ID,
 };
-use crate::{Database, Mailer};
+use crate::{Connection, Database, Mailer};
 
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 pub const COOKIE_NAME: &str = "refresh_token";
 
 lazy_static! {
-    static ref ARGON_CONFIG: argon2::Config<'static> = argon2::Config {
+    pub static ref ARGON_CONFIG: argon2::Config<'static> = argon2::Config {
         variant: argon2::Variant::Argon2id,
         version: argon2::Version::Version13,
         secret: match std::env::var("SECRET_KEY") {
@@ -271,22 +271,43 @@ pub fn login(
         return Err((401, "Invalid credentials."));
     }
 
-    let permissions = Permission::fetch_all(&mut db, user.id);
+    let (access_token, refresh_token) = create_user_session(&mut db, device, None, user.id)?;
+
+    Ok((access_token, refresh_token))
+}
+
+// TODO: Wrap this in a database transaction
+pub fn create_user_session(
+    db: &mut Connection,
+    device_type: Option<String>,
+    ttl: Option<i64>,
+    user_id: i32,
+) -> Result<(AccessToken, RefreshToken), (StatusCode, Message)> {
+    // verify device
+    let mut device = None;
+    if device_type.is_some() {
+        let device_string = device_type.as_ref().unwrap();
+        if device_string.len() > 256 {
+            return Err((400, "'device' cannot be longer than 256 characters."));
+        } else {
+            device = Some(device_string.to_owned());
+        }
+    }
+
+    let permissions = Permission::fetch_all(db, user_id);
     if permissions.is_err() {
-        println!("{:#?}", permissions.err());
         return Err((500, "An internal server error occurred."));
     }
     let permissions = permissions.unwrap();
 
-    let roles = Role::fetch_all(&mut db, user.id);
+    let roles = Role::fetch_all(db, user_id);
     if roles.is_err() {
-        println!("{:#?}", roles.err());
         return Err((500, "An internal server error occurred."));
     }
     let roles = roles.unwrap();
 
-    let access_token_duration = chrono::Duration::seconds(if item.ttl.is_some() {
-        std::cmp::max(item.ttl.unwrap(), 1)
+    let access_token_duration = chrono::Duration::seconds(if ttl.is_some() {
+        std::cmp::max(ttl.unwrap(), 1)
     } else {
         /* 15 minutes */
         15 * 60
@@ -294,7 +315,7 @@ pub fn login(
 
     let access_token_claims = AccessTokenClaims {
         exp: (chrono::Utc::now() + access_token_duration).timestamp() as usize,
-        sub: user.id,
+        sub: user_id,
         token_type: "access_token".to_string(),
         roles,
         permissions,
@@ -302,7 +323,7 @@ pub fn login(
 
     let refresh_token_claims = RefreshTokenClaims {
         exp: (chrono::Utc::now() + chrono::Duration::hours(24)).timestamp() as usize,
-        sub: user.id,
+        sub: user_id,
         token_type: "refresh_token".to_string(),
     };
 
@@ -311,19 +332,19 @@ pub fn login(
         &access_token_claims,
         &EncodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
     )
-    .unwrap();
+        .unwrap();
 
     let refresh_token = encode(
         &Header::default(),
         &refresh_token_claims,
         &EncodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
     )
-    .unwrap();
+        .unwrap();
 
     let user_session = UserSession::create(
-        &mut db,
+        db,
         &UserSessionChangeset {
-            user_id: user.id,
+            user_id: user_id,
             refresh_token: refresh_token.clone(),
             device,
         },
