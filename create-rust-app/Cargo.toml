@@ -45,7 +45,7 @@ libsqlite3-sys = { version = "0.26", optional = true, features = ["bundled"] }
 ##
 
 # plugin_auth
-rust-argon2 = { optional = true, version = "1.0" }
+rust-argon2 = { optional = true, version = "2.0" }
 rand = { optional = true, version = "0.8.5" }
 jsonwebtoken = { optional = true, version = "8.3.0" }
 tsync = { optional = true, version = "1.7.0" }
