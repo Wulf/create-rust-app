@@ -68,7 +68,7 @@ cargo_toml = { optional = true, version = "0.15.2" }
 
 # plugin_storage
 # aws-config = { optional = true, version = "0.14.0" }
-aws-types = { optional = true, version = "0.8.0" }
+aws-types = { optional = true, version = "0.56.1" }
 # aws-endpoint = { optional = true, version = "0.14.0" }
 aws-sdk-s3 = { optional = true, version = "0.8.0" }
 http = { optional = true, version = "0.2.9" }
