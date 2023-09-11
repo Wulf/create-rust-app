@@ -3348,7 +3348,7 @@ dependencies = [
  "proc-macro2",
  "qsync-macro",
  "regex",
- "syn 1.0.109",
+ "syn 2.0.18",
  "walkdir",
 ]
 
