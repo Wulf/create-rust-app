@@ -61,7 +61,7 @@ cargo_metadata = { optional = true, version = "0.15.4" }
 watchexec = { optional = true, version = "2.3.0" }
 #### tracing = { optional=true, version="0.1" }
 #### tracing-subscriber = { optional=true, version="0.3.16", features=["env-filter"] }
-reqwest = { optional = true, version = "0.11.18" }
+reqwest = { optional = true, version = "0.11.20" }
 clearscreen = { optional = true, version = "2.0" }
 open = { optional = true, version = "4.1.0" }
 cargo_toml = { optional = true, version = "0.15.2" }
