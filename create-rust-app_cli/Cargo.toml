@@ -26,7 +26,7 @@ indoc = "2.0.1"
 walkdir = "2.3.3"
 rust-embed = { version = "6.6.1", features = ["debug-embed"] }
 clap = { version = "4.3", features = ["wrap_help", "derive", "cargo"] }
-toml = "0.7.4"
+toml = "0.8.1"
 # tsync = "1"
 update-informer = "1.0.0"
 qsync = { version = "0.1" }
