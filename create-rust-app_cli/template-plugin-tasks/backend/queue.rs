@@ -21,17 +21,19 @@ mod schema;
 mod models;
 mod tasks;
 
+const NUM_WORKERS: u32 = 2;
+
 /// Executes tasks in the default work queue
 pub fn main() {
     let queue = create_rust_app::tasks::queue();
 
-    println!("Starting pool for 'common' tasks...");
+    println!("Starting pool for 'sync' tasks...");
 
     let mut worker_pool = WorkerPool::<Queue>::builder()
         .queue(queue.clone())
-        .retention_mode(RetentionMode::KeepAll)
-        .task_type("common".to_string())
-        .number_of_workers(2_u32)
+        .retention_mode(RetentionMode::RemoveFinished)
+        .task_type("sync".to_string())
+        .number_of_workers(NUM_WORKERS)
         .build();
 
     worker_pool.start().unwrap();

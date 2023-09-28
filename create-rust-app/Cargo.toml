@@ -85,7 +85,7 @@ utoipa = { optional = true, version = "3", features = [
 ] }
 
 # plugin_tasks
-fang = { optional = true, version = "0.10.3" }
+fang = { optional = true, version = "0.10.4", features = ["asynk"] }
 
 ##
 ## BACKENDS
@@ -120,9 +120,9 @@ mime_guess = { optional = true, version = "2.0.4" } # backend_poem, plugin_stora
 anyhow = { optional = true, version = "1.0.71" } # backend_poem, plugin_auth, plugin_dev
 tokio = { optional = true, version = "1", features = [
   "full",
-] } # backend_poem, backend_axum, plugin_storage
-async-priority-channel = "0.1.0"
-futures-util = { optional = true, version = "0.3.28" } # plugin_dev, TODO:plugin_storage?
+] } # backend_poem, backend_axum, plugin_storage, plugin_tasks
+async-priority-channel = "0.1.0" # plugin_dev
+futures-util = { optional = true, version = "0.3.28" } # plugin_dev, plugin_storage
 
 [features]
 default = [
@@ -169,10 +169,11 @@ plugin_storage = [
   "md5",
   "mime_guess",
   "base64",
-] # note: might need to add "futures-util"?
+  "futures-util"
+]
 plugin_graphql = []
 plugin_utoipa = ["utoipa", "backend_actix-web"]
-plugin_tasks = ["fang"]
+plugin_tasks = ["fang", "tokio"]
 backend_poem = ["poem", "anyhow", "mime_guess", "tokio"]
 backend_actix-web = [
   "actix-web",
