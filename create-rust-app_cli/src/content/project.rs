@@ -58,7 +58,6 @@ fn is_restricted_project_name(project_name: &str, project_binaries: &[ProjectBin
         .contains(&project_name)
 }
 
-
 fn add_bins_to_cargo_toml(
     project_dir: &std::path::PathBuf,
     creations_options: &CreationOptions,
@@ -136,7 +135,8 @@ fn add_bins_to_cargo_toml(
         .clone()
         .iter()
         .map(|bin| {
-            format!(r#"[[bin]]
+            format!(
+                r#"[[bin]]
 name = "{name}"
 path = "{path}"
 "#,

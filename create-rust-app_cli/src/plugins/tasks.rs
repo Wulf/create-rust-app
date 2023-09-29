@@ -123,11 +123,13 @@ CREATE INDEX fang_tasks_uniq_hash ON fang_tasks(uniq_hash);
                 fs::replace(
                     "backend/main.rs",
                     "HttpServer::new(move || {",
-                    &format!("{example_tasks}
+                    &format!(
+                        "{example_tasks}
 
-    HttpServer::new(move || {{")
+    HttpServer::new(move || {{"
+                    ),
                 )?;
-            },
+            }
             BackendFramework::Poem => {
                 fs::replace(
                     "backend/main.rs",
@@ -138,10 +140,13 @@ CREATE INDEX fang_tasks_uniq_hash ON fang_tasks(uniq_hash);
                 fs::replace(
                     "backend/main.rs",
                     "let data = create_rust_app::setup();",
-                    &format!("{example_tasks}
+                    &format!(
+                        "{example_tasks}
 
-    let data = create_rust_app::setup();"))?;
-            },
+    let data = create_rust_app::setup();"
+                    ),
+                )?;
+            }
         }
 
         // ===============================

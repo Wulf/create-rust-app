@@ -1,7 +1,7 @@
-use std::sync::Mutex;
 use crate::Database;
 use fang::{AsyncQueue, NoTls, Queue};
 use once_cell::sync::OnceCell;
+use std::sync::Mutex;
 // re-export setup for tasks
 pub use crate::setup;
 
@@ -18,9 +18,7 @@ pub fn queue() -> &'static Queue {
     QUEUE.get_or_init(|| {
         let db = Database::new();
 
-        Queue::builder()
-            .connection_pool(db.pool.clone())
-            .build()
+        Queue::builder().connection_pool(db.pool.clone()).build()
     })
 }
 
