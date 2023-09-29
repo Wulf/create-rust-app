@@ -309,7 +309,7 @@ fn create_project(
                 ];
                 let chosen: Vec<usize> = MultiSelect::with_theme(&ColorfulTheme::default())
                     .items(&items)
-                    .defaults(&[true, true, true, false, false])
+                    .defaults(&[true, false, false, false, false])
                     .interact()?;
 
                 let add_plugin_auth = chosen.iter().any(|x| *x == 0);

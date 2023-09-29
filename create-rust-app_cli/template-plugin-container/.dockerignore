@@ -1,12 +1,15 @@
 .env*
 .DS_Store
 
+Dockerfile
+docker-compose.yml
+
 .cargo/.build
+!.cargo/.build/release
 frontend/node_modules
 frontend/.pnp
 frontend/**/*.pnp.js
 frontend/coverage
-frontend/build
 Dockerfile
 
 build-log*.txt
