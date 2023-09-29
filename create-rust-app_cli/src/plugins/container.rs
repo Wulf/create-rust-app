@@ -33,7 +33,7 @@ impl Plugin for Container {
             "Dockerfile",
             "$APP_BINARY_NAME",
             install_config.project_name.as_str(),
-        );
+        )?;
 
         // TODO: Fix these appends/prepends by prepending the filepath with project_dir
         // currently, this works because we assume the current working directory is the project's root
