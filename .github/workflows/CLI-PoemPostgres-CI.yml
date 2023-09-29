@@ -21,62 +21,62 @@ concurrency:
   group:  CI-PP-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:
+jobs: {}
   # naming convention is: [backend]-[database]-[plugins]
-  Poem-Postgres-None:
-    name: Poem w/ Postgres and no plugins
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3.6.0
-      - uses: rui314/setup-mold@v1
-      - run: rustup install stable
-      - run: rustup update
-      - uses: actions/cache@v3.3.1
-        with:
-          path: |
-            .cargo/.build
-          key: ${{ runner.os }}-cargo-cli-PP-${{ hashFiles('**/Cargo.lock') }}
-      - run: git config --global user.name test
-      - run: git config --global user.email example@email.com
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: run
-          args: --bin create-rust-app -- create -c -d postgres -b poem test-project
-      - name: test test-project
-        working-directory: ./test-project
-        run: |
-          printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs 
-          sed -i 's/create-rust-app = {/create-rust-app = { path = "..\/create-rust-app", /' ./Cargo.toml            
-          cargo dsync 
-          cargo check
-  
-  Poem-Postgres-All:
-    # needs: [Poem-Postgres-None]
-    name: Poem w/ Postgres and all valid plugins
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3.6.0
-      - uses: rui314/setup-mold@v1
-      - run: rustup install stable
-      - run: rustup update
-      - uses: actions/cache@v3.3.1
-        with:
-          path: |
-            .cargo/.build
-          key: ${{ runner.os }}-cargo-cli-PP-all-${{ hashFiles('**/Cargo.lock') }}
-      - run: git config --global user.name test
-      - run: git config --global user.email example@email.com
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: run
-          args: --bin create-rust-app -- create -c -d postgres -b poem --plugins=auth,container,graphql,storage test-project
-      - name: test test-project
-        working-directory: ./test-project
-        run: |
-          printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs 
-          sed -i 's/create-rust-app]/create-rust-app]\npath = "..\/create-rust-app"/' Cargo.toml 
-          cargo dsync 
-          cargo check
+#  Poem-Postgres-None:
+#    name: Poem w/ Postgres and no plugins
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v3.6.0
+#      - uses: rui314/setup-mold@v1
+#      - run: rustup install stable
+#      - run: rustup update
+#      - uses: actions/cache@v3.3.1
+#        with:
+#          path: |
+#            .cargo/.build
+#          key: ${{ runner.os }}-cargo-cli-PP-${{ hashFiles('**/Cargo.lock') }}
+#      - run: git config --global user.name test
+#      - run: git config --global user.email example@email.com
+#      - uses: actions-rs/cargo@v1.0.3
+#        with:
+#          command: run
+#          args: --bin create-rust-app -- create -c -d postgres -b poem test-project
+#      - name: test test-project
+#        working-directory: ./test-project
+#        run: |
+#          printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs
+#          sed -i 's/create-rust-app = {/create-rust-app = { path = "..\/create-rust-app", /' ./Cargo.toml
+#          cargo dsync
+#          cargo check
+#
+#  Poem-Postgres-All:
+#    # needs: [Poem-Postgres-None]
+#    name: Poem w/ Postgres and all valid plugins
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v3.6.0
+#      - uses: rui314/setup-mold@v1
+#      - run: rustup install stable
+#      - run: rustup update
+#      - uses: actions/cache@v3.3.1
+#        with:
+#          path: |
+#            .cargo/.build
+#          key: ${{ runner.os }}-cargo-cli-PP-all-${{ hashFiles('**/Cargo.lock') }}
+#      - run: git config --global user.name test
+#      - run: git config --global user.email example@email.com
+#      - uses: actions-rs/cargo@v1.0.3
+#        with:
+#          command: run
+#          args: --bin create-rust-app -- create -c -d postgres -b poem --plugins=auth,container,graphql,storage test-project
+#      - name: test test-project
+#        working-directory: ./test-project
+#        run: |
+#          printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamptz,\n        updated_at -> Timestamptz,\n    }\n}" >> ./backend/schema.rs
+#          sed -i 's/create-rust-app]/create-rust-app]\npath = "..\/create-rust-app"/' Cargo.toml
+#          cargo dsync
+#          cargo check
 
   # Poem-Postgres-Container:
   #   needs: [Poem-Postgres-None]

@@ -44,7 +44,9 @@ create-rust-app create <project_name>
 
 - Run frontend & backend with a single command: `cargo fullstack`
 - Rust backend
-  - One of the following frameworks: `actix-web`, `poem` or let us know which one you want to use!
+  - One of the following frameworks: 
+    - `actix-web`
+    - `poem` (support temporarily on hold, use version 9.2.2: `cargo install create-rust-app_cli@9.2.2`)
   - Database migrations (using diesel.rs)
     - Generate diesel structs and types by running `cargo dsync` in your project (see codegen section below).
   - Sending mail

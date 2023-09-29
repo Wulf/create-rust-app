@@ -41,7 +41,7 @@ struct Asset;
 //     version.to_string()
 // }
 fn get_current_cra_lib_version() -> String {
-    "9".to_string()
+    "9.2.2".to_string()
 }
 
 #[derive(Clone)]
@@ -279,6 +279,15 @@ pub fn remove_non_database_files(project_dir: &PathBuf, database: BackendDatabas
  * create-rust-app project generation
  */
 pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<()> {
+    /*
+       Temporary guard until we get poem supported again
+    */
+    let cra_version = env!("CARGO_PKG_VERSION");
+    if !cra_version.eq("9.2.2") && creation_options.backend_framework == BackendFramework::Poem {
+        logger::error("Poem is not supported in this version of create-rust-app. Please use version 9.2.2 (cargo install create-rust-app_cli@9.2.2). We hope to bring back poem-web as well as other frameworks in the future.");
+        std::process::exit(1);
+    }
+
     let mut project_dir: PathBuf = PathBuf::from(project_name);
 
     if project_dir.exists() {

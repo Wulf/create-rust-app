@@ -1,7 +1,7 @@
 [package]
 name = "create-rust-app_cli"
 description = "Set up a modern rust+react web app by running one command."
-version = "9.2.1"
+version = "9.2.2"
 authors = ["Haris <4259838+Wulf@users.noreply.github.com>"]
 edition = "2018"
 readme = "../README.md"
