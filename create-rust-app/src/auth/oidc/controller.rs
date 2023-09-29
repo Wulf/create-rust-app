@@ -26,14 +26,14 @@ async fn create_oidc_client(provider: &OIDCProvider, app_url: String) -> Result<
         IssuerUrl::new(provider.clone().issuer_url)?,
         async_http_client,
     )
-        .await?;
+    .await?;
 
     Ok(CoreClient::from_provider_metadata(
         provider_metadata,
         ClientId::new(provider.clone().client_id),
         Some(ClientSecret::new(provider.clone().client_secret)),
     )
-        .set_redirect_uri(RedirectUrl::new(provider.redirect_uri(app_url))?))
+    .set_redirect_uri(RedirectUrl::new(provider.redirect_uri(app_url))?))
 }
 
 pub async fn oidc_login_url(
@@ -285,7 +285,7 @@ pub async fn oauth_login(
                 updated_at: None,
             },
         )
-            .unwrap();
+        .unwrap();
 
         let (access_token, refresh_token) = create_user_session(
             db,
@@ -293,7 +293,7 @@ pub async fn oauth_login(
             None,
             user.id,
         )
-            .map_err(|error| (error.0, error.1.to_string()))?;
+        .map_err(|error| (error.0, error.1.to_string()))?;
 
         return Ok((access_token, refresh_token));
     }
@@ -361,7 +361,7 @@ pub async fn oauth_login(
             updated_at: None,
         },
     )
-        .unwrap();
+    .unwrap();
 
     Ok(create_user_session(
         db,
@@ -369,5 +369,5 @@ pub async fn oauth_login(
         None,
         new_user.id,
     )
-        .map_err(|error| (error.0, error.1.to_string())))?
+    .map_err(|error| (error.0, error.1.to_string())))?
 }

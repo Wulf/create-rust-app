@@ -332,14 +332,14 @@ pub fn create_user_session(
         &access_token_claims,
         &EncodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
     )
-        .unwrap();
+    .unwrap();
 
     let refresh_token = encode(
         &Header::default(),
         &refresh_token_claims,
         &EncodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
     )
-        .unwrap();
+    .unwrap();
 
     let user_session = UserSession::create(
         db,

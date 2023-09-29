@@ -25,7 +25,10 @@ type ProviderFactory = fn(ClientId, ClientSecret, SuccessURI, ErrorURI) -> OIDCP
 
 impl OIDCProvider {
     pub const GOOGLE: ProviderFactory =
-        |client_id: ClientId, client_secret: ClientSecret, success_uri: SuccessURI, error_uri: ErrorURI| OIDCProvider {
+        |client_id: ClientId,
+         client_secret: ClientSecret,
+         success_uri: SuccessURI,
+         error_uri: ErrorURI| OIDCProvider {
             name: "google".to_string(),
             scope: vec!["email".to_string()],
             issuer_url: "https://accounts.google.com".to_string(),

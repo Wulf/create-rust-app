@@ -1,7 +1,7 @@
 use crate::plugins::InstallConfig;
 use crate::plugins::Plugin;
-use crate::utils::{fs, logger};
 use crate::utils::logger::add_file_msg;
+use crate::utils::{fs, logger};
 use crate::{BackendDatabase, BackendFramework};
 use anyhow::Result;
 use indoc::indoc;
@@ -12,7 +12,6 @@ pub struct AuthOIDC {}
 #[derive(RustEmbed)]
 #[folder = "template-plugin-auth-oidc"]
 struct Asset;
-
 
 impl Plugin for AuthOIDC {
     fn name(&self) -> &'static str {
@@ -53,9 +52,12 @@ impl Plugin for AuthOIDC {
         // ===============================
         match install_config.backend_framework {
             BackendFramework::ActixWeb => {
-                fs::replace("backend/main.rs", r#"app = app.app_data(Data::new(AppConfig {
+                fs::replace(
+                    "backend/main.rs",
+                    r#"app = app.app_data(Data::new(AppConfig {
             app_url: std::env::var("APP_URL").unwrap(),
-        }));"#, r#"app = app.app_data(Data::new(AppConfig {
+        }));"#,
+                    r#"app = app.app_data(Data::new(AppConfig {
             app_url: std::env::var("APP_URL").unwrap(),
         }));
         app = app.app_data(Data::new(create_rust_app::auth::AuthConfig {
@@ -72,19 +74,27 @@ impl Plugin for AuthOIDC {
                 ),
             )],
         }));
-"#)?;
-            },
+"#,
+                )?;
+            }
             BackendFramework::Poem => {
-                fs::replace("backend/main.rs", r#"app = app.app_data(Data::new(AppConfig {
+                fs::replace(
+                    "backend/main.rs",
+                    r#"app = app.app_data(Data::new(AppConfig {
             app_url: std::env::var("APP_URL").unwrap(),
-        }));"#, r#"app = app.app_data(Data::new(AppConfig {
+        }));"#,
+                    r#"app = app.app_data(Data::new(AppConfig {
             app_url: std::env::var("APP_URL").unwrap(),
         }));
-"#)?;
+"#,
+                )?;
 
-                fs::replace("backend/main.rs", r#".with(AddData::new(AppConfig {
+                fs::replace(
+                    "backend/main.rs",
+                    r#".with(AddData::new(AppConfig {
                     app_url: std::env::var("APP_URL").unwrap(),
-                 })"#, r##".with(AddData::new(AppConfig {
+                 })"#,
+                    r##".with(AddData::new(AppConfig {
                     app_url: std::env::var("APP_URL").unwrap(),
                  })
                  .with(AddData::new(create_rust_app::auth::AuthConfig {
@@ -100,7 +110,8 @@ impl Plugin for AuthOIDC {
                     app_url = std::env::var("APP_URL").unwrap()
                 ),
             )],
-        })"##)?;
+        })"##,
+                )?;
             }
         }
 
@@ -165,11 +176,18 @@ impl Plugin for AuthOIDC {
         // PATCH FRONTEND
         // ===============================
 
-        fs::replace("frontend/src/hooks/useAuth.tsx", "logout,", indoc! {r#"logout,
+        fs::replace(
+            "frontend/src/hooks/useAuth.tsx",
+            "logout,",
+            indoc! {r#"logout,
 loginOIDC,
-completeOIDCLogin"#})?;
+completeOIDCLogin"#},
+        )?;
 
-        fs::replace("frontend/src/hooks/useAuth.tsx", "const logout = async ()", indoc! {r#"
+        fs::replace(
+            "frontend/src/hooks/useAuth.tsx",
+            "const logout = async ()",
+            indoc! {r#"
 const loginOIDC = async (provider: string) => {
     window.location.href = `/api/auth/oidc/${provider}`
 }
@@ -199,13 +217,15 @@ const completeOIDCLogin = (): boolean => {
     }
 }
 
-const logout = async ()"#})?;
+const logout = async ()"#},
+        )?;
 
         fs::replace(
             "frontend/src/App.tsx",
             "import { LoginPage } from './containers/LoginPage'",
             r#"import { LoginPage } from './containers/LoginPage'
-import { OauthLoginResultPage } from './containers/OauthLoginResultPage'"#)?;
+import { OauthLoginResultPage } from './containers/OauthLoginResultPage'"#,
+        )?;
 
         fs::replace(
             "frontend/src/App.tsx",
@@ -215,11 +235,14 @@ import { OauthLoginResultPage } from './containers/OauthLoginResultPage'"#)?;
             <Route path="/oauth/error" element={<OauthLoginResultPage />} />"#,
         )?;
 
-        fs::replace("frontend/src/containers/LoginPage.tsx", r#"<div style={{ display: 'flex', flexFlow: 'column' }}>
+        fs::replace(
+            "frontend/src/containers/LoginPage.tsx",
+            r#"<div style={{ display: 'flex', flexFlow: 'column' }}>
         <button disabled={processing} onClick={login}>
           Login
         </button>
-      </div>"#, r##"<div style={{ display: 'flex', flexFlow: 'column' }}>
+      </div>"#,
+            r##"<div style={{ display: 'flex', flexFlow: 'column' }}>
         <button disabled={processing} onClick={login}>
           Login
         </button>
@@ -231,7 +254,8 @@ import { OauthLoginResultPage } from './containers/OauthLoginResultPage'"#)?;
       >
         Login with Google
       </a>
-"##)?;
+"##,
+        )?;
 
         Ok(())
     }

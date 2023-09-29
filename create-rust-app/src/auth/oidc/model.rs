@@ -10,16 +10,16 @@ type Connection = crate::Connection;
 
 #[tsync::tsync]
 #[derive(
-Debug,
-Serialize,
-Deserialize,
-Clone,
-Queryable,
-Insertable,
-AsChangeset,
-Identifiable,
-Associations,
-Selectable,
+    Debug,
+    Serialize,
+    Deserialize,
+    Clone,
+    Queryable,
+    Insertable,
+    AsChangeset,
+    Identifiable,
+    Associations,
+    Selectable,
 )]
 #[diesel(table_name=user_oauth2_links, primary_key(id), belongs_to(User, foreign_key=user_id))]
 pub struct UserOauth2Link {

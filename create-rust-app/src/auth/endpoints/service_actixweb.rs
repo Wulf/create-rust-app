@@ -3,7 +3,7 @@ use crate::auth::{
     AuthMessageResponse, AuthTokenResponse, JwtSecurityAddon, UserSessionJson, UserSessionResponse,
 };
 use actix_http::StatusCode;
-use actix_web::{cookie::{Cookie, SameSite}};
+use actix_web::cookie::{Cookie, SameSite};
 use actix_web::{delete, get, post, web, Error as AWError, Result};
 use actix_web::{
     web::{Data, Json, Path, Query},
@@ -182,7 +182,13 @@ async fn oidc_login_redirect(
 ) -> Result<HttpResponse, AWError> {
     use actix_web::http::header::{HeaderValue, LOCATION};
 
-    let result = crate::auth::oidc::controller::oidc_login_url(&db, app_config.as_ref(), auth_config.as_ref(), provider.to_string()).await;
+    let result = crate::auth::oidc::controller::oidc_login_url(
+        &db,
+        app_config.as_ref(),
+        auth_config.as_ref(),
+        provider.to_string(),
+    )
+    .await;
 
     if result.is_err() {
         return Ok(HttpResponse::InternalServerError().finish());
@@ -193,11 +199,13 @@ async fn oidc_login_redirect(
     match result {
         Some(url) => {
             let mut response = HttpResponse::SeeOther().body(());
-            response.headers_mut().append(LOCATION, HeaderValue::from_str(url.as_str()).unwrap());
+            response
+                .headers_mut()
+                .append(LOCATION, HeaderValue::from_str(url.as_str()).unwrap());
 
             Ok(response)
-        },
-        None => Ok(HttpResponse::NotImplemented().finish())
+        }
+        None => Ok(HttpResponse::NotImplemented().finish()),
     }
 }
 
@@ -216,21 +224,25 @@ async fn oidc_login(
     app_config: Data<AppConfig>,
     auth_config: Data<AuthConfig>,
     path_params: Path<String>,
-    query_params: Query<OIDCLoginQueryParams>
+    query_params: Query<OIDCLoginQueryParams>,
 ) -> HttpResponse {
     use actix_web::http::header::{HeaderValue, LOCATION};
     let provider_name = path_params.to_string();
 
-    let provider = auth_config.oidc_providers
+    let provider = auth_config
+        .oidc_providers
         .iter()
         .find(|p| p.name.eq(&provider_name));
 
     if provider.is_none() {
-        return HttpResponse::InternalServerError().json(json!({
-            "success": false,
-            "message": "Provider not configured",
-            "provider": &provider_name
-        }).to_string());
+        return HttpResponse::InternalServerError().json(
+            json!({
+                "success": false,
+                "message": "Provider not configured",
+                "provider": &provider_name
+            })
+            .to_string(),
+        );
     }
 
     let provider = provider.unwrap();
@@ -247,8 +259,9 @@ async fn oidc_login(
         provider_name,
         query_param_code,
         query_param_error,
-        query_param_state
-    ).await;
+        query_param_state,
+    )
+    .await;
 
     let mut response = HttpResponse::SeeOther().body(());
 
@@ -256,35 +269,32 @@ async fn oidc_login(
         Ok((access_token, refresh_token)) => {
             response.headers_mut().append(
                 LOCATION,
-                HeaderValue::from_str(
-                    &format!(
-                        "{}?access_token={}",
-                        provider.success_uri,
-                        access_token
-                    )
-                ).expect("Invalid URL")
+                HeaderValue::from_str(&format!(
+                    "{}?access_token={}",
+                    provider.success_uri, access_token
+                ))
+                .expect("Invalid URL"),
             );
 
-            response.add_cookie(
-                &Cookie::build(COOKIE_NAME, refresh_token)
-                    .secure(true)
-                    .http_only(true)
-                    .same_site(SameSite::Strict)
-                    .path("/")
-                    .finish()
-                ).expect("Could not add refresh_token cookie");
-        },
-        Err((status_code, message)) => {
-            response.headers_mut().append(
-                LOCATION,
-                HeaderValue::from_str(&format!(
-                    "{}?status_code={}&message={}",
-                    provider.error_uri,
-                    status_code,
-                    message
-                )).expect("Invalid URL"),
-            )
+            response
+                .add_cookie(
+                    &Cookie::build(COOKIE_NAME, refresh_token)
+                        .secure(true)
+                        .http_only(true)
+                        .same_site(SameSite::Strict)
+                        .path("/")
+                        .finish(),
+                )
+                .expect("Could not add refresh_token cookie");
         }
+        Err((status_code, message)) => response.headers_mut().append(
+            LOCATION,
+            HeaderValue::from_str(&format!(
+                "{}?status_code={}&message={}",
+                provider.error_uri, status_code, message
+            ))
+            .expect("Invalid URL"),
+        ),
     }
 
     response
