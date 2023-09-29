@@ -59,6 +59,20 @@ pub trait Plugin {
             install_config.backend_framework,
         )?;
 
+        logger::command_msg("cargo fmt");
+
+        let cargo_fmt = std::process::Command::new("cargo")
+            .current_dir(".")
+            .arg("fmt")
+            .stdout(std::process::Stdio::null())
+            .status()
+            .expect("failed to execute process");
+
+        if !cargo_fmt.success() {
+            logger::error("Failed to execute `cargo fmt`");
+            std::process::exit(1);
+        }
+
         logger::command_msg("git add -A");
 
         let git_add = std::process::Command::new("git")

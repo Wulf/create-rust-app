@@ -1,1 +1,1 @@
-pub mod DailyTodo;
+pub mod daily_todo;

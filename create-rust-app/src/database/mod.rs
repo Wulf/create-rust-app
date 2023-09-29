@@ -52,12 +52,12 @@ impl Database {
         POOL.get_or_init(|| {
             Pool::builder()
                 .connection_timeout(std::time::Duration::from_secs(5))
-                .build(ConnectionManager::<DbCon>::new(Self::database_url()))
+                .build(ConnectionManager::<DbCon>::new(Self::connection_url()))
                 .unwrap()
         })
     }
 
-    fn database_url() -> String {
+    pub fn connection_url() -> String {
         std::env::var("DATABASE_URL").expect("DATABASE_URL environment variable expected.")
     }
 }
