@@ -579,7 +579,8 @@ pub fn endpoints(scope: actix_web::Scope) -> actix_web::Scope {
         .service(change_password)
         .service(reset_password);
 
-    if cfg!(feature = "plugin_auth-oidc") {
+    #[cfg(feature = "plugin_auth-oidc")]
+    {
         scope = scope.service(oidc_login_redirect);
         scope = scope.service(oidc_login);
     }
