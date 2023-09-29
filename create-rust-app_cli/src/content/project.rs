@@ -50,7 +50,7 @@ struct ProjectBinary {
     path: &'static str,
 }
 
-fn is_restricted_project_name(project_name: &str, project_binaries: &Vec<ProjectBinary>) -> bool {
+fn is_restricted_project_name(project_name: &str, project_binaries: &[ProjectBinary]) -> bool {
     project_binaries
         .iter()
         .map(|bin| bin.name)
