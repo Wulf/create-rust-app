@@ -134,6 +134,7 @@ async fn login(
             cookie.set_secure(true);
             cookie.set_http_only(true);
             cookie.set_same_site(SameSite::Strict);
+            cookie.set_path("/");
             cookie_jar.add(cookie);
 
             let json = json!({ "access_token": access_token }).to_string();
@@ -202,6 +203,7 @@ async fn refresh(db: Data<&Database>, cookie_jar: &CookieJar) -> Result<impl Int
             cookie.set_secure(true);
             cookie.set_http_only(true);
             cookie.set_same_site(SameSite::Strict);
+            cookie.set_path("/");
             cookie_jar.add(cookie);
 
             Ok(Response::builder()
@@ -382,6 +384,7 @@ async fn check(auth: Auth) -> Result<impl IntoResponse> {
 
 /// returns endpoints for the Auth service
 pub fn api() -> Route {
+    /// TODO: OIDC endpoints!
     Route::new()
         .at("/sessions", get(sessions).delete(destroy_sessions))
         .at("/sessions/:id", delete(destroy_session))

@@ -1,7 +1,7 @@
 [package]
 name = "create-rust-app"
 description = "Set up a modern rust+react web app by running one command."
-version = "9.2.2"
+version = "9.3.0"
 edition = "2018"
 authors = ["Haris <4259838+Wulf@users.noreply.github.com>"]
 readme = "../README.md"
@@ -61,10 +61,10 @@ cargo_metadata = { optional = true, version = "0.15.4" }
 watchexec = { optional = true, version = "2.3.0" }
 #### tracing = { optional=true, version="0.1" }
 #### tracing-subscriber = { optional=true, version="0.3.16", features=["env-filter"] }
-reqwest = { optional = true, version = "0.11.18" }
 clearscreen = { optional = true, version = "2.0" }
 open = { optional = true, version = "4.1.0" }
 cargo_toml = { optional = true, version = "0.15.2" }
+reqwest = { optional = true, version = "0.11.18" }
 
 # plugin_storage
 # aws-config = { optional = true, version = "0.14.0" }
@@ -76,6 +76,9 @@ diesel_derives = { optional = true, version = "2.1.0" }
 uuid = { optional = true, version = "1.3.3", features = ["v4", "serde"] }
 md5 = { optional = true, version = "0.7.0" }
 base64 = { optional = true, version = "0.21.2" }
+
+# plugin_auth-oidc
+openidconnect = { optional = true, version = "3.3.0" }
 
 # plugin_utoipa dependencies
 utoipa = { optional = true, version = "3", features = [
@@ -134,6 +137,7 @@ default = [
   "plugin_graphql",
   "plugin_storage",
   "plugin_utoipa",
+  "plugin_auth-oidc",
 ]
 plugin_dev = [
   "backend_axum",
@@ -157,6 +161,7 @@ plugin_auth = [
   "tsync",
   "dyn-clone",
 ]
+plugin_auth-oidc = ["openidconnect"]
 plugin_storage = [
   # "aws-config",
   "aws-types",

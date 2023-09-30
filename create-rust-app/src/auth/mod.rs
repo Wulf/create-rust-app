@@ -15,6 +15,9 @@ pub mod controller;
 mod endpoints;
 pub use endpoints::*;
 
+#[cfg(feature = "plugin_auth-oidc")]
+pub mod oidc;
+
 pub(crate) mod mail;
 mod permissions;
 mod schema;
@@ -122,4 +125,10 @@ pub struct AuthMessageResponse {
 /// structure to help utoipa know what responses that contain the access_token should look like
 pub struct AuthTokenResponse {
     pub access_token: String,
+}
+
+#[derive(Clone)]
+pub struct AuthConfig {
+    #[cfg(feature = "plugin_auth-oidc")]
+    pub oidc_providers: Vec<crate::auth::oidc::OIDCProvider>,
 }

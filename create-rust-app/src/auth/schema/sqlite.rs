@@ -1,3 +1,5 @@
+// We don't include the `updated_at` column in the SQLite schema
+
 table! {
   role_permissions (role, permission) {
       role -> Text,
