@@ -123,11 +123,11 @@ fn add_bins_to_cargo_toml(
     {
         project_binaries.push(ProjectBinary {
             name: "queue",
-            path: ".cargo/bin/queue.rs",
+            path: "backend/queue.rs",
         });
         project_binaries.push(ProjectBinary {
             name: "async_queue",
-            path: ".cargo/bin/async_queue.rs",
+            path: "backend/async_queue.rs",
         });
     };
 

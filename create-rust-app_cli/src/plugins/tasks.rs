@@ -102,7 +102,7 @@ CREATE INDEX fang_tasks_uniq_hash ON fang_tasks(uniq_hash);
     // See fang docs for more info: https://docs.rs/fang/0.10.4/fang/
     {
         // The async queue uses a separate db connection pool. We need to connnect it at least once before we can use it throughout out app.
-        let mut async_queue = create_rust_app::tasks::async_queue(1);
+        let mut async_queue = create_rust_app::tasks::async_queue();
         async_queue.lock().unwrap().connect(NoTls).await.expect("Failed to connect to async queue database");
         // this means you need to have the above line somewhere in `main.rs`, before any async jobs are scheduled
 

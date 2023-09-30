@@ -61,6 +61,15 @@ pub trait Plugin {
             install_config.backend_framework,
         )?;
 
+        /*
+
+        // TODO: uncomment this after we refactor and add a method to the plugin trait
+        //       which adds plugin-specific binaries to Cargo.toml. Otherwise, we get errors
+        //       like this when running `cargo fmt`:
+        //
+        //       Error: file `/home/h/w/temp/testoidc2/backend/async_queue.rs` does not exist
+        //       Error: file `/home/h/w/temp/testoidc/.cargo/bin/queue.rs` does not exist
+        //
         logger::command_msg("cargo fmt");
 
         let cargo_fmt = std::process::Command::new("cargo")
@@ -74,6 +83,8 @@ pub trait Plugin {
             logger::error("Failed to execute `cargo fmt`");
             std::process::exit(1);
         }
+
+        */
 
         logger::command_msg("git add -A");
 
