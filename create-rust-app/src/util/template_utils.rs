@@ -103,11 +103,14 @@ impl tera::Function for InjectBundle {
                         {
                             inject = format!(
                                 r#"<script>
-                                // create a script tag for the vite dev server
-                                const script = document.createElement('script');
-                                script.type = 'module';
-                                script.src = `http://${{window.location.hostname}}:21012/bundles/{bundle_name}`;
-                                document.head.appendChild(script);
+                                // Injecting bundle (dev server mode)
+                                // {{{{ bundle(name={bundle_name}) }}}}
+                                ;(() => {{
+                                    const script = document.createElement('script');
+                                    script.type = 'module';
+                                    script.src = `http://${{window.location.hostname}}:21012/bundles/{bundle_name}`;
+                                    document.head.appendChild(script);
+                                }})();
                                 </script>"#
                             );
                         }
