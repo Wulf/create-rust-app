@@ -188,10 +188,24 @@ completeOIDCLogin"#},
             "frontend/src/hooks/useAuth.tsx",
             "const logout = async ()",
             indoc! {r#"
-const loginOIDC = async (provider: string) => {
+const loginOIDC = async (
+    provider: string,
+    options?: { redirectUrl?: 'current-url' | string }
+) => {
+    if (options?.redirectUrl) {
+        localStorage.setItem(
+        'create_rust_app_oauth_redirect',
+        options?.redirectUrl === 'current-url'
+            ? window.location.href
+            : options.redirectUrl
+        )
+    } else {
+        localStorage.removeItem('create_rust_app_oauth_redirect')
+    }
+
     window.location.href = `/api/auth/oidc/${provider}`
 }
-
+            
 const completeOIDCLogin = (): boolean => {
     const params = new URLSearchParams(window.location.search);
     let access_token = params.get('access_token');
@@ -212,6 +226,13 @@ const completeOIDCLogin = (): boolean => {
             hasPermission: permissions.hasPermission,
             hasRole: permissions.hasRole,
         })
+
+
+        if (localStorage.getItem('create_rust_app_oauth_redirect')) {
+            window.location.href = localStorage.getItem(
+            'create_rust_app_oauth_redirect'
+            ) as string
+        }
 
         return true
     }

@@ -17,7 +17,7 @@ const App = () => {
           <a className="NavButton" onClick={() => navigate('/todos')}>Todos</a>
           {/* CRA: left-aligned nav buttons */}
         </div>
-        <div>
+        <div style={{ display: 'flex' }}>
           {/* CRA: right-aligned nav buttons */}
         </div>
       </div>

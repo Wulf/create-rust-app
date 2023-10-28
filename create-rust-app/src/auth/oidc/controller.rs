@@ -60,7 +60,7 @@ pub async fn oidc_login_url(
 
     let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
-    // TODO: factor in nonce
+    // TODO: set redirect_uri from provider config
     let (auth_url, csrf_token, nonce) = client
         .authorize_url(
             CoreAuthenticationFlow::AuthorizationCode,

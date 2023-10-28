@@ -16,6 +16,7 @@ pub fn queue() -> &'static Queue {
     static QUEUE: OnceCell<Queue> = OnceCell::new();
 
     QUEUE.get_or_init(|| {
+        // TODO: make the number of connections in the pool configurable
         let db = Database::new();
 
         Queue::builder().connection_pool(db.pool.clone()).build()

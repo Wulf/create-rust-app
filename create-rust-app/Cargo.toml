@@ -81,7 +81,7 @@ base64 = { optional = true, version = "0.21.2" }
 openidconnect = { optional = true, version = "3.3.0" }
 
 # plugin_utoipa dependencies
-utoipa = { optional = true, version = "3", features = [
+utoipa = { optional = true, version = "4", features = [
   "actix_extras",
   "chrono",
   "openapi_extensions",
@@ -177,7 +177,7 @@ plugin_storage = [
   "futures-util"
 ]
 plugin_graphql = []
-plugin_utoipa = ["utoipa", "backend_actix-web"]
+plugin_utoipa = ["utoipa", "backend_actix-web"] # for now, only works with actix-web!
 plugin_tasks = ["fang", "tokio"]
 backend_poem = ["poem", "anyhow", "mime_guess", "tokio"]
 backend_actix-web = [
