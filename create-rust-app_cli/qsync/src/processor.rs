@@ -42,7 +42,27 @@ fn has_qsync_attribute(
     let mut has_qsync_attribute = false;
 
     for attr in attributes.iter() {
-        let meta = attr.parse_meta().unwrap();
+        if is_debug {
+            let attr_path = attr
+                .path
+                .segments
+                .iter()
+                .map(|r| r.ident.to_string())
+                .collect::<Vec<String>>()
+                .join("::");
+            println!("\tFound attribute '{}'", &attr_path);
+        }
+
+        let meta = attr.parse_meta();
+
+        if meta.is_err() {
+            if is_debug {
+                println!("\t> could not parse attribute as `Meta`");
+            }
+            continue;
+        }
+
+        let meta = meta.unwrap();
 
         // extract and compare against attribute's identifier (#[path::to::identifier])
         let attr_identifier = meta
@@ -146,7 +166,11 @@ struct InputType {
     param_type: ParamType,
 }
 
-fn get_api_fn_input_param_type(pat_type: PatType, type_path: TypePath) -> InputType {
+fn get_api_fn_input_param_type(
+    query_input: QsyncInput,
+    pat_type: PatType,
+    type_path: TypePath,
+) -> InputType {
     let mut arg_name: String = "unknown".to_string();
     let mut arg_type: String = "any".to_string();
 
@@ -164,13 +188,30 @@ fn get_api_fn_input_param_type(pat_type: PatType, type_path: TypePath) -> InputT
     let last_segment = segments.last();
 
     if let Some(last_segment) = last_segment {
-        let param_type = match last_segment.clone().ident.to_string().as_str() {
+        // ```
+        // #[qsync]
+        // async fn endpoint(path: Path<SomeType>) -> HttpResponse { ... }
+        //                         ----
+        //                         ^ this is the `endpoint_param_type`
+        // ```
+        let endpoint_param_type = last_segment.clone().ident.to_string();
+        let param_type: ParamType = match endpoint_param_type.as_str() {
             "Path" => ParamType::Path,
             "Json" => ParamType::Body,
             "Form" => ParamType::Body,
             "Query" => ParamType::Query,
             "Auth" => ParamType::Auth,
-            _ => ParamType::Unknown,
+            _ => {
+                if query_input
+                    .options
+                    .auth_extractors
+                    .contains(&endpoint_param_type.to_string())
+                {
+                    ParamType::Auth
+                } else {
+                    ParamType::Unknown
+                }
+            }
         };
 
         if let PathArguments::AngleBracketed(angled) = last_segment.clone().arguments {
@@ -213,6 +254,8 @@ fn extract_path_params_from_hook_endpoint_url(hook: &mut Hook) {
 }
 
 fn extract_endpoint_information(
+    endpoint_prefix: String,
+    base_input_path: &Path,
     input_path: &Path,
     attributes: &Vec<syn::Attribute>,
     hook: &mut Hook,
@@ -241,7 +284,7 @@ fn extract_endpoint_information(
                 if let proc_macro2::TokenTree::Group(g) = token {
                     for x in g.stream() {
                         if let proc_macro2::TokenTree::Literal(lit) = x {
-                            path = lit.to_string();
+                            path = lit.to_string().trim_matches('"').to_string();
                         }
                     }
                 }
@@ -250,24 +293,21 @@ fn extract_endpoint_information(
     }
 
     let endpoint_base = input_path
-        .file_stem()
-        .unwrap_or_default()
+        .parent()
+        .unwrap()
+        .strip_prefix(base_input_path)
+        .unwrap()
         .to_str()
-        .unwrap_or_default()
-        .trim_end_matches('/');
+        .unwrap()
+        .trim_start_matches("/")
+        .trim_end_matches("/");
 
     // the part extracted from the attribute, for example: `#[post("/{id}"]`
-    let handler_path = path
-        .trim_matches('"')
-        .trim_start_matches('/')
-        .trim_end_matches('/');
-    let handler_path = if !handler_path.is_empty() {
-        "/".to_string() + handler_path
-    } else {
-        "".to_string()
-    };
+    let handler_path = path.trim_start_matches('/').trim_end_matches('/');
 
-    hook.endpoint_url = format!("/api/{endpoint_base}{handler_path}");
+    hook.endpoint_url = format!("{endpoint_prefix}/{endpoint_base}/{handler_path}")
+        .trim_end_matches("/")
+        .to_string();
 
     hook.endpoint_verb = verb;
 }
@@ -277,18 +317,26 @@ struct BuildState /*<'a>*/ {
     pub hooks: Vec<Hook>,
     pub unprocessed_files: Vec<PathBuf>,
     // pub ignore_file_config: Option<gitignore::File<'a>>,
-    pub is_debug: bool,
+    pub is_debug: bool, // this is a hack, we shouldn't have is_debug in the build state since it's global state rather than build/input-path specific state.
 }
 
-fn generate_hook_name(input_path: &Path, fn_name: String) -> String {
-    let mut hook_name: Vec<String> = file_path_to_vec_string(input_path);
+fn generate_hook_name(base_input_path: &Path, input_path: &Path, fn_name: String) -> String {
+    let relative_file_path = input_path.strip_prefix(base_input_path).unwrap();
+
+    let mut hook_name: Vec<String> = file_path_to_vec_string(relative_file_path);
 
     hook_name.insert(0, "use".to_string());
     hook_name.push(fn_name.to_pascal_case());
     hook_name.join("")
 }
 
-fn process_service_file(input_path: PathBuf, state: &mut BuildState) {
+fn process_service_file(
+    endpoint_prefix: String,
+    base_input_path: PathBuf,
+    input_path: PathBuf,
+    state: &mut BuildState,
+    input: QsyncInput,
+) {
     if state.is_debug {
         println!(
             "processing rust file: {:?}",
@@ -345,27 +393,43 @@ fn process_service_file(input_path: PathBuf, state: &mut BuildState) {
                     endpoint_verb: HttpVerb::Unknown,
                     is_mutation: qsync_props.is_mutation,
                     return_type: qsync_props.return_type,
-                    hook_name: generate_hook_name(&input_path, exported_fn.sig.ident.to_string()),
+                    hook_name: generate_hook_name(
+                        &base_input_path,
+                        &input_path,
+                        exported_fn.sig.ident.to_string(),
+                    ),
                     body_params: vec![],
                     path_params: vec![],
                     query_params: vec![],
+                    generated_from: input_path.clone(),
+                    generation_options: input.clone(),
                 };
 
-                extract_endpoint_information(&input_path, &exported_fn.attrs, &mut hook);
+                extract_endpoint_information(
+                    endpoint_prefix.clone(),
+                    &base_input_path,
+                    &input_path,
+                    &exported_fn.attrs,
+                    &mut hook,
+                );
                 extract_path_params_from_hook_endpoint_url(&mut hook);
 
-                let mut arg_index = 0;
-                let num_args = exported_fn.sig.inputs.len() - 1;
                 for arg in exported_fn.sig.inputs {
                     if let FnArg::Typed(typed_arg) = arg.clone() {
                         if let Type::Path(type_path) = *typed_arg.clone().ty {
-                            let input_type =
-                                get_api_fn_input_param_type(typed_arg.clone(), type_path);
+                            let input_type = get_api_fn_input_param_type(
+                                input.clone(),
+                                typed_arg.clone(),
+                                type_path,
+                            );
 
                             match input_type.param_type {
                                 ParamType::Auth => {
+                                    // TODO: what about custom auth types like API tokens?
                                     if state.is_debug {
-                                        println!("\t> ParamType::AUTH",);
+                                        println!(
+                                            "\t> ParamType::AUTH (create_rust_app::auth::Auth)",
+                                        );
                                     }
                                     hook.uses_auth = true;
                                 }
@@ -404,14 +468,13 @@ fn process_service_file(input_path: PathBuf, state: &mut BuildState) {
                                     });
                                 }
                                 ParamType::Unknown => {
-                                    // TODO: param type is unknown
+                                    if state.is_debug {
+                                        println!(
+                                            "\t> ParamType::UNKNOWN '{}: {}'",
+                                            input_type.arg_name, input_type.arg_type
+                                        );
+                                    }
                                 }
-                            }
-
-                            // state.types.push_str(&format!("{}", input_type.ty));
-                            if arg_index < num_args {
-                                arg_index += 1;
-                                // state.types.push_str(", ");
                             }
                         }
                     }
@@ -425,64 +488,121 @@ fn process_service_file(input_path: PathBuf, state: &mut BuildState) {
     }
 }
 
-pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) {
+#[derive(Clone)]
+pub struct QsyncInput {
+    path: PathBuf,
+    options: QsyncOptions,
+}
+
+impl QsyncInput {
+    pub fn new(path: PathBuf, options: QsyncOptions) -> Self {
+        Self { path, options }
+    }
+}
+
+// #[derive(Clone)]
+// /// Currently, only header extractors are supported.
+// pub enum Extractor {
+//     /// the generated code will require the user to provide a header
+//     /// with this name, and will update the request to include it
+//     Header(String),
+// }
+
+// #[derive(Clone)]
+// pub struct ExtractorProperties {
+//     /// The extractor's type.
+//     ///
+//     /// It must match exactly what you write in your endpoint function.
+//     ///
+//     /// In the example below, we use "ApiAuth" to extract some property from
+//     /// the request. "ApiAuth" is the type name.
+//     ///
+//     /// ```rust
+//     /// #[qsync]
+//     /// async fn endpoint(auth: path::to::ApiAuth) -> HttpResponse { ... }
+//     ///                                   -------
+//     ///                                   ^ this is the type_name
+//     /// ```
+//     pub type_name: String,
+//
+//     /// This is holds information about what it extracts from the request.
+//     /// This property determines how the generated code will change based
+//     /// on whether this extractor type is present.
+//     pub extracts: Extractor,
+// }
+
+#[derive(Clone)]
+pub struct QsyncOptions {
+    is_debug: bool,
+    url_base: String,
+
+    // Discarded this attempt; this is really hard to do correctly
+    // /// Qsync detects a set of "extractor" types that are generally
+    // /// found in web frameworks like actix_web. It uses these extractors
+    // /// to generate code with correct parameters and return types.
+    // /// By default, it supports:
+    // ///     - Path
+    // ///     - Json
+    // ///     - Form
+    // ///     - Query
+    // ///     - Auth
+    // ///
+    // /// In the case you write your own extractor, you can specify it here.
+    // custom_extractors: Vec<ExtractorProperties>,
+    auth_extractors: Vec<String>,
+}
+
+impl QsyncOptions {
+    pub fn new(is_debug: bool, url_base: String, auth_extractors: Vec<String>) -> Self {
+        Self {
+            is_debug,
+            url_base,
+            auth_extractors: auth_extractors,
+        }
+    }
+}
+
+pub fn process(input_paths: Vec<QsyncInput>, output_path: PathBuf) {
     let mut state: BuildState = BuildState {
         types: String::new(),
         hooks: vec![],
         unprocessed_files: Vec::<PathBuf>::new(),
-        is_debug,
+        is_debug: false, // we should remove this later on and have a global is_debug state, not BuildState-specific is_debug
     };
 
     state.types.push_str(
         r#"/**
     Hooks in this file were generated by create-rust-app's query-sync feature.
 
-    1 — Generating hooks
-    -=-=-=-=-=-=-=-=-=-=-=-
-    Execute `create-rust-app` in your project folder and select "query-sync".
-    This will generate react-hooks which are missing in this file for all
-    functions defined in the `backend/services` folder which have a
-    `#[qsync(returns = "<typescript return type>"[, mutate])]` attribute
-    as well as one of the following actix_web attributes: `#[post(...)]`,
-    `#[get(...)]`, `#[put(...)]`, `#[delete(...)]`, or `#[patch(...)]`.
-
-    2 — Editing hooks
-    -=-=-=-=-=-=-=-=-=-
-    You may edit the hooks as you see fit, they will not regenerate so long as
-    a constant with their name is present. For example:
-
-        const useTodo = ( ... ) => { ... }
-
-    If the "const useTodo" is present, query-sync will not regenerate this hook
-    and any changes you make will sustain through subsequent generation. If you
-    don't want a particular hook (for whatever reason), you can do this:
-
-        const useTodo = null
-
-    Now, because "const useTodo" is already defined, this hook will not be
-    regenerated. As it follows, if you delete "const useTodo = ...", query-sync
-    will regenerate that hook, which is useful if you want to start over.
+    You likely have a `qsync.rs` binary in this project which you can use to
+    regenerate this file.
+    
+    To specify a specific a specific return type for a hook, use the
+    `#[qsync(return_type = "<typescript return type>")]` attribute above
+    your endpoint functions (which are decorated by the actix_web attributes
+    (#[get(...)], #[post(...)], etc).
+    
+    If it doesn't correctly guess whether it's a mutation or query based on
+    the actix_web attributes, then you can manually override that by specifying
+    the mutate property: `#[qsync(mutate=true)]`.
 */
 "#,
     );
 
-    // state
-    //     .types
-    //     .push_str("\nimport type { QueryKey } from 'react-query'\n");
-
-    state
-        .types
-        .push_str("import { useMutation, useQuery, useQueryClient } from 'react-query'\n");
+    state.types.push_str(
+        "import { UseQueryOptions, useMutation, useQuery, useQueryClient } from 'react-query'\n",
+    );
 
     state
         .types
         .push_str("\nimport { useAuth } from './hooks/useAuth'\n");
 
-    // state
-    //     .types
-    //     .push_str("\n/* Placeholder for types which need to be defined */\ntype TODO = unknown\n");
+    for qsync_input in input_paths.clone() {
+        let input_path = qsync_input.path.clone();
+        let options = qsync_input.clone().options;
+        let is_debug = options.is_debug;
+        let endpoint_prefix = options.url_base;
 
-    for input_path in input_paths {
         if !input_path.exists() {
             if is_debug {
                 println!("Path `{input_path:#?}` does not exist");
@@ -492,7 +612,9 @@ pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) 
             continue;
         }
 
-        if input_path.is_dir() {
+        let base_input_path = input_path.clone();
+
+        if input_path.clone().is_dir() {
             for entry in WalkDir::new(input_path.clone()).sort_by_file_name() {
                 match entry {
                     Ok(dir_entry) => {
@@ -503,12 +625,15 @@ pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) 
                             // make sure it is a rust file
                             let extension = path.extension();
                             if extension.is_some() && extension.unwrap().eq_ignore_ascii_case("rs")
-                            // && !path
-                            //     .file_name()
-                            //     .unwrap_or_default()
-                            //     .eq_ignore_ascii_case("storage")
                             {
-                                process_service_file(path, &mut state);
+                                state.is_debug = is_debug; // this is a hack, we shouldn't have is_debug in the build state since it's global state rather than build/input-path specific state.
+                                process_service_file(
+                                    endpoint_prefix.clone(),
+                                    base_input_path.clone(),
+                                    path,
+                                    &mut state,
+                                    qsync_input.clone(),
+                                );
                             } else if is_debug {
                                 println!("Encountered non-service or non-rust file `{path:#?}`");
                             }
@@ -526,10 +651,21 @@ pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) 
                 }
             }
         } else {
-            process_service_file(input_path, &mut state);
+            state.is_debug = is_debug;
+            process_service_file(
+                endpoint_prefix.clone(),
+                base_input_path,
+                input_path,
+                &mut state,
+                qsync_input.clone(),
+            );
         }
     }
 
+    let is_debug = input_paths
+        .clone()
+        .iter()
+        .any(|input| input.options.is_debug);
     if is_debug {
         println!("======================================");
         println!("FINAL FILE:");
@@ -539,54 +675,11 @@ pub fn process(input_paths: Vec<PathBuf>, output_path: PathBuf, is_debug: bool) 
         println!("Note: Nothing is written in debug mode");
         println!("======================================");
     } else {
-        // // Verify that the output file either doesn't exists or has been generated by qsync.
-        // let original_file_path = Path::new(&output_path);
-        // if original_file_path.exists() {
-        //     if !original_file_path.is_file() {
-        //         panic!("Specified output path is a directory but must be a file.")
-        //     }
-        //
-        //     let mut defined_hooks = Vec::<String>::new();
-        //     let file_content =
-        //         std::fs::read_to_string(original_file_path).expect("Couldn't open output file");
-        //
-        //     let hook_regex = regex::Regex::new(r"const\s+([a-zA-Z0-9_]+)").unwrap();
-        //     for hook in hook_regex.captures_iter(file_content.as_str()) {
-        //         defined_hooks.push(hook[1].to_string());
-        //     }
-        //     // now we add any hooks that weren't included in the file
-        //
-        //     let mut file_content = file_content.trim_end().to_string();
-        //     file_content.push('\n');
-        //
-        //     let mut added = 0;
-        //     let mut existing = state.hooks.len();
-        //
-        //     for hook in state
-        //         .hooks
-        //         .iter()
-        //         .filter(|&h| !defined_hooks.contains(&h.hook_name))
-        //     {
-        //         file_content.push('\n');
-        //         file_content.push_str(&hook.to_string());
-        //         added += 1;
-        //         existing -= 1;
-        //         file_content.push('\n');
-        //     }
-        //
-        //     std::fs::write(&output_path, file_content).expect("Unable to write to file");
-        //
-        //     println!(
-        //         "Successfully generated hooks ({} added, {} existing), see {:#?}",
-        //         added, existing, &output_path
-        //     )
-        // } else {
         let mut file: File = File::create(&output_path).expect("Unable to write to file");
         match file.write_all(state.types.as_bytes()) {
             Ok(_) => println!("Successfully generated hooks, see {output_path:#?}"),
             Err(_) => println!("Failed to generate types, an error occurred."),
         }
-        // }
     }
 
     if !state.unprocessed_files.is_empty() {

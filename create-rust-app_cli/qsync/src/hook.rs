@@ -1,4 +1,7 @@
 use std::fmt::Write as _;
+use std::path::PathBuf;
+
+use crate::QsyncInput;
 
 use super::params::is_primitive_type;
 use super::processor::HttpVerb;
@@ -30,9 +33,12 @@ pub struct Hook {
     pub query_params: Vec<HookQueryParam>,
     pub body_params: Vec<HookBodyParam>,
     pub path_params: Vec<HookPathParam>,
+
+    // just some metadata
+    pub generation_options: QsyncInput,
+    pub generated_from: PathBuf,
 }
 
-///
 /// A react hook which uses react-query to pull data from some endpoint. Here's an example:
 ///
 /// ```ts
@@ -224,7 +230,7 @@ impl Hook {
 
         let query_key_base = self
             .endpoint_url
-            .trim_start_matches("/api/")
+            .trim_start_matches("/")
             .split('/')
             .map(|t| {
                 // in actix-web, paths which have {} denote a path param
@@ -245,25 +251,27 @@ impl Hook {
 
 impl ToString for Hook {
     fn to_string(&self) -> String {
+        let hook_args = self.build_args_string();
+
         if self.is_mutation {
             format!(
                 r#"export const {hook_name} = (params: {{{hook_args}}}) => {{
 {variables}  return useMutation<{return_type}>(
-        async () => await (await fetch(`{endpoint_url}{query_string}`, {{
-            method: '{endpoint_verb}',
-            {query_body}headers: {{
-                {authorization_header}'Content-Type': 'application/json',
-            }},
-        }})).json(),
-        {{
-            mutationKey: [{query_key}],
-            onSuccess: () => queryClient.invalidateQueries([{query_key}]),
-        }}
-    )
+    async () => await (await fetch(`{endpoint_url}{query_string}`, {{
+      method: '{endpoint_verb}',
+      {query_body}headers: {{
+        {authorization_header}'Content-Type': 'application/json',
+      }},
+    }})).json(),
+    {{
+      mutationKey: [{query_key}],
+      onSuccess: () => queryClient.invalidateQueries([{query_key}]),
+    }}
+  )
 }}"#,
                 variables = self.build_vars_string(),
                 authorization_header = if self.uses_auth {
-                    "'Authorization': `Bearer ${auth.accessToken}`,\n              "
+                    "'Authorization': `Bearer ${auth.accessToken}`,\n        "
                 } else {
                     ""
                 },
@@ -280,26 +288,28 @@ impl ToString for Hook {
                 endpoint_url = self.endpoint_url.replace('{', "${pathParams."),
                 endpoint_verb = &format!("{:?}", self.endpoint_verb).to_ascii_uppercase(),
                 hook_name = self.hook_name,
-                hook_args = self.build_args_string(),
+                hook_args = hook_args,
                 return_type = self.return_type.trim_matches('"'),
                 query_key = self.build_query_key()
             )
         } else {
             format!(
-                r#"export const {hook_name} = ({hook_args}) => {{
+                r#"export const {hook_name} = ({hook_args}{args_comma}options?: Omit<UseQueryOptions<{return_type}>, 'queryKey' | 'queryFn'>) => {{
 {variables}  return useQuery<{return_type}>(
-        [{query_key}],
-        async () => await (await fetch(`{endpoint_url}{query_string}`, {{
-            method: '{endpoint_verb}',
-            {query_body}headers: {{
-                {authorization_header}'Content-Type': 'application/json',
-            }},
-        }})).json()
-    )
+    [{query_key}],
+    async () => await (await fetch(`{endpoint_url}{query_string}`, {{
+      method: '{endpoint_verb}',
+      {query_body}headers: {{
+        {authorization_header}'Content-Type': 'application/json',
+      }},
+    }})).json(),
+    options
+  )
 }}"#,
+                args_comma = if hook_args.is_empty() { "" } else { ", " },
                 variables = self.build_vars_string(),
                 authorization_header = if self.uses_auth {
-                    "'Authorization': `Bearer ${auth.accessToken}`,\n              "
+                    "'Authorization': `Bearer ${auth.accessToken}`,\n        "
                 } else {
                     ""
                 },
@@ -316,7 +326,7 @@ impl ToString for Hook {
                 endpoint_url = self.endpoint_url.replace('{', "${pathParams."),
                 endpoint_verb = &format!("{:?}", self.endpoint_verb).to_ascii_uppercase(),
                 hook_name = self.hook_name,
-                hook_args = self.build_args_string(),
+                hook_args = hook_args,
                 return_type = self.return_type.trim_matches('"'),
                 query_key = self.build_query_key()
             )
