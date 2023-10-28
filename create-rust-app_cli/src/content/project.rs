@@ -41,7 +41,7 @@ struct Asset;
 //     version.to_string()
 // }
 fn get_current_cra_lib_version() -> String {
-    "9.2.2".to_string()
+    "10.0.0".to_string()
 }
 
 #[derive(Clone)]
