@@ -1,4 +1,4 @@
-use super::workspace_utils::{MANIFEST_PATH, VIEWS_GLOB};
+use super::workspace_utils::{manifest_path, views_glob};
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 use tera::Tera;
@@ -13,7 +13,7 @@ lazy_static! {
     /// all the Templates (html files) included in backend/views/..., uses Tera to bundle the frontend into the template
     /// TODO: ensure this is accurate documentation
     pub static ref TEMPLATES: Tera = {
-        let mut tera = match Tera::new(VIEWS_GLOB.as_str()) {
+        let mut tera = match Tera::new(views_glob()) {
             Ok(t) => t,
             Err(e) => {
                 println!("Parsing error(s): {e}");
@@ -153,7 +153,7 @@ fn load_manifest_entries() -> ViteManifest {
 
     use serde_json::Value;
     let manifest_json = serde_json::from_str(
-        std::fs::read_to_string(std::path::PathBuf::from(MANIFEST_PATH.as_str()))
+        std::fs::read_to_string(std::path::PathBuf::from(manifest_path()))
             .unwrap()
             .as_str(),
     )
