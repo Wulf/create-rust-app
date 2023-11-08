@@ -24,66 +24,48 @@ lazy_static!(
 pub(crate) fn frontend_dir() -> &'static str {
     static FRONTEND_DIR: OnceLock<String> = OnceLock::new();
     FRONTEND_DIR.get_or_init(|| {
-        match std::env::var("CRA_FRONTEND_DIR") {
-            Ok(dir) => dir,
-            Err(_) => {
-                #[cfg(not(feature = "plugin_workspace_support"))]
-                {
-                    "./frontend".to_string()
-                }
-                #[cfg(feature = "plugin_workspace_support")]
-                {
-                    if *WORKSPACE_DIR == std::env::current_dir().unwrap() {
-                        // this is for when cargo run is run from the workspace root
-                        return "./frontend".to_string();
-                    } else {
-                        // this is for when cargo run is run from teh backend directory
-                        return "../frontend".to_string();
-                    }
-                }
+        std::env::var("CRA_FRONTEND_DIR").unwrap_or_else(|_| {
+            match (
+                cfg!(feature = "plugin_workspace_support"), // this can be replaced by a function that tells us if we're using workspaces, instead of using a feature flag
+                std::env::current_dir(),
+            ) {
+                // this is for when cargo run is run from the backend directory
+                (true, Ok(dir)) if dir != *WORKSPACE_DIR => "../frontend".to_string(),
+                // default: when cargo run is run from the workspace root, or we couldn't get the current directory, or we aren't using workspaces
+                _ => "./frontend".to_string(),
             }
-        }
+        })
     })
 }
 /// fn for the path to the project's manifest.json file
 pub(crate) fn manifest_path() -> &'static str {
     static MANIFEST_PATH: OnceLock<String> = OnceLock::new();
-    MANIFEST_PATH.get_or_init(|| match std::env::var("CRA_MANIFEST_PATH") {
-        Ok(dir) => dir,
-        Err(_) => {
-            #[cfg(not(feature = "plugin_workspace_support"))]
-            {
-                "./frontend/dist/manifest.json".to_string()
-            }
-            #[cfg(feature = "plugin_workspace_support")]
-            {
-                if *WORKSPACE_DIR == std::env::current_dir().unwrap() {
-                    "./frontend/dist/manifest.json".to_string();
-                } else {
-                    "../frontend/dist/manifest.json".to_string();
+    MANIFEST_PATH.get_or_init(|| {
+        std::env::var("CRA_FRONTEND_DIR").unwrap_or_else(|_| {
+            match (
+                cfg!(feature = "plugin_workspace_support"), // this can be replaced by a function that tells us if we're using workspaces, instead of using a feature flag
+                std::env::current_dir(),
+            ) {
+                (true, Ok(dir)) if dir != *WORKSPACE_DIR => {
+                    "../frontend/dist/manifest.json".to_string()
                 }
+                _ => "./frontend/dist/manifest.json".to_string(),
             }
-        }
+        })
     })
 }
 /// fn for the path to the project's views directory
 pub(crate) fn views_glob() -> &'static str {
     static VIEWS_GLOB: OnceLock<String> = OnceLock::new();
-    VIEWS_GLOB.get_or_init(|| match std::env::var("CRA_VIEWS_GLOB") {
-        Ok(dir) => dir,
-        Err(_) => {
-            #[cfg(not(feature = "plugin_workspace_support"))]
-            {
-                "backend/views/**/*.html".to_string()
+    VIEWS_GLOB.get_or_init(|| {
+        std::env::var("CRA_VIEWS_GLOB").unwrap_or_else(|_| {
+            match (
+                cfg!(feature = "plugin_workspace_support"), // this can be replaced by a function that tells us if we're using workspaces, instead of using a feature flag
+                std::env::current_dir(),
+            ) {
+                (true, Ok(dir)) if dir != *WORKSPACE_DIR => "views/**/*.html".to_string(),
+                _ => "backend/views/**/*.html".to_string(),
             }
-            #[cfg(feature = "plugin_workspace_support")]
-            {
-                if *WORKSPACE_DIR == std::env::current_dir().unwrap() {
-                    return "backend/views/**/*.html".to_string();
-                } else {
-                    return "views/**/*.html".to_string();
-                }
-            }
-        }
+        })
     })
 }
