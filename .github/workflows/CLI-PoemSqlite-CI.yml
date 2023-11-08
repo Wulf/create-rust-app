@@ -21,70 +21,70 @@ concurrency:
   group:  CI-PS-${{ github.ref }}
   cancel-in-progress: true
 
-jobs:
-  # naming convention is: [backend]-[database]-[plugins]
-  Poem-Sqlite-None:
-    name: Poem w/ Sqlite and no plugins
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3.5.2
-      - uses: rui314/setup-mold@v1
-      - run: rustup install stable
-      - run: rustup update
-      - uses: actions/cache@v3.3.1
-        with:
-          path: |
-            .cargo/.build
-          key: ${{ runner.os }}-cargo-cli-PS-${{ hashFiles('**/Cargo.lock') }}
-      - run: git config --global user.name test
-      - run: git config --global user.email example@email.com
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: run
-          args: --bin create-rust-app -- create -c -d sqlite -b poem test-project
-      - name: test test-project
-        working-directory: ./test-project
-        run: |
-          printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamp,\n        updated_at -> Timestamp,\n    }\n}" >> ./backend/schema.rs 
-          sed -i 's/create-rust-app = {/create-rust-app = { path = "..\/create-rust-app", /' ./Cargo.toml 
-          cargo dsync 
-          cargo check
-
- 
-  Poem-Sqlite-All:
-    # needs: [Poem-Sqlite-None]
-    name: Poem w/ Sqlite and all valid plugins
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3.5.2
-      - uses: rui314/setup-mold@v1
-      - run: rustup install stable
-      - run: rustup update
-      - uses: actions/cache@v3.3.1
-        with:
-          path: |
-            .cargo/.build
-          key: ${{ runner.os }}-cargo-cli-PS-all-${{ hashFiles('**/Cargo.lock') }}
-      - run: git config --global user.name test
-      - run: git config --global user.email example@email.com
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: run
-          args: --bin create-rust-app -- create -c -d sqlite -b poem --plugins=auth,container,graphql,storage test-project
-      - name: test test-project
-        working-directory: ./test-project
-        run: |
-          printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamp,\n        updated_at -> Timestamp,\n    }\n}" >> ./backend/schema.rs 
-          sed -i 's/create-rust-app]/create-rust-app]\npath = "..\/create-rust-app"/' Cargo.toml 
-          cargo dsync 
-          cargo check
+jobs: {}
+#  # naming convention is: [backend]-[database]-[plugins]
+#  Poem-Sqlite-None:
+#    name: Poem w/ Sqlite and no plugins
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v3.6.0
+#      - uses: rui314/setup-mold@v1
+#      - run: rustup install stable
+#      - run: rustup update
+#      - uses: actions/cache@v3.3.1
+#        with:
+#          path: |
+#            .cargo/.build
+#          key: ${{ runner.os }}-cargo-cli-PS-${{ hashFiles('**/Cargo.lock') }}
+#      - run: git config --global user.name test
+#      - run: git config --global user.email example@email.com
+#      - uses: actions-rs/cargo@v1.0.3
+#        with:
+#          command: run
+#          args: --bin create-rust-app -- create -c -d sqlite -b poem test-project
+#      - name: test test-project
+#        working-directory: ./test-project
+#        run: |
+#          printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamp,\n        updated_at -> Timestamp,\n    }\n}" >> ./backend/schema.rs
+#          sed -i 's/create-rust-app = {/create-rust-app = { path = "..\/create-rust-app", /' ./Cargo.toml
+#          cargo dsync
+#          cargo check
+#
+#
+#  Poem-Sqlite-All:
+#    # needs: [Poem-Sqlite-None]
+#    name: Poem w/ Sqlite and all valid plugins
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v3.6.0
+#      - uses: rui314/setup-mold@v1
+#      - run: rustup install stable
+#      - run: rustup update
+#      - uses: actions/cache@v3.3.1
+#        with:
+#          path: |
+#            .cargo/.build
+#          key: ${{ runner.os }}-cargo-cli-PS-all-${{ hashFiles('**/Cargo.lock') }}
+#      - run: git config --global user.name test
+#      - run: git config --global user.email example@email.com
+#      - uses: actions-rs/cargo@v1.0.3
+#        with:
+#          command: run
+#          args: --bin create-rust-app -- create -c -d sqlite -b poem --plugins=auth,container,graphql,storage test-project
+#      - name: test test-project
+#        working-directory: ./test-project
+#        run: |
+#          printf "// @generated automatically by Diesel CLI.\ndiesel::table! {\n    todos (id) {\n        id -> Int4,\n        text -> Text,\n        created_at -> Timestamp,\n        updated_at -> Timestamp,\n    }\n}" >> ./backend/schema.rs
+#          sed -i 's/create-rust-app]/create-rust-app]\npath = "..\/create-rust-app"/' Cargo.toml
+#          cargo dsync
+#          cargo check
 
   # Poem-Sqlite-Container:
   #   needs: [Poem-Sqlite-None]
   #   name: Poem w/ Sqlite and the container plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.5.2
+  #     - uses: actions/checkout@v3.6.0
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
@@ -107,7 +107,7 @@ jobs:
   #   name: Poem w/ Sqlite and the auth plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.5.2
+  #     - uses: actions/checkout@v3.6.0
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
@@ -130,7 +130,7 @@ jobs:
   #   name: Poem w/ Sqlite and the storage plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.5.2
+  #     - uses: actions/checkout@v3.6.0
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
@@ -153,7 +153,7 @@ jobs:
   #   name: Poem w/ Sqlite and the graphql plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.5.2
+  #     - uses: actions/checkout@v3.6.0
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update

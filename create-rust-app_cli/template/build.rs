@@ -46,5 +46,5 @@ fn main() {
 
     // Only build frontend when building a release
     #[cfg(not(debug_assertions))]
-    shell("cd frontend && npm build");
+    shell("cd frontend && npm run build");
 }

@@ -1,5 +1,7 @@
 extern crate diesel;
 
+use create_rust_app::AppConfig;
+
 use poem::endpoint::{StaticFilesEndpoint};
 use poem::{
     listener::TcpListener,
@@ -36,6 +38,9 @@ async fn main() -> Result<(), std::io::Error> {
         .run(
             app.with(AddData::new(data.mailer))
                 .with(AddData::new(data.database))
+                .with(AddData::new(AppConfig {
+                    app_url: std::env::var("APP_URL").unwrap(),
+                 })
                 .with(CookieJarManager::new())
                 .with(Tracing)
                 .catch_error(create_rust_app::not_found),

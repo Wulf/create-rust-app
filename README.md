@@ -44,7 +44,9 @@ create-rust-app create <project_name>
 
 - Run frontend & backend with a single command: `cargo fullstack`
 - Rust backend
-  - One of the following frameworks: `actix-web`, `poem` or let us know which one you want to use!
+  - One of the following frameworks:
+    - `actix-web`
+    - `poem` (support temporarily on hold, use version 9.2.2: `cargo install create-rust-app_cli@9.2.2`)
   - Database migrations (using diesel.rs)
     - Generate diesel structs and types by running `cargo dsync` in your project (see codegen section below).
   - Sending mail
@@ -63,6 +65,7 @@ create-rust-app create <project_name>
 #### Available Plugins
 
 - **Authentication (+ Authorization) plugin**
+
   - Add JWT token-based auth with a simple command
   - Session management: restoration of previous session, revoking of refresh tokens
   - Credentials management/recovery
@@ -73,10 +76,34 @@ create-rust-app create <project_name>
   - Follows OWASP security best practices
   - RBAC permissions out of the box (assign roles and permissions to users)
 
+- **Social authentication (OIDC) plugin**
+
+  - Adds Oauth2-based authentication (requires auth plugin)
+  - Just configure some OIDC providers:
+
+  ```rust
+  app.app_data(Data::new(AuthConfig {
+    oidc_providers: vec![GOOGLE(
+    "client_id",
+    "client_secret",
+    "/success/redirect",
+    "/error/redirect",
+    )],
+  }))
+  ```
+
+  Then, redirect your users to start the flow!
+
+  ```jsx
+  <a href={"/api/auth/google"}>Login with Google</a>
+  ```
+
 - **Container plugin**
+
   - Dockerfile to containerize your rust app into a single image
 
 - **Development plugin**
+
   - View your database via the admin portal at `localhost:3000/admin` (still in development)
   - A "devbox" on the frontend indicates when the backend is compiling or when the database is not reachable
   - Moreover, the devbox displays when migrations are pending + includes a "run migrations" button
@@ -85,9 +112,11 @@ create-rust-app create <project_name>
     <a href="https://user-images.githubusercontent.com/4259838/218256539-b94ecba1-abe6-4e42-b4f4-4d80b6d4079b.png"><img src="https://user-images.githubusercontent.com/4259838/218256528-4b6ca2a4-ffae-4c9e-bc20-c4a483355b01.png" width="650px" /></a>
 
 - **Storage plugin**
+
   - Adds `Storage` extractor which allows you to upload/download files from an S3-compatible object store
   - Seamlessly add single or multiple attachments to your models using `Attachment::*`!
   - Here are some examples:
+
     - Adding an avatar to a user in your users table:
 
     ```rust
@@ -107,13 +136,15 @@ create-rust-app create <project_name>
     (note: see `Attachment::*` and `Storage::*` for more functionality!)
 
 - **GraphQL plugin**
+
   - Adds all the boilerplate necessary to expose GraphQL
   - Requires the auth plugin: authentication and authorization setup out-of-the-box
   - Find a graphql playground at `localhost:3000/graphql`
 
 - **Utoipa plugin**
+
   - Uses the [utoipa](https://github.com/juhaku/utoipa) crate to add OpenAPI documentation and serve it in a SwaggerUI playground.
-  - Find the playground at `localhost:3000/swagger-ui`
+  - Find the playground at `http://localhost:3000/swagger-ui/`
   - Requires the backend be Actix (for now ;) )
   - check out [this page](https://github.com/juhaku/utoipa/tree/master/examples) to see how to document your own API endpoints with a variety of backends
   - Has a soft dependency on the Auth plugin
@@ -136,9 +167,9 @@ create-rust-app create <project_name>
 
 ### 2. Code-gen to reduce boilerplate
 
-````sh
+```sh
 cargo dsync
-````
+```
 
 - Run this commmand to generate diesel model structs and queries in your `backend/models` folder!
 - See dsync docs [here](https://github.com/Wulf/dsync)

@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod auth_oidc;
 pub mod container;
 pub mod dev;
 pub mod graphql;
@@ -19,6 +20,7 @@ pub struct InstallConfig {
     pub backend_database: BackendDatabase,
     pub plugin_dev: bool,
     pub plugin_auth: bool,
+    pub plugin_auth_oidc: bool,
     pub plugin_container: bool,
     pub plugin_storage: bool,
     pub plugin_tasks: bool,
@@ -58,6 +60,31 @@ pub trait Plugin {
             &install_config.project_dir,
             install_config.backend_framework,
         )?;
+
+        /*
+
+        // TODO: uncomment this after we refactor and add a method to the plugin trait
+        //       which adds plugin-specific binaries to Cargo.toml. Otherwise, we get errors
+        //       like this when running `cargo fmt`:
+        //
+        //       Error: file `/home/h/w/temp/testoidc2/backend/async_queue.rs` does not exist
+        //       Error: file `/home/h/w/temp/testoidc/.cargo/bin/queue.rs` does not exist
+        //
+        logger::command_msg("cargo fmt");
+
+        let cargo_fmt = std::process::Command::new("cargo")
+            .current_dir(".")
+            .arg("fmt")
+            .stdout(std::process::Stdio::null())
+            .status()
+            .expect("failed to execute process");
+
+        if !cargo_fmt.success() {
+            logger::error("Failed to execute `cargo fmt`");
+            std::process::exit(1);
+        }
+
+        */
 
         logger::command_msg("git add -A");
 

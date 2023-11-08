@@ -54,6 +54,12 @@ pub use mailer::{DefaultMailTemplates, EmailTemplates};
 // extern crate diesel_migrations;
 
 #[derive(Clone)]
+pub struct AppConfig {
+    // where the app is hosted; for example: create-rust-app.dev:3000
+    pub app_url: String,
+}
+
+#[derive(Clone)]
 ///
 pub struct AppData {
     /// wrapper for SMTP mailing server accessed by chosen web framework

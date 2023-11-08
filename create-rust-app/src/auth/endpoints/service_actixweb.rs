@@ -21,8 +21,7 @@ use crate::auth::{
     },
     Auth, PaginationParams, ID,
 };
-use crate::Database;
-use crate::Mailer;
+use crate::{auth::AuthConfig, AppConfig, Database, Mailer};
 
 /// handler for GET requests at the .../sessions endpoint,
 ///
@@ -162,6 +161,7 @@ async fn login(db: Data<Database>, Json(item): Json<LoginInput>) -> Result<HttpR
                     .secure(true)
                     .http_only(true)
                     .same_site(SameSite::Strict)
+                    .path("/")
                     .finish(),
             )
             .body(json!({ "access_token": access_token }).to_string())),
@@ -170,6 +170,134 @@ async fn login(db: Data<Database>, Json(item): Json<LoginInput>) -> Result<HttpR
         )
         .body(json!({ "message": message }).to_string())),
     }
+}
+
+#[cfg(feature = "plugin_auth-oidc")]
+#[get("/oidc/{provider}")]
+async fn oidc_login_redirect(
+    db: Data<Database>,
+    app_config: Data<AppConfig>,
+    auth_config: Data<AuthConfig>,
+    provider: Path<String>,
+) -> Result<HttpResponse, AWError> {
+    use actix_web::http::header::{HeaderValue, LOCATION};
+
+    let result = crate::auth::oidc::controller::oidc_login_url(
+        &db,
+        app_config.as_ref(),
+        auth_config.as_ref(),
+        provider.to_string(),
+    )
+    .await;
+
+    if result.is_err() {
+        return Ok(HttpResponse::InternalServerError().finish());
+    }
+
+    let result = result.unwrap();
+
+    match result {
+        Some(url) => {
+            let mut response = HttpResponse::SeeOther().body(());
+            response
+                .headers_mut()
+                .append(LOCATION, HeaderValue::from_str(url.as_str()).unwrap());
+
+            Ok(response)
+        }
+        None => Ok(HttpResponse::NotImplemented().finish()),
+    }
+}
+
+#[cfg(feature = "plugin_auth-oidc")]
+#[derive(serde::Deserialize)]
+pub struct OIDCLoginQueryParams {
+    code: Option<String>,
+    state: Option<String>,
+    error: Option<String>,
+}
+
+#[cfg(feature = "plugin_auth-oidc")]
+#[get("/oidc/{provider}/login")]
+async fn oidc_login(
+    db: Data<Database>,
+    app_config: Data<AppConfig>,
+    auth_config: Data<AuthConfig>,
+    path_params: Path<String>,
+    query_params: Query<OIDCLoginQueryParams>,
+) -> HttpResponse {
+    use actix_web::http::header::{HeaderValue, LOCATION};
+    let provider_name = path_params.to_string();
+
+    let provider = auth_config
+        .oidc_providers
+        .iter()
+        .find(|p| p.name.eq(&provider_name));
+
+    if provider.is_none() {
+        return HttpResponse::InternalServerError().json(
+            json!({
+                "success": false,
+                "message": "Provider not configured",
+                "provider": &provider_name
+            })
+            .to_string(),
+        );
+    }
+
+    let provider = provider.unwrap();
+
+    let query_params = query_params.into_inner();
+    let query_param_code = query_params.code;
+    let query_param_state = query_params.state;
+    let query_param_error = query_params.error;
+
+    let resp = crate::auth::oidc::controller::oauth_login(
+        &db,
+        &app_config,
+        &auth_config,
+        provider_name,
+        query_param_code,
+        query_param_error,
+        query_param_state,
+    )
+    .await;
+
+    let mut response = HttpResponse::SeeOther().body(());
+
+    match resp {
+        Ok((access_token, refresh_token)) => {
+            response.headers_mut().append(
+                LOCATION,
+                HeaderValue::from_str(&format!(
+                    "{}?access_token={}",
+                    provider.success_uri, access_token
+                ))
+                .expect("Invalid URL"),
+            );
+
+            response
+                .add_cookie(
+                    &Cookie::build(COOKIE_NAME, refresh_token)
+                        .secure(true)
+                        .http_only(true)
+                        .same_site(SameSite::Strict)
+                        .path("/")
+                        .finish(),
+                )
+                .expect("Could not add refresh_token cookie");
+        }
+        Err((status_code, message)) => response.headers_mut().append(
+            LOCATION,
+            HeaderValue::from_str(&format!(
+                "{}?status_code={}&message={}",
+                provider.error_uri, status_code, message
+            ))
+            .expect("Invalid URL"),
+        ),
+    }
+
+    response
 }
 
 /// handler for POST requests to the .../logout endpount
@@ -241,6 +369,7 @@ async fn refresh(db: Data<Database>, req: HttpRequest) -> Result<HttpResponse, A
                     .secure(true)
                     .http_only(true)
                     .same_site(SameSite::Strict)
+                    .path("/")
                     .finish(),
             )
             .body(json!({ "access_token": access_token }).to_string())),
@@ -446,7 +575,7 @@ async fn reset_password(
 
 /// returns the endpoints for the Auth service
 pub fn endpoints(scope: actix_web::Scope) -> actix_web::Scope {
-    scope
+    let mut scope = scope
         .service(sessions)
         .service(destroy_session)
         .service(destroy_sessions)
@@ -458,7 +587,15 @@ pub fn endpoints(scope: actix_web::Scope) -> actix_web::Scope {
         .service(activate)
         .service(forgot_password)
         .service(change_password)
-        .service(reset_password)
+        .service(reset_password);
+
+    #[cfg(feature = "plugin_auth-oidc")]
+    {
+        scope = scope.service(oidc_login_redirect);
+        scope = scope.service(oidc_login);
+    }
+
+    scope
 }
 
 // swagger

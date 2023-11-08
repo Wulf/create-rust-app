@@ -55,29 +55,28 @@ impl Plugin for Tasks {
 
         crate::content::migration::create(
             "plugin_tasks",
-            indoc! {r##"
-                CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+            indoc! {r#"CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-                CREATE TYPE fang_task_state AS ENUM ('new', 'in_progress', 'failed', 'finished', 'retried');
+CREATE TYPE fang_task_state AS ENUM ('new', 'in_progress', 'failed', 'finished', 'retried');
 
-                CREATE TABLE fang_tasks (
-                    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-                    metadata jsonb NOT NULL,
-                    error_message TEXT,
-                    state fang_task_state DEFAULT 'new' NOT NULL,
-                    task_type VARCHAR DEFAULT 'common' NOT NULL,
-                    uniq_hash CHAR(64),
-                    retries INTEGER DEFAULT 0 NOT NULL,
-                    scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-                    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-                    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-                );
+CREATE TABLE fang_tasks (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    metadata jsonb NOT NULL,
+    error_message TEXT,
+    state fang_task_state DEFAULT 'new' NOT NULL,
+    task_type VARCHAR DEFAULT 'common' NOT NULL,
+    uniq_hash CHAR(64),
+    retries INTEGER DEFAULT 0 NOT NULL,
+    scheduled_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
 
-                CREATE INDEX fang_tasks_state_index ON fang_tasks(state);
-                CREATE INDEX fang_tasks_type_index ON fang_tasks(task_type);
-                CREATE INDEX fang_tasks_scheduled_at_index ON fang_tasks(scheduled_at);
-                CREATE INDEX fang_tasks_uniq_hash ON fang_tasks(uniq_hash);
-            "##},
+CREATE INDEX fang_tasks_state_index ON fang_tasks(state);
+CREATE INDEX fang_tasks_type_index ON fang_tasks(task_type);
+CREATE INDEX fang_tasks_scheduled_at_index ON fang_tasks(scheduled_at);
+CREATE INDEX fang_tasks_uniq_hash ON fang_tasks(uniq_hash);
+"#},
             r#"DROP TABLE fang_tasks;"#,
         )?;
 
@@ -86,23 +85,75 @@ impl Plugin for Tasks {
         // ===============================
         fs::replace("backend/main.rs", "mod mail;", "mod mail;\nmod tasks;")?;
 
-        fs::replace(
-            "backend/main.rs",
-            "HttpServer::new(move || {",
-            r#"
-    let queue = create_rust_app::tasks::queue();
-    // An example of how to schedule a task (see `fang` docs for more info):
-    use fang::Queueable;
-    queue.schedule_task(&tasks::DailyTodo::DailyTodo { text: "Call mom".to_string() }).unwrap();
+        let example_tasks = r##"
 
-    HttpServer::new(move || {"#,
-        )?;
+    // Tasks plugin example: sync queue example
+    // See fang docs for more info: https://docs.rs/fang/0.10.4/fang/
+    {
+        // The blocking queue re-uses the app's db connection pool
+        let queue = create_rust_app::tasks::queue();
+
+        // An example of how to schedule a blocking task (see `fang` docs for more info):
+        use fang::Queueable;
+        queue.schedule_task(&tasks::daily_todo::DailyTodo { text: "Call mom (DailyTodo task)".to_string() }).unwrap();
+    }
+
+    // Tasks plugin example: async queue example
+    // See fang docs for more info: https://docs.rs/fang/0.10.4/fang/
+    {
+        // The async queue uses a separate db connection pool. We need to connnect it at least once before we can use it throughout out app.
+        let mut async_queue = create_rust_app::tasks::async_queue();
+        async_queue.lock().unwrap().connect(NoTls).await.expect("Failed to connect to async queue database");
+        // this means you need to have the above line somewhere in `main.rs`, before any async jobs are scheduled
+
+        // and here's how you can schedule an async task:
+        async_queue.lock().unwrap().schedule_task(&tasks::daily_todo_async::DailyTodoAsync { text: "Call mom (DailyTodoAsync task)".to_string() } as &dyn AsyncRunnable).await.unwrap();
+    }
+
+"##.trim();
+
+        match install_config.backend_framework {
+            BackendFramework::ActixWeb => {
+                fs::replace(
+                    "backend/main.rs",
+                    "use actix_web::web::Data;",
+                    "use actix_web::web::Data;\nuse fang::{AsyncQueueable, AsyncRunnable, NoTls, Queueable};",
+                )?;
+
+                fs::replace(
+                    "backend/main.rs",
+                    "HttpServer::new(move || {",
+                    &format!(
+                        "{example_tasks}
+
+    HttpServer::new(move || {{"
+                    ),
+                )?;
+            }
+            BackendFramework::Poem => {
+                fs::replace(
+                    "backend/main.rs",
+                    "use poem::endpoint::{StaticFilesEndpoint};",
+                    "use poem::endpoint::{StaticFilesEndpoint};\nuse fang::{AsyncQueueable, AsyncRunnable, NoTls, Queueable};",
+                )?;
+
+                fs::replace(
+                    "backend/main.rs",
+                    "let data = create_rust_app::setup();",
+                    &format!(
+                        "{example_tasks}
+
+    let data = create_rust_app::setup();"
+                    ),
+                )?;
+            }
+        }
 
         // ===============================
         // Add dependencies
         // ===============================
 
-        add_dependency(&install_config.project_dir, "fang", r#"fang = "0.10.3""#)?;
+        add_dependency(&install_config.project_dir, "fang", r#"fang = "0.10.4""#)?;
 
         Ok(())
     }

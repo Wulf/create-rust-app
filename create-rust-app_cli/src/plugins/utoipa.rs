@@ -19,31 +19,33 @@ impl Plugin for Utoipa {
             std::process::exit(1);
         }
 
+        // add link to Swagger UI docs
+        fs::replace(
+            "frontend/src/App.tsx",
+            r#"{/* CRA: right-aligned nav buttons */}"#,
+            r#"{/* CRA: right-aligned nav buttons */}
+            <a className="NavButton" onClick={() => window.location.href = "/swagger-ui/" }>API</a>"#,
+        )?;
+
         // add dependencies
         match install_config.backend_framework {
             BackendFramework::ActixWeb => {
                 add_dependency(
                     &install_config.project_dir,
                     "utoipa",
-                    r#"utoipa = { version="3", features=["actix_extras", "chrono", "openapi_extensions"] }"#,
+                    r#"utoipa = { version="4", features=["actix_extras", "chrono", "openapi_extensions"] }"#,
                 )?;
                 add_dependency(
                     &install_config.project_dir,
                     "utoipa-swagger-ui",
-                    r#"utoipa-swagger-ui = { version="3", features=["actix-web"]}"#,
+                    r#"utoipa-swagger-ui = { version="4", features=["actix-web"]}"#,
                 )?;
             }
-            BackendFramework::Poem => {
-                add_dependency(
-                    &install_config.project_dir,
-                    "utoipa",
-                    r#"utoipa = { version="3", features=["chrono", "openapi_extensions"] }"#,
-                )?;
-                add_dependency(
-                    &install_config.project_dir,
-                    "utoipa-swagger-ui",
-                    r#"utoipa-swagger-ui = "3""#,
-                )?;
+            _ => {
+                crate::logger::error(
+                    "plugin_utoipa not yet implemented for backends other than actix-web",
+                );
+                std::process::exit(1);
             }
         }
 
@@ -68,9 +70,8 @@ impl Plugin for Utoipa {
             ]));"#,
                 )?;
             }
-            BackendFramework::Poem => {
-                // TODO: implement for poem
-                panic!("utoipa plugin not yet implemented for poem");
+            _ => {
+                panic!("plugin_utoipa not yet implemented for backends other than actix-web");
             }
         };
 

@@ -63,12 +63,12 @@ import { ResetPage } from './containers/ResetPage'"#,
             "frontend/src/App.tsx",
             r#"{/* CRA: routes */}"#,
             r#"{/* CRA: routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/recovery" element={<RecoveryPage />} />
-            <Route path="/reset" element={<ResetPage />} />
-            <Route path="/activate" element={<ActivationPage />} />
-            <Route path="/register" element={<RegistrationPage />} />
-            <Route path="/account" element={<AccountPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/recovery" element={<RecoveryPage />} />
+          <Route path="/reset" element={<ResetPage />} />
+          <Route path="/activate" element={<ActivationPage />} />
+          <Route path="/register" element={<RegistrationPage />} />
+          <Route path="/account" element={<AccountPage />} />
     "#,
         )?;
         fs::replace(
