@@ -18,6 +18,7 @@ impl Plugin for GraphQL {
         "GraphQL"
     }
 
+    #[allow(clippy::too_many_lines)]
     fn install(&self, install_config: InstallConfig) -> Result<()> {
         if !install_config.plugin_auth {
             crate::logger::error("The GraphQL plugin requires the Auth plugin!");
@@ -175,7 +176,7 @@ use actix_web::guard;"##,
                     other_data.push_str(
                         r#"
         .data(app_data.storage.clone())"#,
-                    )
+                    );
                 }
                 fs::replace(
                     "backend/main.rs",

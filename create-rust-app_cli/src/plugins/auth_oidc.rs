@@ -18,6 +18,7 @@ impl Plugin for AuthOIDC {
         "OIDC Auth"
     }
 
+    #[allow(clippy::too_many_lines)]
     fn install(&self, install_config: InstallConfig) -> Result<()> {
         if !install_config.plugin_auth {
             logger::exit_code("Cannot install OIDC Auth plugin without Auth plugin", 1);
@@ -94,7 +95,7 @@ impl Plugin for AuthOIDC {
                     r#".with(AddData::new(AppConfig {
                     app_url: std::env::var("APP_URL").unwrap(),
                  })"#,
-                    r##".with(AddData::new(AppConfig {
+                    r#".with(AddData::new(AppConfig {
                     app_url: std::env::var("APP_URL").unwrap(),
                  })
                  .with(AddData::new(create_rust_app::auth::AuthConfig {
@@ -110,7 +111,7 @@ impl Plugin for AuthOIDC {
                     app_url = std::env::var("APP_URL").unwrap()
                 ),
             )],
-        })"##,
+        })"#,
                 )?;
             }
         }

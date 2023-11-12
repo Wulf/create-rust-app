@@ -1,8 +1,11 @@
 /* This file is generated and managed by dsync */
 
-use crate::auth::oidc::schema::*;
+use crate::auth::oidc::schema::user_oauth2_links;
 use crate::auth::User;
-use crate::diesel::*;
+use crate::diesel::{
+    insert_into, AsChangeset, Associations, ExpressionMethods, Identifiable, Insertable, QueryDsl,
+    Queryable, RunQueryDsl, Selectable,
+};
 use diesel::QueryResult;
 use serde::{Deserialize, Serialize};
 
@@ -58,9 +61,13 @@ pub struct UpdateUserOauth2Link {
     pub csrf_token: Option<String>,
     pub nonce: Option<String>,
     pub pkce_secret: Option<String>,
+    #[allow(clippy::option_option)]
     pub refresh_token: Option<Option<String>>,
+    #[allow(clippy::option_option)]
     pub access_token: Option<Option<String>>,
+    #[allow(clippy::option_option)]
     pub subject_id: Option<Option<String>>,
+    #[allow(clippy::option_option)]
     pub user_id: Option<Option<i32>>,
     pub created_at: Option<chrono::DateTime<chrono::Utc>>,
     pub updated_at: Option<chrono::DateTime<chrono::Utc>>,
@@ -68,7 +75,7 @@ pub struct UpdateUserOauth2Link {
 
 impl UserOauth2Link {
     pub fn create(db: &mut Connection, item: &CreateUserOauth2Link) -> QueryResult<Self> {
-        use crate::auth::oidc::schema::user_oauth2_links::dsl::*;
+        use crate::auth::oidc::schema::user_oauth2_links::dsl::user_oauth2_links;
 
         insert_into(user_oauth2_links)
             .values(item)
@@ -76,7 +83,7 @@ impl UserOauth2Link {
     }
 
     pub fn read(db: &mut Connection, param_id: i32) -> QueryResult<Self> {
-        use crate::auth::oidc::schema::user_oauth2_links::dsl::*;
+        use crate::auth::oidc::schema::user_oauth2_links::dsl::{id, user_oauth2_links};
 
         user_oauth2_links.filter(id.eq(param_id)).first::<Self>(db)
     }
@@ -86,7 +93,9 @@ impl UserOauth2Link {
         param_provider: String,
         param_token: String,
     ) -> QueryResult<Self> {
-        use crate::auth::oidc::schema::user_oauth2_links::dsl::*;
+        use crate::auth::oidc::schema::user_oauth2_links::dsl::{
+            csrf_token, provider, user_oauth2_links,
+        };
 
         user_oauth2_links
             .filter(provider.eq(param_provider))
@@ -95,7 +104,7 @@ impl UserOauth2Link {
     }
 
     pub fn read_by_subject(db: &mut Connection, param_subject_id: String) -> QueryResult<Self> {
-        use crate::auth::oidc::schema::user_oauth2_links::dsl::*;
+        use crate::auth::oidc::schema::user_oauth2_links::dsl::{subject_id, user_oauth2_links};
 
         user_oauth2_links
             .filter(subject_id.eq(param_subject_id))
@@ -107,7 +116,7 @@ impl UserOauth2Link {
         param_id: i32,
         item: &UpdateUserOauth2Link,
     ) -> QueryResult<Self> {
-        use crate::auth::oidc::schema::user_oauth2_links::dsl::*;
+        use crate::auth::oidc::schema::user_oauth2_links::dsl::{id, user_oauth2_links};
 
         diesel::update(user_oauth2_links.filter(id.eq(param_id)))
             .set(item)
@@ -115,7 +124,7 @@ impl UserOauth2Link {
     }
 
     pub fn delete(db: &mut Connection, param_id: i32) -> QueryResult<usize> {
-        use crate::auth::oidc::schema::user_oauth2_links::dsl::*;
+        use crate::auth::oidc::schema::user_oauth2_links::dsl::{id, user_oauth2_links};
 
         diesel::delete(user_oauth2_links.filter(id.eq(param_id))).execute(db)
     }

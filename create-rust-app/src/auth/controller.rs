@@ -15,17 +15,15 @@ lazy_static! {
     pub static ref ARGON_CONFIG: argon2::Config<'static> = argon2::Config {
         variant: argon2::Variant::Argon2id,
         version: argon2::Version::Version13,
-        secret: match std::env::var("SECRET_KEY") {
-            Ok(s) => Box::leak(s.into_boxed_str()).as_bytes(),
-            Err(_) => panic!("No SECRET_KEY environment variable set!"),
-        },
+        secret: std::env::var("SECRET_KEY").map_or_else(|_| panic!("No SECRET_KEY environment variable set!"), |s| Box::leak(s.into_boxed_str()).as_bytes()),
         ..Default::default()
     };
+    // TODO: instead of initializing EncodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()) repeatedly in the code, just initialize it here and use it everywhere
 }
 
 #[cfg(not(debug_assertions))]
 type Seconds = i64;
-type StatusCode = i32;
+type StatusCode = u16;
 type Message = &'static str;
 
 #[derive(Deserialize, Serialize)]
@@ -116,11 +114,18 @@ pub struct ResetInput {
 ///
 /// breaks up the results of that query as defined by [`info`](`PaginationParams`)
 ///
-///
 /// # Returns [`Result`]
 /// - Ok([`UserSessionResponse`])
 ///     - the results of the query paginated according to [`info`](`PaginationParams`)
 /// - Err([`StatusCode`], [`Message`])
+///
+/// # Errors
+/// - 500: Could not fetch sessions
+///
+/// # Panics
+/// - could not connect to database
+///
+/// TODO: don't panic if db connection fails, just return an error
 pub fn get_sessions(
     db: &Database,
     auth: &Auth,
@@ -128,33 +133,25 @@ pub fn get_sessions(
 ) -> Result<UserSessionResponse, (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
-    let sessions = UserSession::read_all(&mut db, info, auth.user_id);
-
-    if sessions.is_err() {
+    let Ok(sessions) = UserSession::read_all(&mut db, info, auth.user_id) else {
         return Err((500, "Could not fetch sessions."));
-    }
+    };
 
-    let sessions: Vec<UserSession> = sessions.unwrap();
-    let mut sessions_json: Vec<UserSessionJson> = vec![];
-
-    for session in sessions {
-        let session_json = UserSessionJson {
-            id: session.id,
-            device: session.device,
-            created_at: session.created_at,
+    let sessions_json: Vec<UserSessionJson> = sessions
+        .iter()
+        .map(|s| UserSessionJson {
+            id: s.id,
+            device: s.device.clone(),
+            created_at: s.created_at,
             #[cfg(not(feature = "database_sqlite"))]
-            updated_at: session.updated_at,
-        };
+            updated_at: s.updated_at,
+        })
+        .collect();
 
-        sessions_json.push(session_json);
-    }
-
-    let num_sessions = UserSession::count_all(&mut db, auth.user_id);
-    if num_sessions.is_err() {
+    let Ok(num_sessions) = UserSession::count_all(&mut db, auth.user_id) else {
         return Err((500, "Could not fetch sessions."));
-    }
+    };
 
-    let num_sessions = num_sessions.unwrap();
     let num_pages = (num_sessions / info.page_size) + i64::from(num_sessions % info.page_size != 0);
 
     let resp = UserSessionResponse {
@@ -170,9 +167,15 @@ pub fn get_sessions(
 /// deletes the entry in the `user_session` with the specified [`item_id`](`ID`) from
 /// [`db`](`Database`) if it's owned by the User associated with [`auth`](`Auth`)
 ///
-/// # Returns [`Result`]
-/// - Ok(`()`)
-/// - Err([`StatusCode`], [`Message`])
+/// # Errors
+/// - 404: Session not found
+/// - 500: Internal error
+/// - 500: Could not delete session
+///
+/// # Panics
+/// - could not connect to database
+///
+/// TODO: don't panic if db connection fails, just return an error
 pub fn destroy_session(
     db: &Database,
     auth: &Auth,
@@ -180,21 +183,14 @@ pub fn destroy_session(
 ) -> Result<(), (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
-    let user_session = UserSession::read(&mut db, item_id);
+    let user_session = match UserSession::read(&mut db, item_id) {
+        Ok(user_session) if user_session.user_id == auth.user_id => user_session,
+        Ok(_) => return Err((404, "Session not found.")),
+        Err(_) => return Err((500, "Internal error.")),
+    };
 
-    if user_session.is_err() {
-        return Err((500, "Internal error."));
-    }
-
-    let user_session = user_session.unwrap();
-
-    if user_session.user_id != auth.user_id {
-        return Err((404, "Session not found."));
-    }
-
-    if UserSession::delete(&mut db, user_session.id).is_err() {
-        return Err((500, "Could not delete session."));
-    }
+    UserSession::delete(&mut db, user_session.id)
+        .map_err(|_| (500, "Could not delete session."))?;
 
     Ok(())
 }
@@ -204,15 +200,18 @@ pub fn destroy_session(
 /// destroys all entries in the `user_session` table in [`db`](`Database`) owned
 /// by the User associated with [`auth`](`Auth`)
 ///
-/// # Returns [`Result`]
-/// - Ok(`()`)
-/// - Err([`StatusCode`], [`Message`])
+/// # Errors
+/// - 500: Could not delete sessions
+///
+/// # Panics
+/// - could not connect to database
+///
+/// TODO: don't panic if db connection fails, just return an error
 pub fn destroy_sessions(db: &Database, auth: &Auth) -> Result<(), (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
-    if UserSession::delete_all_for_user(&mut db, auth.user_id).is_err() {
-        return Err((500, "Could not delete sessions."));
-    }
+    UserSession::delete_all_for_user(&mut db, auth.user_id)
+        .map_err(|_| (500, "Could not delete sessions."))?;
 
     Ok(())
 }
@@ -228,8 +227,19 @@ type RefreshToken = String;
 /// # Returns [`Result`]
 /// - Ok([`AccessToken`], [`RefreshToken`])
 ///     - an access token that should be sent to the user in the response body,
-///     - a reset token that should be sent as a secure, http-only, and same_site=strict cookie.
+///     - a reset token that should be sent as a secure, http-only, and `same_site=strict` cookie.
 /// - Err([`StatusCode`], [`Message`])
+///
+/// # Errors
+/// - 400: 'device' cannot be longer than 256 characters.
+/// - 400: Account has not been activated.
+/// - 401: Invalid credentials.
+///
+/// # Panics
+/// - could not connect to database
+/// - verifying the password hash fails
+///
+/// TODO: neither of these should panic, just return an error
 pub fn login(
     db: &Database,
     item: &LoginInput,
@@ -237,27 +247,19 @@ pub fn login(
     let mut db = db.pool.get().unwrap();
 
     // verify device
-    let mut device = None;
-    if item.device.is_some() {
-        let device_string = item.device.as_ref().unwrap();
-        if device_string.len() > 256 {
+    let device = match item.device {
+        Some(ref device) if device.len() > 256 => {
             return Err((400, "'device' cannot be longer than 256 characters."));
-        } else {
-            device = Some(device_string.to_owned());
         }
-    }
+        Some(ref device) => Some(device.clone()),
+        None => None,
+    };
 
-    let user = User::find_by_email(&mut db, item.email.clone());
-
-    if user.is_err() {
-        return Err((401, "Invalid credentials."));
-    }
-
-    let user = user.unwrap();
-
-    if !user.activated {
-        return Err((400, "Account has not been activated."));
-    }
+    let user = match User::find_by_email(&mut db, item.email.clone()) {
+        Ok(user) if user.activated => user,
+        Ok(_) => return Err((400, "Account has not been activated.")),
+        Err(_) => return Err((401, "Invalid credentials.")),
+    };
 
     let is_valid = argon2::verify_encoded_ext(
         &user.hash_password,
@@ -271,12 +273,22 @@ pub fn login(
         return Err((401, "Invalid credentials."));
     }
 
-    let (access_token, refresh_token) = create_user_session(&mut db, device, None, user.id)?;
-
-    Ok((access_token, refresh_token))
+    create_user_session(&mut db, device, None, user.id)
 }
 
 // TODO: Wrap this in a database transaction
+/// create a user session for the user with [`user_id`](`i32`)
+///
+/// # Errors
+/// - 400: 'device' cannot be longer than 256 characters.
+/// - 500: An internal server error occurred.
+/// - 500: Could not create session.
+///
+/// # Panics
+/// - could not connect to database
+/// - could not get `SECRET_KEY` from environment
+///
+/// TODO: don't panic if db connection fails, just return an error
 pub fn create_user_session(
     db: &mut Connection,
     device_type: Option<String>,
@@ -284,35 +296,27 @@ pub fn create_user_session(
     user_id: i32,
 ) -> Result<(AccessToken, RefreshToken), (StatusCode, Message)> {
     // verify device
-    let mut device = None;
-    if device_type.is_some() {
-        let device_string = device_type.as_ref().unwrap();
-        if device_string.len() > 256 {
+    let device = match device_type {
+        Some(device) if device.len() > 256 => {
             return Err((400, "'device' cannot be longer than 256 characters."));
-        } else {
-            device = Some(device_string.to_owned());
         }
-    }
+        Some(device) => Some(device),
+        None => None,
+    };
 
-    let permissions = Permission::fetch_all(db, user_id);
-    if permissions.is_err() {
+    let Ok(permissions) = Permission::fetch_all(db, user_id) else {
         return Err((500, "An internal server error occurred."));
-    }
-    let permissions = permissions.unwrap();
+    };
 
-    let roles = Role::fetch_all(db, user_id);
-    if roles.is_err() {
+    let Ok(roles) = Role::fetch_all(db, user_id) else {
         return Err((500, "An internal server error occurred."));
-    }
-    let roles = roles.unwrap();
+    };
 
-    let access_token_duration = chrono::Duration::seconds(if ttl.is_some() {
-        std::cmp::max(ttl.unwrap(), 1)
-    } else {
-        /* 15 minutes */
-        15 * 60
-    });
+    let access_token_duration = chrono::Duration::seconds(
+        ttl.map_or_else(|| /* 15 minutes */ 15 * 60, |tt| std::cmp::max(tt, 1)),
+    );
 
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     let access_token_claims = AccessTokenClaims {
         exp: (chrono::Utc::now() + access_token_duration).timestamp() as usize,
         sub: user_id,
@@ -321,6 +325,7 @@ pub fn create_user_session(
         permissions,
     };
 
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     let refresh_token_claims = RefreshTokenClaims {
         exp: (chrono::Utc::now() + chrono::Duration::hours(24)).timestamp() as usize,
         sub: user_id,
@@ -341,18 +346,15 @@ pub fn create_user_session(
     )
     .unwrap();
 
-    let user_session = UserSession::create(
+    UserSession::create(
         db,
         &UserSessionChangeset {
-            user_id: user_id,
+            user_id,
             refresh_token: refresh_token.clone(),
             device,
         },
-    );
-
-    if user_session.is_err() {
-        return Err((500, "Could not create a session."));
-    }
+    )
+    .map_err(|_| (500, "Could not create session."))?;
 
     Ok((access_token, refresh_token))
 }
@@ -360,96 +362,91 @@ pub fn create_user_session(
 /// /logout
 /// If this is successful, delete the cookie storing the refresh token
 ///
-/// # Returns [`Result`]
-/// - Ok(`()`)
-/// - Err([`StatusCode`], [`Message`])
+/// # Errors
+/// - 401: Invalid session
+/// - 401: Invalid token
+/// - 500: Could not delete session
+///
+/// # Panics
+/// - could not connect to database
+///
+/// TODO: don't panic if db connection fails, just return an error
 pub fn logout(db: &Database, refresh_token: Option<&'_ str>) -> Result<(), (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
-    if refresh_token.is_none() {
+    let Some(refresh_token) = refresh_token else {
         return Err((401, "Invalid session."));
-    }
+    };
 
-    let refresh_token = refresh_token.unwrap();
-
-    let session = UserSession::find_by_refresh_token(&mut db, refresh_token);
-
-    if session.is_err() {
+    let Ok(session) = UserSession::find_by_refresh_token(&mut db, refresh_token) else {
         return Err((401, "Invalid session."));
-    }
+    };
 
-    let session = session.unwrap();
-
-    let is_deleted = UserSession::delete(&mut db, session.id);
-
-    if is_deleted.is_err() {
-        return Err((401, "Could not delete session."));
-    }
+    UserSession::delete(&mut db, session.id).map_err(|_| (500, "Could not delete session."))?;
 
     Ok(())
 }
 
 /// /refresh
 ///
-/// refreshes the user session associated with the clients refresh_token cookie
+/// refreshes the user session associated with the clients `refresh_token` cookie
 ///
 /// # Returns [`Result`]
 /// - Ok([`AccessToken`], [`RefreshToken`])
 ///     - an access token that should be sent to the user in the response body,
-///     - a reset token that should be sent as a secure, http-only, and same_site=strict cookie.
+///     - a reset token that should be sent as a secure, http-only, and `same_site=strict` cookie.
 /// - Err([`StatusCode`], [`Message`])
+///
+/// # Errors
+/// - 401: Invalid session
+/// - 401: Invalid token
+/// - 500: Could not update session
+/// - 500: An internal server error occurred
+///
+/// # Panics
+/// - could not connect to database
+/// - could not get `SECRET_KEY` from environment
+///
+/// TODO: don't panic if db connection fails, just return an error
 pub fn refresh(
     db: &Database,
     refresh_token_str: Option<&'_ str>,
 ) -> Result<(AccessToken, RefreshToken), (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
-    if refresh_token_str.is_none() {
+    let Some(refresh_token_str) = refresh_token_str else {
         return Err((401, "Invalid session."));
-    }
+    };
 
-    let refresh_token_str = refresh_token_str.unwrap();
-
-    let refresh_token = decode::<RefreshTokenClaims>(
+    let _refresh_token = match decode::<RefreshTokenClaims>(
         refresh_token_str,
         &DecodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
         &Validation::default(),
-    );
+    ) {
+        Ok(token)
+            if token
+                .claims
+                .token_type
+                .eq_ignore_ascii_case("refresh_token") =>
+        {
+            token
+        }
+        _ => return Err((401, "Invalid token.")),
+    };
 
-    if refresh_token.is_err() {
-        return Err((401, "Invalid token."));
-    }
-
-    let refresh_token = refresh_token.unwrap();
-
-    if !refresh_token
-        .claims
-        .token_type
-        .eq_ignore_ascii_case("refresh_token")
-    {
-        return Err((401, "Invalid token."));
-    }
-
-    let session = UserSession::find_by_refresh_token(&mut db, refresh_token_str);
-
-    if session.is_err() {
+    let Ok(session) = UserSession::find_by_refresh_token(&mut db, refresh_token_str) else {
         return Err((401, "Invalid session."));
-    }
+    };
 
-    let session = session.unwrap();
-
-    let permissions = Permission::fetch_all(&mut db, session.user_id);
-    if permissions.is_err() {
+    let Ok(permissions) = Permission::fetch_all(&mut db, session.user_id) else {
         return Err((500, "An internal server error occurred."));
-    }
-    let permissions = permissions.unwrap();
+    };
 
-    let roles = Role::fetch_all(&mut db, session.user_id);
-    if roles.is_err() {
+    let Ok(roles) = Role::fetch_all(&mut db, session.user_id) else {
         return Err((500, "An internal server error occurred."));
-    }
-    let roles = roles.unwrap();
+    };
 
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     let access_token_claims = AccessTokenClaims {
         exp: (chrono::Utc::now() + chrono::Duration::minutes(15)).timestamp() as usize,
         sub: session.user_id,
@@ -458,6 +455,7 @@ pub fn refresh(
         permissions,
     };
 
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     let refresh_token_claims = RefreshTokenClaims {
         exp: (chrono::Utc::now() + chrono::Duration::hours(24)).timestamp() as usize,
         sub: session.user_id,
@@ -479,7 +477,7 @@ pub fn refresh(
     .unwrap();
 
     // update session with the new refresh token
-    let session_update = UserSession::update(
+    UserSession::update(
         &mut db,
         session.id,
         &UserSessionChangeset {
@@ -487,11 +485,8 @@ pub fn refresh(
             refresh_token: refresh_token_str.clone(),
             device: session.device,
         },
-    );
-
-    if session_update.is_err() {
-        return Err((500, "Could not update the session."));
-    }
+    )
+    .map_err(|_| (500, "Could not update session."))?;
 
     Ok((access_token, refresh_token_str))
 }
@@ -504,9 +499,15 @@ pub fn refresh(
 /// that contains a unique link that allows the recipient to activate the account associated with
 /// that email address
 ///
-/// # Returns [`Result`]
-/// - Ok(`()`)
-/// - Err([`StatusCode`], [`Message`])
+/// # Errors
+/// - 400: Already registered
+///
+/// # Panics
+/// - could not connect to database
+/// - could not get `SECRET_KEY` from environment
+/// - any of the database operations fail
+///
+/// TODO: don't panic if db connection fails, just return an error
 pub fn register(
     db: &Database,
     item: &RegisterInput,
@@ -514,14 +515,12 @@ pub fn register(
 ) -> Result<(), (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
-    let user = User::find_by_email(&mut db, item.email.to_string());
-
-    if let Ok(user) = user {
-        if !user.activated {
+    match User::find_by_email(&mut db, item.email.to_string()) {
+        Ok(user) if user.activated => return Err((400, "Already registered.")),
+        Ok(user) => {
             User::delete(&mut db, user.id).unwrap();
-        } else {
-            return Err((400, "Already registered."));
         }
+        Err(_) => (),
     }
 
     let salt = generate_salt();
@@ -537,6 +536,7 @@ pub fn register(
     )
     .unwrap();
 
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     let registration_claims = RegistrationClaims {
         exp: (chrono::Utc::now() + chrono::Duration::days(30)).timestamp() as usize,
         sub: user.id,
@@ -561,9 +561,18 @@ pub fn register(
 ///
 /// activates the account associated with the token in [`item`](`ActivationInput`)
 ///
-/// # Returns [`Result`]
-/// - Ok(`()`)
-/// - Err([`StatusCode`], [`Message`])
+/// # Errors
+/// - 401: Invalid token
+/// - 401: Invalid token
+/// - 400: Invalid token
+/// - 200: Already activated!
+/// - 500: Could not activate user
+///
+/// # Panics
+/// - could not connect to database
+/// - could not get `SECRET_KEY` from environment
+///
+/// TODO: don't panic if db connection fails, just return an error
 pub fn activate(
     db: &Database,
     item: &ActivationInput,
@@ -571,39 +580,29 @@ pub fn activate(
 ) -> Result<(), (StatusCode, Message)> {
     let mut db = db.pool.get().unwrap();
 
-    let token = decode::<RegistrationClaims>(
+    let token = match decode::<RegistrationClaims>(
         &item.activation_token,
         &DecodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
         &Validation::default(),
-    );
+    ) {
+        Ok(token)
+            if token
+                .claims
+                .token_type
+                .eq_ignore_ascii_case("activation_token") =>
+        {
+            token
+        }
+        _ => return Err((401, "Invalid token.")),
+    };
 
-    if token.is_err() {
-        return Err((401, "Invalid token."));
-    }
+    let user = match User::read(&mut db, token.claims.sub) {
+        Ok(user) if !user.activated => user,
+        Ok(_) => return Err((200, "Already activated!")),
+        Err(_) => return Err((400, "Invalid token.")),
+    };
 
-    let token = token.unwrap();
-
-    if !token
-        .claims
-        .token_type
-        .eq_ignore_ascii_case("activation_token")
-    {
-        return Err((401, "Invalid token."));
-    }
-
-    let user = User::read(&mut db, token.claims.sub);
-
-    if user.is_err() {
-        return Err((400, "Invalid token."));
-    }
-
-    let user = user.unwrap();
-
-    if user.activated {
-        return Err((200, "Already activated!"));
-    }
-
-    let activated_user = User::update(
+    User::update(
         &mut db,
         user.id,
         &UserChangeset {
@@ -611,11 +610,8 @@ pub fn activate(
             email: user.email.clone(),
             hash_password: user.hash_password,
         },
-    );
-
-    if activated_user.is_err() {
-        return Err((500, "Could not activate user."));
-    }
+    )
+    .map_err(|_| (500, "Could not activate user."))?;
 
     mailer.templates.send_activated(mailer, &user.email);
 
@@ -623,7 +619,7 @@ pub fn activate(
 }
 
 /// /forgot
-/// sends an email to the email in the ['ForgotInput'] Json in the request body
+/// sends an email to the email in the [`ForgotInput`] Json in the request body
 /// that will allow the user associated with that email to change their password
 ///
 /// sends an email, using [`mailer`](`Mailer`), to the email address in [`item`](`RegisterInput`)
@@ -631,9 +627,15 @@ pub fn activate(
 /// of the account associated with that email address (or create a new account if there is
 /// no accound accosiated with the email address)
 ///
-/// # Returns [`Result`]
-/// - Ok(`()`)
-/// - Err([`StatusCode`], [`Message`])
+/// # Errors
+/// - None
+///
+/// # Panics
+/// - could not connect to database
+/// - current timestamp could not be converted from `i64` to `usize`
+/// - could not get `SECRET_KEY` from environment
+///
+/// TODO: don't panic if db connection fails, just return an error
 pub fn forgot_password(
     db: &Database,
     item: &ForgotInput,
@@ -648,6 +650,7 @@ pub fn forgot_password(
         //   return Ok(HttpResponse::build(400).body(" has not been activate"))
         // }
 
+        #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
         let reset_token_claims = ResetTokenClaims {
             exp: (chrono::Utc::now() + chrono::Duration::hours(24)).timestamp() as usize,
             sub: user.id,
@@ -680,9 +683,19 @@ pub fn forgot_password(
 /// change the password of the User associated with [`auth`](`Auth`)
 /// from [`item.old_password`](`ChangeInput`) to [`item.new_password`](`ChangeInput`)
 ///
-/// # Returns [`Result`]
-/// - Ok(`()`)
-/// - Err([`StatusCode`], [`Message`])
+/// # Errors
+/// - 400: Missing password
+/// - 400: The new password must be different
+/// - 400: Account has not been activated
+/// - 401: Invalid credentials
+/// - 500: Could not update password
+/// - 500: Could not find user
+///
+/// # Panics
+/// - could not connect to database
+/// - could not get `SECRET_KEY` from environment
+///
+/// TODO: don't panic if db connection fails, just return an error
 pub fn change_password(
     db: &Database,
     item: &ChangeInput,
@@ -699,17 +712,11 @@ pub fn change_password(
 
     let mut db = db.pool.get().unwrap();
 
-    let user = User::read(&mut db, auth.user_id);
-
-    if user.is_err() {
-        return Err((500, "Could not find user"));
-    }
-
-    let user = user.unwrap();
-
-    if !user.activated {
-        return Err((400, "Account has not been activated"));
-    }
+    let user = match User::read(&mut db, auth.user_id) {
+        Ok(user) if user.activated => user,
+        Ok(_) => return Err((400, "Account has not been activated")),
+        Err(_) => return Err((500, "Could not find user")),
+    };
 
     let is_old_password_valid = argon2::verify_encoded_ext(
         &user.hash_password,
@@ -720,14 +727,14 @@ pub fn change_password(
     .unwrap();
 
     if !is_old_password_valid {
-        return Err((400, "Invalid credentials"));
+        return Err((401, "Invalid credentials"));
     }
 
     let salt = generate_salt();
     let new_hash =
         argon2::hash_encoded(item.new_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
 
-    let updated_user = User::update(
+    User::update(
         &mut db,
         auth.user_id,
         &UserChangeset {
@@ -735,11 +742,8 @@ pub fn change_password(
             hash_password: new_hash,
             activated: user.activated,
         },
-    );
-
-    if updated_user.is_err() {
-        return Err((500, "Could not update password"));
-    }
+    )
+    .map_err(|_| (500, "Could not update password"))?;
 
     mailer.templates.send_password_changed(mailer, &user.email);
 
@@ -750,16 +754,25 @@ pub fn change_password(
 ///
 /// just a lifeline function, clients can post to this endpoint to check
 /// if the auth service is running
-pub fn check(_: &Auth) {}
+pub const fn check(_: &Auth) {}
 
 /// reset
 ///
 /// changes the password of the user associated with [`item.reset_token`](`ResetInput`)
 /// to [`item.new_password`](`ResetInput`)
 ///
-/// # Returns [`Result`]
-/// - Ok(`()`)
-/// - Err([`StatusCode`], [`Message`])
+/// # Errors
+/// - 400: Missing password
+/// - 401: Invalid token
+/// - 400: Invalid token
+/// - 400: Account has not been activated
+/// - 500: Could not update password
+///
+/// # Panics
+/// - could not connect to database
+/// - could not get `SECRET_KEY` from environment
+///
+/// TODO: don't panic if db connection fails, just return an error
 pub fn reset_password(
     db: &Database,
     item: &ResetInput,
@@ -771,39 +784,26 @@ pub fn reset_password(
         return Err((400, "Missing password"));
     }
 
-    let token = decode::<ResetTokenClaims>(
+    let token = match decode::<ResetTokenClaims>(
         &item.reset_token,
         &DecodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
         &Validation::default(),
-    );
+    ) {
+        Ok(token) if token.claims.token_type.eq_ignore_ascii_case("reset_token") => token,
+        _ => return Err((401, "Invalid token.")),
+    };
 
-    if token.is_err() {
-        return Err((401, "Invalid token."));
-    }
-
-    let token = token.unwrap();
-
-    if !token.claims.token_type.eq_ignore_ascii_case("reset_token") {
-        return Err((401, "Invalid token."));
-    }
-
-    let user = User::read(&mut db, token.claims.sub);
-
-    if user.is_err() {
-        return Err((400, "Invalid token."));
-    }
-
-    let user = user.unwrap();
-
-    if !user.activated {
-        return Err((400, "Account has not been activated"));
-    }
+    let user = match User::read(&mut db, token.claims.sub) {
+        Ok(user) if user.activated => user,
+        Ok(_) => return Err((400, "Account has not been activated")),
+        Err(_) => return Err((400, "Invalid token.")),
+    };
 
     let salt = generate_salt();
     let new_hash =
         argon2::hash_encoded(item.new_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
 
-    let update = User::update(
+    User::update(
         &mut db,
         user.id,
         &UserChangeset {
@@ -811,20 +811,20 @@ pub fn reset_password(
             hash_password: new_hash,
             activated: user.activated,
         },
-    );
-
-    if update.is_err() {
-        return Err((500, "Could not update password"));
-    }
+    )
+    .map_err(|_| (500, "Could not update password"))?;
 
     mailer.templates.send_password_reset(mailer, &user.email);
 
     Ok(())
 }
 
+#[must_use]
+#[allow(clippy::missing_panics_doc)]
 pub fn generate_salt() -> [u8; 16] {
     use rand::Fill;
     let mut salt = [0; 16];
+    // this does not fail
     salt.try_fill(&mut rand::thread_rng()).unwrap();
     salt
 }

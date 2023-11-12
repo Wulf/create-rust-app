@@ -1,6 +1,5 @@
 use super::auth::Auth;
 use crate::auth::{permissions::Permission, AccessTokenClaims};
-use actix_http::header::HeaderValue;
 use actix_web::dev::Payload;
 use actix_web::error::ResponseError;
 use actix_web::http::StatusCode;
@@ -12,10 +11,9 @@ use jsonwebtoken::DecodingKey;
 use jsonwebtoken::Validation;
 use serde_json::json;
 use std::collections::HashSet;
-use std::iter::FromIterator;
 
 #[derive(Debug, Display, Error)]
-#[display(fmt = "Unauthorized ({:?}), reason: {:?}", status, reason)]
+#[display(fmt = "Unauthorized ({status:?}), reason: {reason:?}")]
 /// custom error type for Authorization related errors
 pub struct AuthError {
     reason: String,
@@ -23,11 +21,13 @@ pub struct AuthError {
 }
 
 impl AuthError {
-    pub fn new(reason: String, status: StatusCode) -> Self {
+    #[must_use]
+    pub const fn new(reason: String, status: StatusCode) -> Self {
         Self { reason, status }
     }
 
-    pub fn reason(reason: String) -> Self {
+    #[must_use]
+    pub const fn reason(reason: String) -> Self {
         Self {
             reason,
             status: StatusCode::UNAUTHORIZED,
@@ -58,48 +58,35 @@ impl FromRequest for Auth {
 
     /// extracts [`Auth`] from the given [`req`](`HttpRequest`)
     fn from_request(req: &HttpRequest, _payload: &mut Payload) -> <Self as FromRequest>::Future {
-        let auth_header_opt: Option<&HeaderValue> = req.headers().get("Authorization");
+        let access_token_str = match req.headers().get("Authorization").map(|h| h.to_str()) {
+            Some(Ok(auth_header)) if auth_header.starts_with("Bearer ") => auth_header,
+            Some(_) => {
+                return ready(Err(AuthError::reason(
+                    "Invalid authorization header".to_string(),
+                )))
+            }
+            None => {
+                return ready(Err(AuthError::reason(
+                    "Authorization header required".to_string(),
+                )))
+            }
+        };
 
-        if auth_header_opt.is_none() {
-            return ready(Err(AuthError::reason(
-                "Authorization header required".to_string(),
-            )));
-        }
-
-        let access_token_str = auth_header_opt.unwrap().to_str().unwrap_or("");
-
-        if !access_token_str.starts_with("Bearer ") {
-            return ready(Err(AuthError::reason(
-                "Invalid authorization header".to_string(),
-            )));
-        }
-
-        let access_token = decode::<AccessTokenClaims>(
+        let access_token = match decode::<AccessTokenClaims>(
             access_token_str.trim_start_matches("Bearer "),
             &DecodingKey::from_secret(std::env::var("SECRET_KEY").unwrap().as_ref()),
             &Validation::default(),
-        );
-
-        if access_token.is_err() {
-            return ready(Err(AuthError::reason("Invalid access token".to_string())));
-        }
-
-        let access_token = access_token.unwrap();
-
-        if !access_token
-            .claims
-            .token_type
-            .eq_ignore_ascii_case("access_token")
-        {
-            return ready(Err(AuthError::reason("Invalid access token".to_string())));
-        }
+        ) {
+            Ok(token) if token.claims.token_type.eq_ignore_ascii_case("access_token") => token,
+            _ => return ready(Err(AuthError::reason("Invalid access token".to_string()))),
+        };
 
         let user_id = access_token.claims.sub;
         let permissions: HashSet<Permission> =
-            HashSet::from_iter(access_token.claims.permissions.iter().cloned());
-        let roles: HashSet<String> = HashSet::from_iter(access_token.claims.roles.iter().cloned());
+            access_token.claims.permissions.iter().cloned().collect();
+        let roles: HashSet<String> = access_token.claims.roles.iter().cloned().collect();
 
-        ready(Ok(Auth {
+        ready(Ok(Self {
             user_id,
             roles,
             permissions,

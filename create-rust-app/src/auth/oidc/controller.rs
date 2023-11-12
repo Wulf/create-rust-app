@@ -33,9 +33,11 @@ async fn create_oidc_client(provider: &OIDCProvider, app_url: String) -> Result<
         ClientId::new(provider.clone().client_id),
         Some(ClientSecret::new(provider.clone().client_secret)),
     )
-    .set_redirect_uri(RedirectUrl::new(provider.redirect_uri(app_url))?))
+    .set_redirect_uri(RedirectUrl::new(provider.redirect_uri(&app_url))?))
 }
 
+/// # Errors
+/// * could not create the OIDC client
 pub async fn oidc_login_url(
     db: &Database,
     app_config: &AppConfig,
@@ -44,17 +46,14 @@ pub async fn oidc_login_url(
 ) -> Result<Option<String>> {
     let mut db = db.get_connection();
 
-    let provider_config: Option<_> = auth_config
+    let Some(provider) = auth_config
         .clone()
         .oidc_providers
         .into_iter()
-        .find(|provider_config| provider_config.name.eq(&provider_name));
-
-    if provider_config.is_none() {
+        .find(|provider_config| provider_config.name.eq(&provider_name))
+    else {
         return Ok(None);
-    }
-
-    let provider = provider_config.unwrap();
+    };
 
     let client = create_oidc_client(&provider, app_config.clone().app_url).await?;
 
@@ -80,9 +79,9 @@ pub async fn oidc_login_url(
             refresh_token: None,
             subject_id: None,
             user_id: None,
-            csrf_token: csrf_token.secret().to_owned(),
-            nonce: nonce.secret().to_owned(),
-            pkce_secret: pkce_verifier.secret().to_owned(),
+            csrf_token: csrf_token.secret().clone(),
+            nonce: nonce.secret().clone(),
+            pkce_secret: pkce_verifier.secret().clone(),
         },
     )?;
 
@@ -91,8 +90,20 @@ pub async fn oidc_login_url(
 
 type RefreshToken = String;
 type AccessToken = String;
-type StatusCode = i32;
+type StatusCode = u16;
 type Message = String;
+
+/// # Panics
+/// * Could not update the user oauth2 link
+///
+/// # Errors
+/// * 501 - This oauth provider is not supported
+/// * 400 - Invalid code
+/// * 500 - Internal server error (could be a lot of things)
+///
+/// TODO: don't panic
+/// TODO: this function is too long, break it up into smaller parts
+#[allow(clippy::too_many_lines)]
 pub async fn oauth_login(
     db: &Database,
     app_config: &AppConfig,
@@ -105,21 +116,17 @@ pub async fn oauth_login(
     let db = &mut db.get_connection();
 
     // 1. Make sure this provider is setup
-    let provider_config = auth_config
+    let Some(provider) = auth_config
         .clone()
         .oidc_providers
-        .clone()
         .into_iter()
-        .find(|provider_config| provider_config.name.eq(&provider_name));
-
-    if provider_config.is_none() {
+        .find(|provider_config| provider_config.name.eq(&provider_name))
+    else {
         return Err((501, "This oauth provider is not supported".into()));
-    }
-
-    let provider = provider_config.unwrap();
+    };
 
     // 2. make sure we haven't encountered an error
-    if query_param_error.is_some() {
+    if let Some(query_param_error) = query_param_error {
         /*
         =================================================================
         Valid values for this error param:
@@ -164,80 +171,59 @@ pub async fn oauth_login(
                The requested scope is invalid, unknown, malformed, or
                exceeds the scope granted by the resource owner.
         */
-        return Err((401, query_param_error.unwrap()));
+        return Err((401, query_param_error));
     }
 
     // 3. make sure the CSRF/state variable is what we expect (i.e. exists in our db)
     // later on, we'll use the pkce verifier associated with this csrf token
-    if query_param_state.is_none() {
+    let Some(state) = query_param_state else {
         return Err((400, "Invalid CSRF token".into()));
-    }
-    let state = query_param_state.unwrap();
+    };
     let oauth_request = UserOauth2Link::read_by_csrf_token(db, provider_name.clone(), state)
         .expect("Invalid oauth2 redirection");
 
     let pkce_verifier = PkceCodeVerifier::new(oauth_request.pkce_secret);
 
     // 4. exchange code for a token!
-    if query_param_code.is_none() {
+    let Some(code) = query_param_code else {
         return Err((400, "Invalid code".into()));
-    }
+    };
 
-    let code = query_param_code.unwrap();
-
-    let client = create_oidc_client(&provider, app_config.clone().app_url).await;
-
-    if client.is_err() {
+    let Ok(client) = create_oidc_client(&provider, app_config.clone().app_url).await else {
         return Err((500, "Internal server error".into()));
-    }
+    };
 
-    let client = client.unwrap();
-
-    let token_result = client
+    let Ok(token_response) = client
         .exchange_code(AuthorizationCode::new(code))
         .set_pkce_verifier(pkce_verifier)
         .request_async(async_http_client)
-        .await;
-
-    if token_result.is_err() {
+        .await
+    else {
         return Err((400, "Invalid code".into()));
-    }
+    };
 
-    let token_response = token_result.unwrap();
-
-    let id_token = token_response.id_token();
-
-    if id_token.is_none() {
+    let Some(id_token) = token_response.id_token() else {
         return Err((500, "Server did not return an ID token".into()));
-    }
+    };
 
-    let id_token = id_token.unwrap();
-
-    let claims = id_token.claims(
+    let Ok(claims) = id_token.claims(
         &client.id_token_verifier(),
         &Nonce::new(oauth_request.nonce),
-    );
-
-    if claims.is_err() {
+    ) else {
         return Err((500, "Invalid ID token claims".into()));
-    }
-
-    let claims = claims.unwrap();
+    };
 
     if let Some(expected_access_token_hash) = claims.access_token_hash() {
-        let signing_alg = id_token.signing_alg();
-        if signing_alg.is_err() {
+        let Ok(signing_alg) = id_token.signing_alg() else {
             return Err((500, "Invalid signing algorithm".into()));
-        }
-        let signing_alg = signing_alg.unwrap();
+        };
 
-        let actual_access_token_hash =
-            AccessTokenHash::from_token(token_response.access_token(), &signing_alg);
-
-        if actual_access_token_hash.is_err() {
+        let Ok(actual_access_token_hash) =
+            AccessTokenHash::from_token(token_response.access_token(), &signing_alg)
+        else {
             return Err((500, "Invalid access token".into()));
-        }
-        let actual_access_token_hash = actual_access_token_hash.unwrap();
+        };
+
         if actual_access_token_hash != *expected_access_token_hash {
             return Err((401, "Invalid access token".into()));
         }
@@ -249,125 +235,112 @@ pub async fn oauth_login(
     // 1. Check if the subject is already present and linked to an existing user
     // 2. Link the subject to a new user (unless the email is already claimed by a local account)
 
-    let oauth2_link = UserOauth2Link::read_by_subject(db, subject).optional();
-    if oauth2_link.is_err() {
-        return Err((500, "Internal server error".into()));
-    }
-    let oauth2_link = oauth2_link.unwrap();
-    if oauth2_link.is_some() {
-        let oauth2_link = oauth2_link.unwrap();
-        if oauth2_link.user_id.is_none() {
-            return Err((500, "Internal server error".into()));
+    let user = match UserOauth2Link::read_by_subject(db, subject).optional() {
+        Ok(Some(oauth2_link)) => {
+            // subject is already present, let's check if it's linked to a user
+            if oauth2_link.user_id.is_none() {
+                return Err((500, "Internal server error".into()));
+            }
+            let Ok(user) = User::read(db, oauth2_link.user_id.unwrap()) else {
+                return Err((500, "Internal server error".into()));
+            };
+
+            // TODO: put this in a transaction because we'll create a session and if that fails, we need to rollback!
+
+            UserOauth2Link::update(
+                db,
+                oauth_request.id,
+                &UpdateUserOauth2Link {
+                    provider: None,
+                    access_token: Some(Some(token_response.access_token().secret().to_string())),
+                    refresh_token: token_response
+                        .refresh_token()
+                        .map(|token| Some(token.secret().to_string())),
+                    csrf_token: None,
+                    nonce: None,
+                    pkce_secret: None,
+                    user_id: None,
+                    subject_id: None,
+                    created_at: None,
+                    updated_at: None,
+                },
+            )
+            .unwrap();
+
+            user
         }
-        let user = User::read(db, oauth2_link.user_id.unwrap());
-        if user.is_err() {
-            return Err((500, "Internal server error".into()));
+        Ok(None) => {
+            // subject is not already present, let's create a new user!
+            let email = match (claims.email(), claims.email_verified()) {
+                (Some(email), Some(true)) => email.to_string(),
+                (None, _) => return Err((500, "No email returned".into())),
+                (_, Some(false) | None) => return Err((500, "Email not verified".into())),
+            };
+
+            match User::find_by_email(db, email.clone()).optional() {
+                Ok(Some(_)) => {
+                    return Err((500, "Email already registered".into()));
+                }
+                Err(_) => {
+                    return Err((500, "Internal server error".into()));
+                }
+                Ok(None) => {}
+            }
+
+            // create a random password
+            let salt = generate_salt();
+            let random_password = rand::thread_rng()
+                .sample_iter(&Alphanumeric)
+                .take(64)
+                .map(char::from)
+                .collect::<String>();
+            let hash =
+                argon2::hash_encoded(random_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
+            let Ok(new_user) = User::create(
+                db,
+                &UserChangeset {
+                    email,
+                    activated: false, // do not activate the account because it should not be allowed to login locally
+                    hash_password: hash,
+                },
+            ) else {
+                return Err((500, "Internal server error".into()));
+            };
+
+            // TODO: put this in a a transaction because we've created a user at this point and if this
+            // next step doesn't work, we need to rollback!
+            UserOauth2Link::update(
+                db,
+                oauth_request.id,
+                &UpdateUserOauth2Link {
+                    provider: None,
+                    access_token: Some(Some(token_response.access_token().secret().to_string())),
+                    refresh_token: Some(
+                        token_response
+                            .refresh_token()
+                            .map(|token| token.secret().into()),
+                    ),
+                    csrf_token: Some(String::new()),
+                    nonce: Some(String::new()),
+                    pkce_secret: Some(String::new()),
+                    user_id: Some(Some(new_user.id)),
+                    subject_id: Some(Some(claims.subject().to_string())),
+                    created_at: None,
+                    updated_at: None,
+                },
+            )
+            .unwrap();
+
+            new_user
         }
-        let user = user.unwrap();
+        Err(_) => return Err((500, "Internal server error".into())),
+    };
 
-        // TODO: put this in a transaction because we'll create a session and if that fails, we need to rollback!
-
-        UserOauth2Link::update(
-            db,
-            oauth_request.id,
-            &UpdateUserOauth2Link {
-                provider: None,
-                access_token: Some(Some(token_response.access_token().secret().to_string())),
-                refresh_token: token_response
-                    .refresh_token()
-                    .map(|token| Some(token.secret().to_string())),
-                csrf_token: None,
-                nonce: None,
-                pkce_secret: None,
-                user_id: None,
-                subject_id: None,
-                created_at: None,
-                updated_at: None,
-            },
-        )
-        .unwrap();
-
-        let (access_token, refresh_token) = create_user_session(
-            db,
-            Some(format!("Oauth2 - {}", &provider_name)),
-            None,
-            user.id,
-        )
-        .map_err(|error| (error.0, error.1.to_string()))?;
-
-        return Ok((access_token, refresh_token));
-    }
-
-    // subject is not already present, let's create a new user!
-
-    let email = claims.email();
-
-    if email.is_none() {
-        return Err((500, "No email returned".into()));
-    }
-    if claims.email_verified().is_none() || claims.email_verified().unwrap() == false {
-        return Err((500, "Email not verified".into()));
-    }
-    let email = email.unwrap().to_string();
-
-    let existing_user = User::find_by_email(db, email.clone()).optional();
-    if existing_user.is_err() {
-        return Err((500, "Internal server error".into()));
-    }
-    if existing_user.unwrap().is_some() {
-        return Err((500, "Email already registered".into()));
-    }
-
-    // create a random password
-    let salt = generate_salt();
-    let random_password = rand::thread_rng()
-        .sample_iter(&Alphanumeric)
-        .take(64)
-        .map(char::from)
-        .collect::<String>();
-    let hash = argon2::hash_encoded(random_password.as_bytes(), &salt, &ARGON_CONFIG).unwrap();
-    let new_user = User::create(
-        db,
-        &UserChangeset {
-            email: email,
-            activated: false, // do not activate the account because it should not be allowed to login locally
-            hash_password: hash,
-        },
-    );
-    if new_user.is_err() {
-        return Err((500, "Internal server error".into()));
-    }
-    let new_user = new_user.unwrap();
-
-    // TODO: put this in a a transaction because we've created a user at this point and if this
-    // next step doesn't work, we need to rollback!
-    UserOauth2Link::update(
-        db,
-        oauth_request.id,
-        &UpdateUserOauth2Link {
-            provider: None,
-            access_token: Some(Some(token_response.access_token().secret().to_string())),
-            refresh_token: Some(
-                token_response
-                    .refresh_token()
-                    .map(|token| token.secret().into()),
-            ),
-            csrf_token: Some("".into()),
-            nonce: Some("".into()),
-            pkce_secret: Some("".into()),
-            user_id: Some(Some(new_user.id)),
-            subject_id: Some(Some(claims.subject().to_string())),
-            created_at: None,
-            updated_at: None,
-        },
-    )
-    .unwrap();
-
-    Ok(create_user_session(
+    create_user_session(
         db,
         Some(format!("Oauth2 - {}", &provider_name)),
         None,
-        new_user.id,
+        user.id,
     )
-    .map_err(|error| (error.0, error.1.to_string())))?
+    .map_err(|error| (error.0, error.1.to_string()))
 }

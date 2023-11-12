@@ -5,13 +5,17 @@ use diesel::QueryResult;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::diesel::*;
+use crate::diesel::{
+    insert_into, AsChangeset, ExpressionMethods, Identifiable, Insertable, QueryDsl, Queryable,
+    RunQueryDsl,
+};
 use crate::storage::attachment_blob::AttachmentBlobChangeset;
 use crate::storage::{schema, AttachmentBlob, Utc, ID};
 use crate::Connection;
 
-use super::{schema::*, Storage};
+use super::{schema::attachments, Storage};
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(
     Debug, Serialize, Deserialize, Clone, Queryable, Insertable, Identifiable, AsChangeset,
 )]
@@ -27,6 +31,7 @@ pub struct Attachment {
     pub created_at: Utc,
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Serialize, Deserialize, Clone, Insertable, AsChangeset)]
 #[diesel(table_name=attachments)]
 pub struct AttachmentChangeset {
@@ -36,13 +41,17 @@ pub struct AttachmentChangeset {
     pub blob_id: ID,
 }
 
+#[allow(clippy::module_name_repetitions)]
 pub struct AttachmentData {
     pub data: Vec<u8>,
     pub file_name: Option<String>,
 }
 
 impl Attachment {
-    /// in actix_web we don't need to support send+sync handlers, so we can use the &mut Connection directly.
+    /// in `actix_web` we don't need to support send+sync handlers, so we can use the `&mut Connection` directly.
+    ///
+    /// # Errors
+    /// * Diesel error
     #[allow(clippy::too_many_arguments)]
     #[cfg(feature = "backend_actix-web")]
     pub async fn attach(
@@ -57,22 +66,18 @@ impl Attachment {
     ) -> Result<String, String> {
         let checksum = format!("{:x}", md5::compute(&data.data));
         let file_name = data.file_name.clone();
-        let content_type = if file_name.is_some() {
-            mime_guess::from_path(file_name.unwrap()).first_raw()
-        } else {
-            None
-        }
-        .map(|t| t.to_string());
+        let content_type = file_name
+            .and_then(|f| mime_guess::from_path(f).first_raw())
+            .map(std::string::ToString::to_string);
         let key = Uuid::new_v4().to_string();
 
         if !allow_multiple {
-            let existing =
-                Attachment::find_for_record(db, name.clone(), record_type.clone(), record_id);
-
-            if existing.is_ok() {
+            if let Ok(existing) =
+                Self::find_for_record(db, name.clone(), record_type.clone(), record_id)
+            {
                 // one already exists, we need to delete it
                 if overwrite_existing {
-                    Attachment::detach(db, storage, existing.unwrap().id).await.map_err(|_| {
+                    Self::detach(db, storage, existing.id).await.map_err(|_| {
                         format!("Could not detach the existing attachment for '{name}' attachment on '{record_type}'", name=name.clone(), record_type=record_type.clone())
                     })?;
                 } else {
@@ -85,6 +90,7 @@ impl Attachment {
         let attached = diesel::connection::Connection::transaction::<Self, Error, _>(db, |db| {
             let blob = AttachmentBlob::create(
                 db,
+                #[allow(clippy::cast_possible_wrap)]
                 &AttachmentBlobChangeset {
                     byte_size: data.data.len() as i64,
                     service_name: "s3".to_string(),
@@ -95,7 +101,7 @@ impl Attachment {
                 },
             )?;
 
-            let attached = Attachment::create(
+            let attached = Self::create(
                 db,
                 &AttachmentChangeset {
                     blob_id: blob.id,
@@ -117,18 +123,21 @@ impl Attachment {
                 checksum.clone(),
             )
             .await
-            .map(|_| key);
+            .map(|()| key);
 
         if upload_result.is_err() {
             // attempt to delete the attachment
             // if it fails, it fails
-            Attachment::detach(db, storage, attached.id).await?;
+            Self::detach(db, storage, attached.id).await?;
         }
 
         upload_result
     }
 
     /// in poem, we need to pass in the pool itself because the Connection is not Send+Sync which poem handlers require
+    ///
+    /// # Errors
+    /// * Diesel error
     #[allow(clippy::too_many_arguments)]
     #[cfg(feature = "backend_poem")]
     pub async fn attach(
@@ -145,22 +154,18 @@ impl Attachment {
 
         let checksum = format!("{:x}", md5::compute(&data.data));
         let file_name = data.file_name.clone();
-        let content_type = if file_name.is_some() {
-            mime_guess::from_path(file_name.unwrap()).first_raw()
-        } else {
-            None
-        }
-        .map(|t| t.to_string());
+        let content_type = file_name
+            .and_then(|f| mime_guess::from_path(f).first_raw())
+            .map(std::string::ToString::to_string);
         let key = Uuid::new_v4().to_string();
 
         if !allow_multiple {
-            let existing =
-                Attachment::find_for_record(&mut db, name.clone(), record_type.clone(), record_id);
-
-            if existing.is_ok() {
+            if let Ok(existing) =
+                Self::find_for_record(&mut db, name.clone(), record_type.clone(), record_id)
+            {
                 // one already exists, we need to delete it
                 if overwrite_existing {
-                    Attachment::detach(pool.clone(), storage, existing.unwrap().id).await.map_err(|_| {
+                    Self::detach(pool.clone(), storage, existing.id).await.map_err(|_| {
                         format!("Could not detach the existing attachment for '{name}' attachment on '{record_type}'", name=name.clone(), record_type=record_type.clone())
                     })?;
                 } else {
@@ -217,26 +222,28 @@ impl Attachment {
         upload_result
     }
 
-    /// in actix_web we don't need to support send+sync handlers, so we can use the &mut Connection directly.
+    /// in `actix_web` we don't need to support send+sync handlers, so we can use the &mut Connection directly.
+    ///
+    /// # Errors
+    /// * Diesel error
     #[cfg(feature = "backend_actix-web")]
     pub async fn detach(db: &mut Connection, storage: &Storage, item_id: ID) -> Result<(), String> {
-        let attached =
-            Attachment::find_by_id(db, item_id).map_err(|_| "Could not load attachment")?;
+        let attached = Self::find_by_id(db, item_id).map_err(|_| "Could not load attachment")?;
         let blob = AttachmentBlob::find_by_id(db, attached.blob_id)
             .map_err(|_| "Could not load attachment blob")?;
 
         let delete_result = storage.delete(blob.key.clone()).await;
 
-        if delete_result.is_err() {
+        if let Err(error) = delete_result {
             // we continue even if there's an error deleting the actual object
             // todo: make this more robust by checking why it failed to delete the object
             //       => is it because it didn't exist?
-            println!("{}", delete_result.err().unwrap());
+            println!("{error}");
         }
 
         diesel::connection::Connection::transaction::<(), Error, _>(db, |db| {
             // delete the attachment first because it references the blobs
-            Attachment::delete(db, attached.id)?;
+            Self::delete(db, attached.id)?;
             AttachmentBlob::delete(db, blob.id)?;
 
             Ok(())
@@ -247,6 +254,12 @@ impl Attachment {
     }
 
     /// in poem, we need to pass in the pool itself because the Connection is not Send+Sync which poem handlers require
+    ///
+    /// # Errors
+    /// * Diesel error
+    ///
+    /// # Panics
+    /// * If the pool is unable to get a connection
     #[allow(clippy::too_many_arguments)]
     #[cfg(feature = "backend_poem")]
     pub async fn detach(
@@ -257,22 +270,22 @@ impl Attachment {
         let mut db = pool.get().unwrap();
 
         let attached =
-            Attachment::find_by_id(&mut db, item_id).map_err(|_| "Could not load attachment")?;
+            Self::find_by_id(&mut db, item_id).map_err(|_| "Could not load attachment")?;
         let blob = AttachmentBlob::find_by_id(&mut db, attached.blob_id)
             .map_err(|_| "Could not load attachment blob")?;
 
         let delete_result = storage.delete(blob.key.clone()).await;
 
-        if delete_result.is_err() {
+        if let Err(error) = delete_result {
             // we continue even if there's an error deleting the actual object
             // todo: make this more robust by checking why it failed to delete the object
             //       => is it because it didn't exist?
-            println!("{}", delete_result.err().unwrap());
+            println!("{}", error);
         }
 
         diesel::connection::Connection::transaction::<(), Error, _>(&mut db, |db| {
             // delete the attachment first because it references the blobs
-            Attachment::delete(db, attached.id)?;
+            Self::delete(db, attached.id)?;
             AttachmentBlob::delete(db, blob.id)?;
 
             Ok(())
@@ -282,6 +295,8 @@ impl Attachment {
         Ok(())
     }
 
+    /// # Errors
+    /// * Diesel error
     pub async fn detach_all(
         db: &mut Connection,
         storage: &Storage,
@@ -289,7 +304,7 @@ impl Attachment {
         record_type: String,
         record_id: ID,
     ) -> Result<(), String> {
-        let attached = Attachment::find_all_for_record(db, name, record_type, record_id)
+        let attached = Self::find_all_for_record(db, name, record_type, record_id)
             .map_err(|_| "Could not load attachments")?;
         let attached_ids = attached
             .iter()
@@ -308,16 +323,16 @@ impl Attachment {
 
         let delete_result = storage.delete_many(keys).await;
 
-        if delete_result.is_err() {
+        if let Err(error) = delete_result {
             // we continue even if there's an error deleting the actual object
             // todo: make this more robust by checking why it failed to delete the objects
             //       => is it because it didn't exist?
-            println!("{}", delete_result.err().unwrap());
+            println!("{error}");
         }
 
         diesel::connection::Connection::transaction::<(), Error, _>(db, |db| {
             // delete the attachments first because they reference the blobs
-            Attachment::delete_all(db, attached_ids)?;
+            Self::delete_all(db, attached_ids)?;
             AttachmentBlob::delete_all(db, blob_ids)?;
 
             Ok(())
@@ -328,11 +343,9 @@ impl Attachment {
     }
 
     fn create(db: &mut Connection, item: &AttachmentChangeset) -> QueryResult<Self> {
-        use super::schema::attachments::dsl::*;
+        use super::schema::attachments::dsl::attachments;
 
-        insert_into(attachments)
-            .values(item)
-            .get_result::<Attachment>(db)
+        insert_into(attachments).values(item).get_result::<Self>(db)
     }
 
     fn find_by_id(db: &mut Connection, item_id: ID) -> QueryResult<Self> {
@@ -341,6 +354,10 @@ impl Attachment {
             .first(db)
     }
 
+    /// Find an attachment for a given record type and record id
+    ///
+    /// # Errors
+    /// * Diesel error
     pub fn find_for_record(
         db: &mut Connection,
         item_name: String,
@@ -354,6 +371,10 @@ impl Attachment {
             .first::<Self>(db)
     }
 
+    /// Find all attachments for a given record type and record id
+    ///
+    /// # Errors
+    /// * Diesel error
     pub fn find_all_for_record(
         db: &mut Connection,
         item_name: String,
@@ -367,6 +388,10 @@ impl Attachment {
             .get_results::<Self>(db)
     }
 
+    /// Find all attachments for a given record type and record ids
+    ///
+    /// # Errors
+    /// * Diesel error
     pub fn find_all_for_records(
         db: &mut Connection,
         item_name: String,
@@ -389,13 +414,13 @@ impl Attachment {
     // }
 
     fn delete(db: &mut Connection, item_id: ID) -> QueryResult<usize> {
-        use super::schema::attachments::dsl::*;
+        use super::schema::attachments::dsl::attachments;
 
         diesel::delete(attachments.filter(schema::attachments::id.eq(item_id))).execute(db)
     }
 
     fn delete_all(db: &mut Connection, item_ids: Vec<ID>) -> QueryResult<usize> {
-        use super::schema::attachments::dsl::*;
+        use super::schema::attachments::dsl::attachments;
 
         diesel::delete(attachments.filter(schema::attachments::id.eq_any(item_ids))).execute(db)
     }

@@ -13,6 +13,7 @@ use anyhow::Result;
 use std::path::PathBuf;
 
 #[derive(Clone)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct InstallConfig {
     pub project_name: String,
     pub project_dir: PathBuf,
@@ -121,6 +122,7 @@ pub trait Plugin {
     }
 }
 
+#[allow(clippy::needless_pass_by_value)] // we allow pass_by_value because most of these are zero-sized types, and therefore smaller than references
 pub fn install(plugin: impl Plugin, install_config: InstallConfig) -> Result<()> {
     logger::plugin_msg(plugin.name());
 

@@ -177,7 +177,7 @@ enum Commands {
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    project::check_cli_version()?;
+    project::check_cli_version();
 
     // did user provide sub commands?
     match cli.command {
@@ -218,6 +218,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+#[allow(clippy::too_many_lines, clippy::cognitive_complexity)] //TODO: refactor to reduce complexity
 fn create_project(
     cli_mode: bool,
     project_name: String,
@@ -235,54 +236,48 @@ fn create_project(
     }
 
     // get the backend database
-    let backend_database = match database {
-        Some(database) => database,
-        None => {
-            if cli_mode {
-                panic!("Fatal: No backend database specified")
-            }
-            logger::message("Select a database to use:");
-            logger::message("Use UP/DOWN arrows to navigate and SPACE or ENTER to confirm.");
-            let items = vec!["postgres", "sqlite"];
-            let selection = Select::with_theme(&ColorfulTheme::default())
-                .items(&items)
-                .default(0)
-                .interact_on_opt(&Term::stderr())?;
+    let backend_database = if let Some(database) = database {
+        database
+    } else {
+        assert!(!cli_mode, "Fatal: No backend database specified");
+        logger::message("Select a database to use:");
+        logger::message("Use UP/DOWN arrows to navigate and SPACE or ENTER to confirm.");
+        let items = vec!["postgres", "sqlite"];
+        let selection = Select::with_theme(&ColorfulTheme::default())
+            .items(&items)
+            .default(0)
+            .interact_on_opt(&Term::stderr())?;
 
-            match selection {
-                Some(0) => BackendDatabase::Postgres,
-                Some(1) => BackendDatabase::Sqlite,
-                _ => panic!("Fatal: Unknown backend database specified."),
-            }
+        match selection {
+            Some(0) => BackendDatabase::Postgres,
+            Some(1) => BackendDatabase::Sqlite,
+            _ => panic!("Fatal: Unknown backend database specified."),
         }
     };
 
     // get the backend framework
-    let backend_framework: BackendFramework = match framework {
-        Some(framework) => framework,
-        None => {
-            if cli_mode {
-                panic!("Fatal: No backend database specified")
-            }
-            logger::message("Select a rust backend framework to use:");
-            logger::message("Use UP/DOWN arrows to navigate and SPACE or ENTER to confirm.");
-            let items = vec!["actix-web", "poem"];
-            let selection = Select::with_theme(&ColorfulTheme::default())
-                .items(&items)
-                .default(0)
-                .interact_on_opt(&Term::stderr())?;
+    let backend_framework: BackendFramework = if let Some(framework) = framework {
+        framework
+    } else {
+        assert!(!cli_mode, "Fatal: No backend database specified");
+        logger::message("Select a rust backend framework to use:");
+        logger::message("Use UP/DOWN arrows to navigate and SPACE or ENTER to confirm.");
+        let items = vec!["actix-web", "poem"];
+        let selection = Select::with_theme(&ColorfulTheme::default())
+            .items(&items)
+            .default(0)
+            .interact_on_opt(&Term::stderr())?;
 
-            match selection {
-                Some(0) => BackendFramework::ActixWeb,
-                Some(1) => BackendFramework::Poem,
-                _ => panic!("Fatal: Unknown backend framework specified."),
-            }
+        match selection {
+            Some(0) => BackendFramework::ActixWeb,
+            Some(1) => BackendFramework::Poem,
+            _ => panic!("Fatal: Unknown backend framework specified."),
         }
     };
 
     // get enabled features (plugins)
-    let mut cra_enabled_features: Vec<String> = match plugins {
-        Some(plugins) => plugins
+    let mut cra_enabled_features: Vec<String> = if let Some(plugins) = plugins {
+        plugins
             .iter()
             .map(|plugin| match plugin.as_str() {
                 "auth" => "plugin_auth".to_string(),
@@ -293,15 +288,17 @@ fn create_project(
                 "utoipa" => "plugin_utoipa".to_string(),
                 _ => panic!("Fatal: Unknown plugin specified"),
             })
-            .collect(),
-        None => {
-            if !cli_mode {
-                logger::message("Please select plugins for your new project:");
-                logger::message(
+            .collect()
+    } else {
+        let mut features: Vec<String> = vec![];
+
+        if !cli_mode {
+            logger::message("Please select plugins for your new project:");
+            logger::message(
                     "Use UP/DOWN arrows to navigate, SPACE to enable/disable a plugin, and ENTER to confirm.",
                 );
 
-                let items = vec![
+            let items = vec![
                     "Authentication Plugin: local email-based authentication", // 0
                     "Social Authentication Plugin: Oauth2 (OIDC) authentication", // 1
                     "Container Plugin: dockerize your app", // 2
@@ -310,51 +307,48 @@ fn create_project(
                     "GraphQL Plugin: bootstraps a GraphQL setup including a playground", // 5
                     "Utoipa Plugin: Autogenerated OpenAPI documentation served in a SwaggerUI playground", // 6
                 ];
-                let chosen: Vec<usize> = MultiSelect::with_theme(&ColorfulTheme::default())
-                    .items(&items)
-                    .defaults(&[true, false, false, false, false])
-                    .interact()?;
+            let chosen: Vec<usize> = MultiSelect::with_theme(&ColorfulTheme::default())
+                .items(&items)
+                .defaults(&[true, false, false, false, false])
+                .interact()?;
 
-                let add_plugin_auth = chosen.iter().any(|x| *x == 0);
-                let add_plugin_auth_oidc = chosen.iter().any(|x| *x == 1);
-                let add_plugin_container = chosen.iter().any(|x| *x == 2);
-                let add_plugin_storage = chosen.iter().any(|x| *x == 3);
-                let add_plugin_tasks = chosen.iter().any(|x| *x == 4);
-                let add_plugin_graphql = chosen.iter().any(|x| *x == 5);
-                let add_plugin_utoipa = chosen.iter().any(|x| *x == 6);
+            let add_plugin_auth = chosen.iter().any(|x| *x == 0);
+            let add_plugin_auth_oidc = chosen.iter().any(|x| *x == 1);
+            let add_plugin_container = chosen.iter().any(|x| *x == 2);
+            let add_plugin_storage = chosen.iter().any(|x| *x == 3);
+            let add_plugin_tasks = chosen.iter().any(|x| *x == 4);
+            let add_plugin_graphql = chosen.iter().any(|x| *x == 5);
+            let add_plugin_utoipa = chosen.iter().any(|x| *x == 6);
 
-                let mut features: Vec<String> = vec![];
-                if add_plugin_auth {
-                    features.push("plugin_auth".to_string());
-                }
-                if add_plugin_auth_oidc {
-                    if !add_plugin_auth {
-                        panic!("Fatal: Cannot add OIDC plugin without adding the auth plugin");
-                    }
-                    features.push("plugin_auth-oidc".to_string());
-                }
-                if add_plugin_container {
-                    features.push("plugin_container".to_string());
-                }
-                if add_plugin_storage {
-                    features.push("plugin_storage".to_string());
-                }
-                if add_plugin_tasks {
-                    features.push("plugin_tasks".to_string());
-                }
-                if add_plugin_graphql {
-                    features.push("plugin_graphql".to_string());
-                }
-                if add_plugin_utoipa {
-                    features.push("plugin_utoipa".to_string());
-                }
-
-                features
-            } else {
-                vec![]
+            if add_plugin_auth {
+                features.push("plugin_auth".to_string());
+            }
+            if add_plugin_auth_oidc {
+                assert!(
+                    add_plugin_auth,
+                    "Fatal: Cannot add OIDC plugin without adding the auth plugin"
+                );
+                features.push("plugin_auth-oidc".to_string());
+            }
+            if add_plugin_container {
+                features.push("plugin_container".to_string());
+            }
+            if add_plugin_storage {
+                features.push("plugin_storage".to_string());
+            }
+            if add_plugin_tasks {
+                features.push("plugin_tasks".to_string());
+            }
+            if add_plugin_graphql {
+                features.push("plugin_graphql".to_string());
+            }
+            if add_plugin_utoipa {
+                features.push("plugin_utoipa".to_string());
             }
         }
+        features
     };
+
     //add the dev plugin
     cra_enabled_features.push("plugin_dev".to_string());
 
@@ -555,7 +549,7 @@ fn configure_project(
                 // Add resource
                 let resource_name: String = Input::new()
                     .with_prompt("Resource name")
-                    .default("".into())
+                    .default(String::new())
                     .interact_text()?;
 
                 if resource_name.is_empty() {

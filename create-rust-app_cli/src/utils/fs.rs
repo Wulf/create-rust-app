@@ -23,10 +23,7 @@ pub fn is_rust_project(directory: &PathBuf) -> Result<bool> {
 }
 
 pub fn get_current_working_directory() -> Result<PathBuf> {
-    match std::env::current_dir() {
-        Ok(path) => Ok(path),
-        Err(_) => Err(anyhow!("Could not get current working directory.")),
-    }
+    std::env::current_dir().map_err(|_| anyhow!("Could not get current working directory."))
 }
 
 pub fn ensure_file(file: &PathBuf, contents: Option<&str>) -> Result<()> {
@@ -46,26 +43,26 @@ pub fn ensure_file(file: &PathBuf, contents: Option<&str>) -> Result<()> {
 
 pub fn ensure_directory(directory: &PathBuf, prompt_before_create: bool) -> Result<()> {
     if !directory.exists() {
-        let proceed = match prompt_before_create {
-            false => true,
-            true => Confirm::with_theme(&ColorfulTheme::default())
+        let proceed = if prompt_before_create {
+            Confirm::with_theme(&ColorfulTheme::default())
                 .with_prompt(format!(
                     "Directory does not exist, create '{:#?}' directory?",
                     &directory
                 ))
                 .default(false)
-                .interact()?,
+                .interact()?
+        } else {
+            true
         };
 
         if proceed {
             std::fs::create_dir_all(directory)?;
             return Ok(());
-        } else {
-            return Err(anyhow!(
-                "Required directory '{:#?}' was not present!",
-                &directory
-            ));
         }
+        return Err(anyhow!(
+            "Required directory '{:#?}' was not present!",
+            &directory
+        ));
     }
 
     if !directory.is_dir() {
@@ -81,12 +78,11 @@ pub fn ensure_directory(directory: &PathBuf, prompt_before_create: bool) -> Resu
             std::fs::remove_file(directory)?;
             std::fs::create_dir_all(directory)?;
             return Ok(());
-        } else {
-            return Err(anyhow!(
-                "Found file '{:#?}' but expecte directory!",
-                &directory
-            ));
         }
+        return Err(anyhow!(
+            "Found file '{:#?}' but expecte directory!",
+            &directory
+        ));
     }
 
     Ok(())

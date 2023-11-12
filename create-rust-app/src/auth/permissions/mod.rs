@@ -30,6 +30,11 @@ impl Role {
     /// assign `role` to the User whose id is [`user_id`](`ID`)
     ///
     /// Returns true if successful
+    ///
+    /// # Errors
+    /// * infallible
+    ///
+    /// TODO: don't return a result if we never fail, or return a result and not a bool
     pub fn assign(db: &mut Connection, user_id: ID, role: &str) -> Result<bool> {
         let assigned = UserRole::create(
             db,
@@ -45,6 +50,11 @@ impl Role {
     /// assigns every role in `roles` to the User whose id is [`user_id`](`ID`)
     ///
     /// returns true if successful
+    ///
+    /// # Errors
+    /// * infallible
+    ///
+    /// TODO: don't return a result if we never fail, or return a result and not a bool
     pub fn assign_many(db: &mut Connection, user_id: ID, roles: Vec<String>) -> Result<bool> {
         let assigned = UserRole::create_many(
             db,
@@ -60,6 +70,11 @@ impl Role {
     /// unassigns `role` from the User whose id is [`user_id`](`ID`)
     ///
     /// returns true if successful
+    ///
+    /// # Errors
+    /// * infallible
+    ///
+    /// TODO: don't return a result if we never fail, or return a result and not a bool
     pub fn unassign(db: &mut Connection, user_id: ID, role: &str) -> Result<bool> {
         let unassigned = UserRole::delete(db, user_id, role.to_string());
 
@@ -69,6 +84,11 @@ impl Role {
     /// unassigns every role in `roles` from the User whose id is [`user_id`](`ID`)
     ///
     /// returns true if successful
+    ///
+    /// # Errors
+    /// * infallible
+    ///
+    /// TODO: don't return a result if we never fail, or return a result and not a bool
     pub fn unassign_many(db: &mut Connection, user_id: ID, roles: Vec<String>) -> Result<bool> {
         let unassigned = UserRole::delete_many(db, user_id, roles);
 
@@ -76,6 +96,9 @@ impl Role {
     }
 
     /// returns a vector containing every role assigned to the User whose id is [`user_id`](`ID`)
+    ///
+    /// # Errors
+    /// * [`diesel::result::Error`](`diesel::result::Error`) if the query fails
     pub fn fetch_all(db: &mut Connection, user_id: ID) -> Result<Vec<String>> {
         let roles = sql_query("SELECT role FROM user_roles WHERE user_id = $1");
 
@@ -125,6 +148,11 @@ impl Permission {
     /// grants `permission` to the User whose id is [`user_id`](`ID`)
     ///
     /// returns true if successful
+    ///
+    /// # Errors
+    /// * infallible
+    ///
+    /// TODO: don't return a result if we never fail, or return a result and not a bool
     pub fn grant_to_user(db: &mut Connection, user_id: ID, permission: &str) -> Result<bool> {
         let granted = UserPermission::create(
             db,
@@ -140,6 +168,11 @@ impl Permission {
     /// grant `permission` to `role`
     ///
     /// returns true if successful
+    ///
+    /// # Errors
+    /// * infallible
+    ///
+    /// TODO: don't return a result if we never fail, or return a result and not a bool
     pub fn grant_to_role(db: &mut Connection, role: &str, permission: &str) -> Result<bool> {
         let granted = RolePermission::create(
             db,
@@ -155,6 +188,13 @@ impl Permission {
     /// grants every permission in `permissions` to `role`
     ///
     /// returns true if successful
+    ///
+    /// # Errors
+    /// * infallible
+    ///
+    /// TODO: don't return a result if we never fail, or return a result and not a bool
+    /// TODO: take a &str instead of a String
+    #[allow(clippy::needless_pass_by_value)]
     pub fn grant_many_to_role(
         db: &mut Connection,
         role: String,
@@ -177,6 +217,11 @@ impl Permission {
     /// grants every permission in `permissions` to `role`
     ///
     /// returns true if successful
+    ///
+    /// # Errors
+    /// * infallible
+    ///
+    /// TODO: don't return a result if we never fail, or return a result and not a bool
     pub fn grant_many_to_user(
         db: &mut Connection,
         user_id: i32,
@@ -187,8 +232,8 @@ impl Permission {
             permissions
                 .into_iter()
                 .map(|permission| UserPermissionChangeset {
-                    permission,
                     user_id,
+                    permission,
                 })
                 .collect::<Vec<_>>(),
         );
@@ -199,6 +244,11 @@ impl Permission {
     /// revokes `permission` from the User whose id is [`user_id`](`ID`)
     ///
     /// returns true if successful
+    ///
+    /// # Errors
+    /// * infallible
+    ///
+    /// TODO: don't return a result if we never fail, or return a result and not a bool
     pub fn revoke_from_user(db: &mut Connection, user_id: ID, permission: &str) -> Result<bool> {
         let deleted = UserPermission::delete(db, user_id, permission.to_string());
 
@@ -208,6 +258,11 @@ impl Permission {
     /// revokes `permission` from `role`
     ///
     /// returns true if successful
+    ///
+    /// # Errors
+    /// * infallible
+    ///
+    /// TODO: don't return a result if we never fail, or return a result and not a bool
     pub fn revoke_from_role(db: &mut Connection, role: String, permission: String) -> Result<bool> {
         let deleted = RolePermission::delete(db, role, permission);
 
@@ -217,6 +272,11 @@ impl Permission {
     /// revokes every permission in `permissions` from the User whose id is [`user_id`](`ID`)
     ///
     /// returns true if successful
+    ///
+    /// # Errors
+    /// * infallible
+    ///
+    /// TODO: don't return a result if we never fail, or return a result and not a bool
     pub fn revoke_many_from_user(
         db: &mut Connection,
         user_id: ID,
@@ -230,6 +290,11 @@ impl Permission {
     /// revokes every permission in `permissions` from `role`
     ///
     /// returns true if successful
+    ///
+    /// # Errors
+    /// * infallible
+    ///
+    /// TODO: don't return a result if we never fail, or return a result and not a bool
     pub fn revoke_many_from_role(
         db: &mut Connection,
         role: String,
@@ -243,6 +308,11 @@ impl Permission {
     /// revokes every permission granted to `role`
     ///
     /// returns true if successful
+    ///
+    /// # Errors
+    /// * infallible
+    ///
+    /// TODO: don't return a result if we never fail, or return a result and not a bool
     pub fn revoke_all_from_role(db: &mut Connection, role: &str) -> Result<bool> {
         let deleted = RolePermission::delete_all(db, role);
 
@@ -252,6 +322,11 @@ impl Permission {
     /// revokes every permission granted to the User whose id is [`user_id`](`ID`)
     ///
     /// returns true if successful
+    ///
+    /// # Errors
+    /// * infallible
+    ///
+    /// TODO: don't return a result if we never fail, or return a result and not a bool
     pub fn revoke_all_from_user(db: &mut Connection, user_id: i32) -> Result<bool> {
         let deleted = UserPermission::delete_all(db, user_id);
 
@@ -259,7 +334,10 @@ impl Permission {
     }
 
     /// returns every permission granted to the User whose id is [`user_id`](`ID`)
-    pub fn fetch_all(db: &mut Connection, user_id: ID) -> Result<Vec<Permission>> {
+    ///
+    /// # Errors
+    /// * [`diesel::result::Error`](`diesel::result::Error`) if the query fails
+    pub fn fetch_all(db: &mut Connection, user_id: ID) -> Result<Vec<Self>> {
         let permissions = sql_query(
             r#"
       SELECT 
@@ -281,7 +359,7 @@ impl Permission {
 
         let permissions = permissions
             .bind::<Integer, _>(user_id)
-            .get_results::<Permission>(db)?;
+            .get_results::<Self>(db)?;
 
         Ok(permissions)
     }

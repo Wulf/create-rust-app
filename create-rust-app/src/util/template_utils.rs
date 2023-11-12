@@ -44,89 +44,89 @@ pub fn to_template_name(request_path: &str) -> &'_ str {
 struct InjectBundle;
 impl tera::Function for InjectBundle {
     fn call(&self, args: &HashMap<String, serde_json::Value>) -> tera::Result<serde_json::Value> {
-        match args.get("name") {
-            Some(val) => {
-                match tera::from_value::<String>(val.clone()) {
-                    Ok(bundle_name) => {
-                        let inject: String;
-
-                        #[cfg(not(debug_assertions))]
-                        {
-                            let manifest_entry = VITE_MANIFEST
-                                .get(&format!("bundles/{bundle_name}"))
-                                .unwrap_or_else(|| {
-                                    panic!("could not get bundle `{}`", bundle_name)
-                                });
-                            let entry_file = format!(
-                                r#"<script type="module" src="/{file}"></script>"#,
-                                file = manifest_entry.file
-                            );
-                            let css_files = manifest_entry
-                                .css
-                                .as_ref()
-                                .unwrap_or(&vec![])
-                                .iter()
-                                .map(|css_file| {
-                                    format!(
-                                        r#"<link rel="stylesheet" href="/{file}" />"#,
-                                        file = css_file
-                                    )
-                                })
-                                .collect::<Vec<String>>()
-                                .join("\n");
-                            let dyn_entry_files = manifest_entry
-                                .dynamicImports
-                                .as_ref()
-                                .unwrap_or(&vec![])
-                                .iter()
-                                .map(|dyn_script_file| {
-                                    // TODO: make this deferred or async -- look this up!~
-                                    format!(
-                                        r#"<script type="module" src="/{file}"></script>"#,
-                                        file = dyn_script_file
-                                    )
-                                })
-                                .collect::<Vec<String>>()
-                                .join("\n");
-
-                            inject = format!(
-                                r##"
-                        <!-- production mode -->
-                        {entry_file}
-                        {css_files}
-                        {dyn_entry_files}
-                        "##
-                            );
-                        }
-
-                        #[cfg(debug_assertions)]
-                        {
-                            inject = format!(
-                                r#"<script>
-                                // Injecting bundle (dev server mode)
-                                // {{{{ bundle(name={bundle_name}) }}}}
-                                ;(() => {{
-                                    const script = document.createElement('script');
-                                    script.type = 'module';
-                                    script.src = `http://${{window.location.hostname}}:21012/bundles/{bundle_name}`;
-                                    document.head.appendChild(script);
-                                }})();
-                                </script>"#
-                            );
-                        }
-
-                        Ok(tera::to_value(inject).unwrap())
-                    }
-                    Err(_) => panic!("No bundle named '{:#?}'", val),
-                }
-            }
-            None => Err("oops".into()),
-        }
+        args.get("name").map_or_else(
+            || Err("oops".into()),
+            |val| {
+                tera::from_value::<String>(val.clone()).map_or_else(
+                    |_| panic!("No bundle named '{:#?}`", val),
+                    |bundle_name| Ok(tera::to_value(create_inject(&bundle_name)).unwrap()),
+                )
+            },
+        )
     }
 
     fn is_safe(&self) -> bool {
         true
     }
+}
+
+fn create_inject(bundle_name: &str) -> String {
+    let inject: String;
+
+    #[cfg(not(debug_assertions))]
+    {
+        let manifest_entry = VITE_MANIFEST
+            .get(&format!("bundles/{bundle_name}"))
+            .unwrap_or_else(|| panic!("could not get bundle `{}`", bundle_name));
+        let entry_file = format!(
+            r#"<script type="module" src="/{file}"></script>"#,
+            file = manifest_entry.file
+        );
+        let css_files = manifest_entry
+            .css
+            .as_ref()
+            .unwrap_or(&vec![])
+            .iter()
+            .map(|css_file| {
+                format!(
+                    r#"<link rel="stylesheet" href="/{file}" />"#,
+                    file = css_file
+                )
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+        let dyn_entry_files = manifest_entry
+            .dynamicImports
+            .as_ref()
+            .unwrap_or(&vec![])
+            .iter()
+            .map(|dyn_script_file| {
+                // TODO: make this deferred or async -- look this up!~
+                format!(
+                    r#"<script type="module" src="/{file}"></script>"#,
+                    file = dyn_script_file
+                )
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        inject = format!(
+            r#"
+    <!-- production mode -->
+    {entry_file}
+    {css_files}
+    {dyn_entry_files}
+    "#
+        );
+    }
+
+    #[cfg(debug_assertions)]
+    {
+        inject = format!(
+            r#"<script>
+            // Injecting bundle (dev server mode)
+            // {{{{ bundle(name={bundle_name}) }}}}
+            ;(() => {{
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.src = `http://${{window.location.hostname}}:21012/bundles/{bundle_name}`;
+                document.head.appendChild(script);
+            }})();
+            </script>"#
+        );
+    }
+
+    inject
 }
 
 #[allow(dead_code, non_snake_case)]
@@ -151,9 +151,9 @@ pub struct ViteManifestEntry {
 type ViteManifest = HashMap<String, ViteManifestEntry>;
 
 fn load_manifest_entries() -> ViteManifest {
+    use serde_json::Value;
     let mut manifest: ViteManifest = HashMap::new();
 
-    use serde_json::Value;
     let manifest_json = serde_json::from_str(
         std::fs::read_to_string(std::path::PathBuf::from("./frontend/dist/manifest.json"))
             .unwrap()
