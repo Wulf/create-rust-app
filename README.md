@@ -164,6 +164,7 @@ create-rust-app create <project_name>
       - `CRA_MANIFEST_PATH`: default `./frontend/dist/manifest.json` when called from workspace root, `../frontend/dist/manifest.json` otherwise.
       - `CRA_FRONTEND_DIR`: default `./frontend` when called from workspace root, `../frontend` otherwise.
       - `CRA_VIEWS_GLOB`: default `backend/views/\*\*/\*.html` when called from workspace root, `views/\*\*/\*.html` otherwise.
+    - Note that in any non-standard setup, you will need to set the above environment variables to the correct values for your project to ensure correct behavior.
 
 ### 2. Code-gen to reduce boilerplate
 
