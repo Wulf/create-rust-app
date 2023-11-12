@@ -155,7 +155,7 @@ create-rust-app create <project_name>
   - Add a task to the queue with `create_rust_app::tasks::queue()`
   - Run the queue with `cargo run --bin tasks`
 
-- **Workspace Support Plugin** (not supported in the CLI yet)
+- **Workspace Support** (Enabled by default, not tied to a feature flag)
   - allows you to organize your rust app in workspaces, and changes the defaults for the environment variables that specify paths to various important places.
   - to organize you project as a workspace:
     - enable this feature

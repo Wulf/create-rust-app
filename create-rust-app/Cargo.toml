@@ -174,12 +174,14 @@ plugin_storage = [
   "md5",
   "mime_guess",
   "base64",
-  "futures-util"
+  "futures-util",
 ]
 plugin_graphql = []
-plugin_utoipa = ["utoipa", "backend_actix-web"] # for now, only works with actix-web!
+plugin_utoipa = [
+  "utoipa",
+  "backend_actix-web",
+] # for now, only works with actix-web!
 plugin_tasks = ["fang", "tokio"]
-plugin_workspace_support = []
 backend_poem = ["poem", "anyhow", "mime_guess", "tokio"]
 backend_actix-web = [
   "actix-web",
