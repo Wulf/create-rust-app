@@ -3,6 +3,9 @@
 /// are exposed directly as create_rust_app::<utilty-fn>.
 ///
 
+/// constants for paths and files in workspaces
+pub(crate) mod workspace_utils;
+
 #[cfg(feature = "backend_actix-web")]
 mod actix_web_utils;
 
