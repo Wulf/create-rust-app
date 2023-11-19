@@ -32,22 +32,28 @@ impl Default for Database {
 
 impl Database {
     /// create a new [`Database`]
-    pub fn new() -> Database {
-        Database {
+    #[must_use]
+    pub fn new() -> Self {
+        Self {
             pool: Self::get_or_init_pool(),
         }
     }
 
     /// get a [`Connection`] to a database
+    ///
+    /// TODO: return a `Result` and let the caller handle the error (a server might want to return a 500 error if the database is not available instead of crashing)
+    ///
+    /// # Panics
+    /// * if the database is not available
+    #[must_use]
     pub fn get_connection(&self) -> Connection {
         self.pool.get().unwrap()
     }
 
     fn get_or_init_pool() -> &'static Pool {
+        static POOL: OnceCell<Pool> = OnceCell::new();
         #[cfg(debug_assertions)]
         crate::load_env_vars();
-
-        static POOL: OnceCell<Pool> = OnceCell::new();
 
         POOL.get_or_init(|| {
             Pool::builder()
@@ -57,6 +63,11 @@ impl Database {
         })
     }
 
+    /// get the connection url for the database
+    ///
+    /// # Panics
+    /// * if the `DATABASE_URL` environment variable is not set
+    #[must_use]
     pub fn connection_url() -> String {
         std::env::var("DATABASE_URL").expect("DATABASE_URL environment variable expected.")
     }

@@ -85,7 +85,7 @@ CREATE INDEX fang_tasks_uniq_hash ON fang_tasks(uniq_hash);
         // ===============================
         fs::replace("backend/main.rs", "mod mail;", "mod mail;\nmod tasks;")?;
 
-        let example_tasks = r##"
+        let example_tasks = r#"
 
     // Tasks plugin example: sync queue example
     // See fang docs for more info: https://docs.rs/fang/0.10.4/fang/
@@ -110,7 +110,7 @@ CREATE INDEX fang_tasks_uniq_hash ON fang_tasks(uniq_hash);
         async_queue.lock().unwrap().schedule_task(&tasks::daily_todo_async::DailyTodoAsync { text: "Call mom (DailyTodoAsync task)".to_string() } as &dyn AsyncRunnable).await.unwrap();
     }
 
-"##.trim();
+"#.trim();
 
         match install_config.backend_framework {
             BackendFramework::ActixWeb => {

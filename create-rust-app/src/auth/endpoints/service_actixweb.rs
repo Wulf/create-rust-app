@@ -58,7 +58,7 @@ async fn sessions(
     match result {
         Ok(sessions) => Ok(HttpResponse::Ok().json(sessions)),
         Err((status_code, error_message)) => Ok(HttpResponse::build(
-            StatusCode::from_u16(status_code as u16).unwrap(),
+            StatusCode::from_u16(status_code).unwrap(),
         )
         .body(json!({ "message": error_message }).to_string())),
     }
@@ -92,11 +92,11 @@ async fn destroy_session(
         web::block(move || controller::destroy_session(&db, &auth, item_id.into_inner())).await?;
 
     match result {
-        Ok(_) => Ok(
+        Ok(()) => Ok(
             HttpResponse::build(StatusCode::OK).body(json!({"message": "Deleted."}).to_string())
         ),
         Err((status_code, error_message)) => Ok(HttpResponse::build(
-            StatusCode::from_u16(status_code as u16).unwrap(),
+            StatusCode::from_u16(status_code).unwrap(),
         )
         .body(json!({ "message": error_message }).to_string())),
     }
@@ -123,11 +123,11 @@ async fn destroy_sessions(db: Data<Database>, auth: Auth) -> Result<HttpResponse
     let result = web::block(move || controller::destroy_sessions(&db, &auth)).await?;
 
     match result {
-        Ok(_) => Ok(
+        Ok(()) => Ok(
             HttpResponse::build(StatusCode::OK).body(json!({"message": "Deleted."}).to_string())
         ),
         Err((status_code, error_message)) => Ok(HttpResponse::build(
-            StatusCode::from_u16(status_code as u16).unwrap(),
+            StatusCode::from_u16(status_code).unwrap(),
         )
         .body(json!({ "message": error_message }).to_string())),
     }
@@ -166,7 +166,7 @@ async fn login(db: Data<Database>, Json(item): Json<LoginInput>) -> Result<HttpR
             )
             .body(json!({ "access_token": access_token }).to_string())),
         Err((status_code, message)) => Ok(HttpResponse::build(
-            StatusCode::from_u16(status_code as u16).unwrap(),
+            StatusCode::from_u16(status_code).unwrap(),
         )
         .body(json!({ "message": message }).to_string())),
     }
@@ -190,14 +190,8 @@ async fn oidc_login_redirect(
     )
     .await;
 
-    if result.is_err() {
-        return Ok(HttpResponse::InternalServerError().finish());
-    }
-
-    let result = result.unwrap();
-
     match result {
-        Some(url) => {
+        Ok(Some(url)) => {
             let mut response = HttpResponse::SeeOther().body(());
             response
                 .headers_mut()
@@ -205,7 +199,8 @@ async fn oidc_login_redirect(
 
             Ok(response)
         }
-        None => Ok(HttpResponse::NotImplemented().finish()),
+        Ok(None) => Ok(HttpResponse::NotImplemented().finish()),
+        Err(_) => Ok(HttpResponse::InternalServerError().finish()),
     }
 }
 
@@ -219,6 +214,7 @@ pub struct OIDCLoginQueryParams {
 
 #[cfg(feature = "plugin_auth-oidc")]
 #[get("/oidc/{provider}/login")]
+/// TODO: return result (or specific http response) instead of panicking
 async fn oidc_login(
     db: Data<Database>,
     app_config: Data<AppConfig>,
@@ -229,12 +225,13 @@ async fn oidc_login(
     use actix_web::http::header::{HeaderValue, LOCATION};
     let provider_name = path_params.to_string();
 
-    let provider = auth_config
+    let provider = if let Some(provider) = auth_config
         .oidc_providers
         .iter()
-        .find(|p| p.name.eq(&provider_name));
-
-    if provider.is_none() {
+        .find(|p| p.name.eq(&provider_name))
+    {
+        provider
+    } else {
         return HttpResponse::InternalServerError().json(
             json!({
                 "success": false,
@@ -243,9 +240,7 @@ async fn oidc_login(
             })
             .to_string(),
         );
-    }
-
-    let provider = provider.unwrap();
+    };
 
     let query_params = query_params.into_inner();
     let query_param_code = query_params.code;
@@ -315,24 +310,26 @@ async fn oidc_login(
     tag = "Sessions",
 ))]
 #[post("/logout")]
+#[allow(clippy::future_not_send)] // safe because we're running blocking actions in a web::block
 async fn logout(db: Data<Database>, req: HttpRequest) -> Result<HttpResponse, AWError> {
     let refresh_token = req
         .cookie(COOKIE_NAME)
         .map(|cookie| String::from(cookie.value()));
 
-    let result =
-        web::block(move || controller::logout(&db, refresh_token.as_ref().map(|t| t.as_ref())))
-            .await?;
+    let result = web::block(move || {
+        controller::logout(&db, refresh_token.as_ref().map(std::convert::AsRef::as_ref))
+    })
+    .await?;
 
     match result {
-        Ok(_) => {
+        Ok(()) => {
             let mut cookie = Cookie::named(COOKIE_NAME);
             cookie.make_removal();
 
             Ok(HttpResponse::Ok().cookie(cookie).finish())
         }
         Err((status_code, message)) => Ok(HttpResponse::build(
-            StatusCode::from_u16(status_code as u16).unwrap(),
+            StatusCode::from_u16(status_code).unwrap(),
         )
         .body(json!({ "message": message }).to_string())),
     }
@@ -353,14 +350,16 @@ async fn logout(db: Data<Database>, req: HttpRequest) -> Result<HttpResponse, AW
     tag = "Sessions",
 ))]
 #[post("/refresh")]
+#[allow(clippy::future_not_send)] // safe because we're running blocking actions in a web::block
 async fn refresh(db: Data<Database>, req: HttpRequest) -> Result<HttpResponse, AWError> {
     let refresh_token = req
         .cookie(COOKIE_NAME)
         .map(|cookie| String::from(cookie.value()));
 
-    let result =
-        web::block(move || controller::refresh(&db, refresh_token.as_ref().map(|t| t.as_ref())))
-            .await?;
+    let result = web::block(move || {
+        controller::refresh(&db, refresh_token.as_ref().map(std::convert::AsRef::as_ref))
+    })
+    .await?;
 
     match result {
         Ok((access_token, refresh_token)) => Ok(HttpResponse::build(StatusCode::OK)
@@ -374,7 +373,7 @@ async fn refresh(db: Data<Database>, req: HttpRequest) -> Result<HttpResponse, A
             )
             .body(json!({ "access_token": access_token }).to_string())),
         Err((status_code, message)) => Ok(HttpResponse::build(
-            StatusCode::from_u16(status_code as u16).unwrap(),
+            StatusCode::from_u16(status_code).unwrap(),
         )
         .body(json!({ "message": message }).to_string())),
     }
@@ -408,7 +407,7 @@ async fn register(
         Ok(()) => Ok(HttpResponse::build(StatusCode::OK)
             .body("{ \"message\": \"Registered! Check your email to activate your account.\" }")),
         Err((status_code, message)) => Ok(HttpResponse::build(
-            StatusCode::from_u16(status_code as u16).unwrap(),
+            StatusCode::from_u16(status_code).unwrap(),
         )
         .body(json!({ "message": message }).to_string())),
     }
@@ -440,7 +439,7 @@ async fn activate(
     match result {
         Ok(()) => Ok(HttpResponse::build(StatusCode::OK).body("{ \"message\": \"Activated!\" }")),
         Err((status_code, message)) => Ok(HttpResponse::build(
-            StatusCode::from_u16(status_code as u16).unwrap(),
+            StatusCode::from_u16(status_code).unwrap(),
         )
         .body(json!({ "message": message }).to_string())),
     }
@@ -475,7 +474,7 @@ async fn forgot_password(
         Ok(()) => Ok(HttpResponse::build(StatusCode::OK)
             .body("{ \"message\": \"Please check your email.\" }")),
         Err((status_code, message)) => Ok(HttpResponse::build(
-            StatusCode::from_u16(status_code as u16).unwrap(),
+            StatusCode::from_u16(status_code).unwrap(),
         )
         .body(json!({ "message": message }).to_string())),
     }
@@ -515,7 +514,7 @@ async fn change_password(
         Ok(()) => Ok(HttpResponse::build(StatusCode::OK)
             .body(json!({"message": "Password changed."}).to_string())),
         Err((status_code, message)) => Ok(HttpResponse::build(
-            StatusCode::from_u16(status_code as u16).unwrap(),
+            StatusCode::from_u16(status_code).unwrap(),
         )
         .body(json!({ "message": message }).to_string())),
     }
@@ -567,13 +566,14 @@ async fn reset_password(
         Ok(()) => Ok(HttpResponse::build(StatusCode::OK)
             .body(json!({"message": "Password reset"}).to_string())),
         Err((status_code, message)) => Ok(HttpResponse::build(
-            StatusCode::from_u16(status_code as u16).unwrap(),
+            StatusCode::from_u16(status_code).unwrap(),
         )
         .body(json!({ "message": message }).to_string())),
     }
 }
 
 /// returns the endpoints for the Auth service
+#[must_use]
 pub fn endpoints(scope: actix_web::Scope) -> actix_web::Scope {
     let mut scope = scope
         .service(sessions)

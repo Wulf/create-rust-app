@@ -2,7 +2,7 @@ use crate::BackendDatabase;
 use console::style;
 
 pub fn message(msg: &str) {
-    println!("[{}] {}", style("create-rust-app").blue(), msg)
+    println!("[{}] {}", style("create-rust-app").blue(), msg);
 }
 
 pub fn command_msg(command: &str) {
@@ -41,7 +41,7 @@ pub fn plugin_msg(name: &str) {
 }
 
 pub fn error(msg: &str) {
-    message(&format!("{} {}", style("ERROR: ").red(), msg))
+    message(&format!("{} {}", style("ERROR: ").red(), msg));
 }
 
 pub fn exit_code(msg: &str, code: i32) -> ! {
@@ -49,7 +49,7 @@ pub fn exit_code(msg: &str, code: i32) -> ! {
     std::process::exit(code);
 }
 
-pub fn exit_error(msg: &str, err: std::io::Error) -> ! {
+pub fn exit_error(msg: &str, err: &std::io::Error) -> ! {
     error(format!("{msg}: {err:?}").as_str());
     std::process::exit(1);
 }
@@ -63,28 +63,22 @@ pub fn project_created_msg(install_config: crate::plugins::InstallConfig) {
 
     command_msg("cargo watch --help\t# checking cargo-watch installation");
 
-    let is_cargo_watch_installed = match std::process::Command::new("cargo")
+    let is_cargo_watch_installed = std::process::Command::new("cargo")
         .arg("watch")
         .arg("--help")
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .status()
-    {
-        Ok(status) => status.success(),
-        Err(_) => false,
-    };
+        .map_or(false, |status| status.success());
 
     command_msg("diesel --help\t# checking diesel_cli installation");
 
-    let is_diesel_cli_installed = match std::process::Command::new("diesel")
+    let is_diesel_cli_installed = std::process::Command::new("diesel")
         .arg("--help")
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
         .status()
-    {
-        Ok(status) => status.success(),
-        Err(_) => false,
-    };
+        .map_or(false, |status| status.success());
 
     message(&format!(
         "{}",

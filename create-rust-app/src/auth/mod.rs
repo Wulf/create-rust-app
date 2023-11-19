@@ -63,7 +63,7 @@ impl PaginationParams {
 #[tsync::tsync]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[cfg_attr(feature = "plugin_utoipa", derive(utoipa::ToSchema))]
-/// Rust struct representation of a entry from the databases user_session table
+/// Rust struct representation of a entry from the databases `user_session` table
 /// serialized into Json
 pub struct UserSessionJson {
     pub id: ID,
@@ -108,9 +108,11 @@ impl Modify for JwtSecurityAddon {
                     .bearer_format("JWT")
                     .build(),
             ),
-        )
+        );
     }
 }
+
+#[allow(clippy::module_name_repetitions)]
 #[cfg(feature = "plugin_utoipa")]
 #[tsync::tsync]
 #[derive(Debug, Serialize, utoipa::ToSchema)]
@@ -119,14 +121,16 @@ pub struct AuthMessageResponse {
     pub message: String,
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[cfg(feature = "plugin_utoipa")]
 #[tsync::tsync]
 #[derive(Debug, Serialize, utoipa::ToSchema)]
-/// structure to help utoipa know what responses that contain the access_token should look like
+/// structure to help utoipa know what responses that contain the `access_token` should look like
 pub struct AuthTokenResponse {
     pub access_token: String,
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone)]
 pub struct AuthConfig {
     #[cfg(feature = "plugin_auth-oidc")]

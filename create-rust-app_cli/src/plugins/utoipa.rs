@@ -41,7 +41,7 @@ impl Plugin for Utoipa {
                     r#"utoipa-swagger-ui = { version="4", features=["actix-web"]}"#,
                 )?;
             }
-            _ => {
+            BackendFramework::Poem => {
                 crate::logger::error(
                     "plugin_utoipa not yet implemented for backends other than actix-web",
                 );
@@ -70,7 +70,7 @@ impl Plugin for Utoipa {
             ]));"#,
                 )?;
             }
-            _ => {
+            BackendFramework::Poem => {
                 panic!("plugin_utoipa not yet implemented for backends other than actix-web");
             }
         };

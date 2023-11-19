@@ -28,7 +28,7 @@ impl OIDCProvider {
         |client_id: ClientId,
          client_secret: ClientSecret,
          success_uri: SuccessURI,
-         error_uri: ErrorURI| OIDCProvider {
+         error_uri: ErrorURI| Self {
             name: "google".to_string(),
             scope: vec!["email".to_string()],
             issuer_url: "https://accounts.google.com".to_string(),
@@ -38,10 +38,11 @@ impl OIDCProvider {
             error_uri,
         };
 
-    pub fn redirect_uri(&self, api_url: String) -> String {
+    #[must_use]
+    pub fn redirect_uri(&self, api_url: impl AsRef<str>) -> String {
         format!(
             "{api_url}/api/auth/oidc/{provider_name}/login",
-            api_url = api_url,
+            api_url = api_url.as_ref(),
             provider_name = self.name
         )
     }

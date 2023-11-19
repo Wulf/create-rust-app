@@ -99,20 +99,21 @@ impl Mailer {
     }
 
     #[cfg(feature = "plugin_auth")]
+    #[must_use]
     pub fn new(templates: Box<dyn EmailTemplates + Sync + Send>) -> Self {
-        Mailer::check_environment_variables();
+        Self::check_environment_variables();
 
         let from_address: String = std::env::var("SMTP_FROM_ADDRESS")
             .unwrap_or_else(|_| "create-rust-app@localhost".to_string());
-        let smtp_server: String = std::env::var("SMTP_SERVER").unwrap_or_else(|_| "".to_string());
+        let smtp_server: String = std::env::var("SMTP_SERVER").unwrap_or_else(|_| String::new());
         let smtp_username: String =
-            std::env::var("SMTP_USERNAME").unwrap_or_else(|_| "".to_string());
+            std::env::var("SMTP_USERNAME").unwrap_or_else(|_| String::new());
         let smtp_password: String =
-            std::env::var("SMTP_PASSWORD").unwrap_or_else(|_| "".to_string());
+            std::env::var("SMTP_PASSWORD").unwrap_or_else(|_| String::new());
         let actually_send: bool = std::env::var("SEND_MAIL")
             .unwrap_or_else(|_| "false".to_string())
             .eq_ignore_ascii_case("true");
-        Mailer {
+        Self {
             from_address,
             smtp_server,
             smtp_username,
@@ -126,6 +127,12 @@ impl Mailer {
     ///
     /// prints messages denoting which, if any, of the required
     /// environment variables were not set
+    ///
+    /// # Panics
+    ///
+    /// panics if any of the required environment variables aren't set properly
+    ///
+    /// TODO: it'd be better to return a Result and let the user handle the error
     pub fn check_environment_variables() {
         let vars = vec![
             "SMTP_FROM_ADDRESS",
@@ -165,6 +172,12 @@ impl Mailer {
     /// * `subject` - subject field of the email
     /// * `text` - text content of the email
     /// * `html` - html content of the email
+    ///
+    /// # Panics
+    ///
+    /// panis if the `to` argument is not a valid email address
+    ///
+    /// TODO: wouldn't it be better to instead require the `to` argument be some wrapper around a string that is always a valid email address?
     pub fn send(&self, to: &str, subject: &str, text: &str, html: &str) {
         let email = Message::builder()
             .to(to.parse().unwrap())
@@ -222,6 +235,7 @@ pub struct DefaultMailTemplates {
 }
 #[cfg(feature = "plugin_auth")]
 impl DefaultMailTemplates {
+    #[must_use]
     pub fn new(base_url: &str) -> Self {
         Self {
             base_url: base_url.to_string(),

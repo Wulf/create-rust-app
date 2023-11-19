@@ -16,10 +16,10 @@ use crate::auth::controller::{
 use crate::auth::{controller, Auth, PaginationParams, ID};
 use crate::{Database, Mailer};
 
-fn error_response(status_code: i32, message: &'static str) -> Error {
+fn error_response(status_code: u16, message: &'static str) -> Error {
     Error::from_string(
         json!({ "message": message }).to_string(),
-        StatusCode::from_u16(status_code as u16).unwrap(),
+        StatusCode::from_u16(status_code).unwrap(),
     )
 }
 

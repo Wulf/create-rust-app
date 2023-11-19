@@ -6,16 +6,19 @@ use crate::QsyncInput;
 use super::params::is_primitive_type;
 use super::processor::HttpVerb;
 
+#[allow(clippy::module_name_repetitions)]
 pub struct HookPathParam {
     pub hook_arg_name: String,
     pub hook_arg_type: String,
 }
 
+#[allow(clippy::module_name_repetitions)]
 pub struct HookQueryParam {
     pub hook_arg_name: String,
     pub hook_arg_type: String,
 }
 
+#[allow(clippy::module_name_repetitions)]
 pub struct HookBodyParam {
     pub hook_arg_name: String,
     pub hook_arg_type: String,
@@ -106,7 +109,7 @@ impl Hook {
             variables.push_str("  const queryParams: Record<string, any> = Object.assign({}, ");
             let query_param_iter = self.query_params.iter();
             for (index, param) in query_param_iter.clone().enumerate() {
-                let is_primitive_type = is_primitive_type(param.hook_arg_type.clone());
+                let is_primitive_type = is_primitive_type(&param.hook_arg_type);
 
                 if is_primitive_type {
                     variables.push_str("{ ");
@@ -151,7 +154,7 @@ impl Hook {
             variables.push_str("  const bodyParams = Object.assign({}, ");
             let body_param_iter = self.body_params.iter();
             for (index, param) in body_param_iter.clone().enumerate() {
-                let is_primitive_type = is_primitive_type(param.hook_arg_type.clone());
+                let is_primitive_type = is_primitive_type(&param.hook_arg_type);
                 if is_primitive_type {
                     variables.push_str("{ ");
                 }
@@ -225,12 +228,12 @@ impl Hook {
         }
 
         if !query_key.is_empty() {
-            query_key.insert_str(0, ", ")
+            query_key.insert_str(0, ", ");
         }
 
         let query_key_base = self
             .endpoint_url
-            .trim_start_matches("/")
+            .trim_start_matches('/')
             .split('/')
             .map(|t| {
                 // in actix-web, paths which have {} denote a path param
@@ -275,15 +278,15 @@ impl ToString for Hook {
                 } else {
                     ""
                 },
-                query_body = if !self.body_params.is_empty() {
+                query_body = if self.body_params.is_empty() {
+                    ""
+                } else {
                     "body: JSON.stringify(bodyParams),\n"
-                } else {
-                    ""
                 },
-                query_string = if !self.query_params.is_empty() {
-                    "?${new URLSearchParams(queryParams).toString()}"
-                } else {
+                query_string = if self.query_params.is_empty() {
                     ""
+                } else {
+                    "?${new URLSearchParams(queryParams).toString()}"
                 },
                 endpoint_url = self.endpoint_url.replace('{', "${pathParams."),
                 endpoint_verb = &format!("{:?}", self.endpoint_verb).to_ascii_uppercase(),
@@ -313,15 +316,15 @@ impl ToString for Hook {
                 } else {
                     ""
                 },
-                query_body = if !self.body_params.is_empty() {
+                query_body = if self.body_params.is_empty() {
+                    ""
+                } else {
                     "body: JSON.stringify(bodyParams),\n"
-                } else {
-                    ""
                 },
-                query_string = if !self.query_params.is_empty() {
-                    "?${new URLSearchParams(queryParams).toString()}"
-                } else {
+                query_string = if self.query_params.is_empty() {
                     ""
+                } else {
+                    "?${new URLSearchParams(queryParams).toString()}"
                 },
                 endpoint_url = self.endpoint_url.replace('{', "${pathParams."),
                 endpoint_verb = &format!("{:?}", self.endpoint_verb).to_ascii_uppercase(),

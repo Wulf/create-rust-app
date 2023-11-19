@@ -79,6 +79,7 @@ pub struct AppData {
 
 #[cfg(feature = "plugin_auth")]
 impl AppData {
+    #[must_use]
     pub fn with_custom_email_templates<T: EmailTemplates + 'static>(
         mut self,
         templates: T,
@@ -101,9 +102,15 @@ fn load_env_vars() {
 
 /// ensures required environment variables are present,
 ///  
-/// initialize a [`Mailer`], [`Database`], and [`Storage`] (is `Storage` plugin was enabled ("plugin_storage" feature enabled))
+/// initialize a [`Mailer`], [`Database`], and [`Storage`] (is `Storage` plugin was enabled ("`plugin_storage`" feature enabled))
 ///
 /// and wraps them in a [`AppData`] struct that is then returned
+///
+/// # Panics
+///
+/// Panics if required environment variables are not present
+/// TODO: should we panic here? wouldn't it be better to return a Result and let the user handle the error?
+#[must_use]
 pub fn setup() -> AppData {
     // Only load dotenv in development
     #[cfg(debug_assertions)]
@@ -115,13 +122,15 @@ pub fn setup() -> AppData {
     }
 
     #[cfg(feature = "plugin_auth")]
-    if std::env::var("SECRET_KEY").is_err() {
-        panic!("No SECRET_KEY environment variable set!");
-    }
+    assert!(
+        std::env::var("SECRET_KEY").is_ok(),
+        "No SECRET_KEY environment variable set!"
+    );
 
-    if std::env::var("DATABASE_URL").is_err() {
-        panic!("No DATABASE_URL environment variable set!");
-    }
+    assert!(
+        std::env::var("DATABASE_URL").is_ok(),
+        "No DATABASE_URL environment variable set!"
+    );
 
     AppData {
         mailer: Mailer::default(),

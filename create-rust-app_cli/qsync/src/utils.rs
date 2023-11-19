@@ -11,7 +11,7 @@ pub fn file_path_to_vec_string(input_path: &std::path::Path) -> Vec<String> {
         s.push(path_as_string.clone());
     }
 
-    s.iter().map(|s| s.to_pascal_case()).collect()
+    s.iter().map(Inflector::to_pascal_case).collect()
 }
 
 #[test]

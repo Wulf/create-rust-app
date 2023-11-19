@@ -41,7 +41,7 @@ fn has_qsync_attribute(
     let mut has_actix_attribute = false;
     let mut has_qsync_attribute = false;
 
-    for attr in attributes.iter() {
+    for attr in attributes {
         if is_debug {
             let attr_path = attr
                 .path
@@ -98,25 +98,7 @@ fn has_qsync_attribute(
                     is_mutation = Some(false);
                 }
             }
-            "post" => {
-                has_actix_attribute = true;
-                if is_mutation.is_none() {
-                    is_mutation = Some(true);
-                }
-            }
-            "patch" => {
-                has_actix_attribute = true;
-                if is_mutation.is_none() {
-                    is_mutation = Some(true);
-                }
-            }
-            "put" => {
-                has_actix_attribute = true;
-                if is_mutation.is_none() {
-                    is_mutation = Some(true);
-                }
-            }
-            "delete" => {
+            "post" | "patch" | "put" | "delete" => {
                 has_actix_attribute = true;
                 if is_mutation.is_none() {
                     is_mutation = Some(true);
@@ -167,7 +149,7 @@ struct InputType {
 }
 
 fn get_api_fn_input_param_type(
-    query_input: QsyncInput,
+    query_input: &QsyncInput,
     pat_type: PatType,
     type_path: TypePath,
 ) -> InputType {
@@ -197,8 +179,7 @@ fn get_api_fn_input_param_type(
         let endpoint_param_type = last_segment.clone().ident.to_string();
         let param_type: ParamType = match endpoint_param_type.as_str() {
             "Path" => ParamType::Path,
-            "Json" => ParamType::Body,
-            "Form" => ParamType::Body,
+            "Json" | "Form" => ParamType::Body,
             "Query" => ParamType::Query,
             "Auth" => ParamType::Auth,
             _ => {
@@ -221,9 +202,9 @@ fn get_api_fn_input_param_type(
         }
 
         InputType {
-            param_type,
             arg_name,
             arg_type,
+            param_type,
         }
     } else {
         InputType {
@@ -235,9 +216,10 @@ fn get_api_fn_input_param_type(
 }
 
 fn extract_path_params_from_hook_endpoint_url(hook: &mut Hook) {
-    if hook.endpoint_url.is_empty() {
-        panic!("cannot extract path params because endpoint_url is empty!");
-    }
+    assert!(
+        !hook.endpoint_url.is_empty(),
+        "cannot extract path params because endpoint_url is empty!"
+    );
 
     let re = Regex::new(r"\{[A-Za-z0-9_]+}").unwrap();
     for path_param_text in re.find_iter(hook.endpoint_url.as_str()) {
@@ -249,19 +231,19 @@ fn extract_path_params_from_hook_endpoint_url(hook: &mut Hook) {
         hook.path_params.push(HookPathParam {
             hook_arg_name: path_param_text,
             hook_arg_type: "string".to_string(),
-        })
+        });
     }
 }
 
 fn extract_endpoint_information(
-    endpoint_prefix: String,
+    endpoint_prefix: &str,
     base_input_path: &Path,
     input_path: &Path,
     attributes: &Vec<syn::Attribute>,
     hook: &mut Hook,
 ) {
     let mut verb = HttpVerb::Unknown;
-    let mut path = "".to_string();
+    let mut path = String::new();
 
     for attr in attributes {
         let last_segment = attr.path.segments.last();
@@ -299,14 +281,14 @@ fn extract_endpoint_information(
         .unwrap()
         .to_str()
         .unwrap()
-        .trim_start_matches("/")
-        .trim_end_matches("/");
+        .trim_start_matches('/')
+        .trim_end_matches('/');
 
     // the part extracted from the attribute, for example: `#[post("/{id}"]`
     let handler_path = path.trim_start_matches('/').trim_end_matches('/');
 
     hook.endpoint_url = format!("{endpoint_prefix}/{endpoint_base}/{handler_path}")
-        .trim_end_matches("/")
+        .trim_end_matches('/')
         .to_string();
 
     hook.endpoint_verb = verb;
@@ -320,7 +302,7 @@ struct BuildState /*<'a>*/ {
     pub is_debug: bool, // this is a hack, we shouldn't have is_debug in the build state since it's global state rather than build/input-path specific state.
 }
 
-fn generate_hook_name(base_input_path: &Path, input_path: &Path, fn_name: String) -> String {
+fn generate_hook_name(base_input_path: &Path, input_path: &Path, fn_name: &str) -> String {
     let relative_file_path = input_path.strip_prefix(base_input_path).unwrap();
 
     let mut hook_name: Vec<String> = file_path_to_vec_string(relative_file_path);
@@ -330,12 +312,13 @@ fn generate_hook_name(base_input_path: &Path, input_path: &Path, fn_name: String
     hook_name.join("")
 }
 
+#[allow(clippy::too_many_lines)]
 fn process_service_file(
-    endpoint_prefix: String,
-    base_input_path: PathBuf,
+    endpoint_prefix: &str,
+    base_input_path: &Path,
     input_path: PathBuf,
     state: &mut BuildState,
-    input: QsyncInput,
+    input: &QsyncInput,
 ) {
     if state.is_debug {
         println!(
@@ -389,14 +372,14 @@ fn process_service_file(
                 let qsync_props = qsync_props.unwrap();
                 let mut hook = Hook {
                     uses_auth: false,
-                    endpoint_url: "".to_string(),
+                    endpoint_url: String::new(),
                     endpoint_verb: HttpVerb::Unknown,
                     is_mutation: qsync_props.is_mutation,
                     return_type: qsync_props.return_type,
                     hook_name: generate_hook_name(
-                        &base_input_path,
+                        base_input_path,
                         &input_path,
-                        exported_fn.sig.ident.to_string(),
+                        exported_fn.sig.ident.to_string().as_str(),
                     ),
                     body_params: vec![],
                     path_params: vec![],
@@ -406,8 +389,8 @@ fn process_service_file(
                 };
 
                 extract_endpoint_information(
-                    endpoint_prefix.clone(),
-                    &base_input_path,
+                    endpoint_prefix,
+                    base_input_path,
                     &input_path,
                     &exported_fn.attrs,
                     &mut hook,
@@ -417,11 +400,8 @@ fn process_service_file(
                 for arg in exported_fn.sig.inputs {
                     if let FnArg::Typed(typed_arg) = arg.clone() {
                         if let Type::Path(type_path) = *typed_arg.clone().ty {
-                            let input_type = get_api_fn_input_param_type(
-                                input.clone(),
-                                typed_arg.clone(),
-                                type_path,
-                            );
+                            let input_type =
+                                get_api_fn_input_param_type(input, typed_arg.clone(), type_path);
 
                             match input_type.param_type {
                                 ParamType::Auth => {
@@ -495,7 +475,8 @@ pub struct QsyncInput {
 }
 
 impl QsyncInput {
-    pub fn new(path: PathBuf, options: QsyncOptions) -> Self {
+    #[must_use]
+    pub const fn new(path: PathBuf, options: QsyncOptions) -> Self {
         Self { path, options }
     }
 }
@@ -553,16 +534,19 @@ pub struct QsyncOptions {
 }
 
 impl QsyncOptions {
+    #[must_use]
     pub fn new(is_debug: bool, url_base: String, auth_extractors: Vec<String>) -> Self {
         Self {
             is_debug,
             url_base,
-            auth_extractors: auth_extractors,
+            auth_extractors,
         }
     }
 }
 
-pub fn process(input_paths: Vec<QsyncInput>, output_path: PathBuf) {
+/// # Panics
+/// - if it can't create the output file
+pub fn process(input_paths: impl AsRef<[QsyncInput]>, output_path: &Path) {
     let mut state: BuildState = BuildState {
         types: String::new(),
         hooks: vec![],
@@ -597,7 +581,7 @@ pub fn process(input_paths: Vec<QsyncInput>, output_path: PathBuf) {
         .types
         .push_str("\nimport { useAuth } from './hooks/useAuth'\n");
 
-    for qsync_input in input_paths.clone() {
+    for qsync_input in input_paths.as_ref() {
         let input_path = qsync_input.path.clone();
         let options = qsync_input.clone().options;
         let is_debug = options.is_debug;
@@ -616,54 +600,53 @@ pub fn process(input_paths: Vec<QsyncInput>, output_path: PathBuf) {
 
         if input_path.clone().is_dir() {
             for entry in WalkDir::new(input_path.clone()).sort_by_file_name() {
-                match entry {
-                    Ok(dir_entry) => {
-                        let path = dir_entry.into_path();
+                if let Ok(dir_entry) = entry {
+                    let path = dir_entry.into_path();
 
-                        // skip dir files because they're going to be recursively crawled by WalkDir
-                        if !path.is_dir() {
-                            // make sure it is a rust file
-                            let extension = path.extension();
-                            if extension.is_some() && extension.unwrap().eq_ignore_ascii_case("rs")
-                            {
+                    // skip dir files because they're going to be recursively crawled by WalkDir
+                    if !path.is_dir() {
+                        // make sure it is a rust file
+                        match path.extension() {
+                            Some(extension) if extension.eq_ignore_ascii_case("rs") => {
                                 state.is_debug = is_debug; // this is a hack, we shouldn't have is_debug in the build state since it's global state rather than build/input-path specific state.
                                 process_service_file(
-                                    endpoint_prefix.clone(),
-                                    base_input_path.clone(),
+                                    &endpoint_prefix,
+                                    &base_input_path,
                                     path,
                                     &mut state,
-                                    qsync_input.clone(),
+                                    qsync_input,
                                 );
-                            } else if is_debug {
+                            }
+                            _ if is_debug => {
                                 println!("Encountered non-service or non-rust file `{path:#?}`");
                             }
-                        } else if is_debug {
-                            println!("Encountered directory `{path:#?}`");
+                            _ => {}
                         }
+                    } else if is_debug {
+                        println!("Encountered directory `{path:#?}`");
                     }
-                    Err(_) => {
-                        println!(
-                            "An error occurred whilst walking directory `{:#?}`...",
-                            input_path.clone()
-                        );
-                        continue;
-                    }
+                } else {
+                    println!(
+                        "An error occurred whilst walking directory `{:#?}`...",
+                        input_path.clone()
+                    );
+                    continue;
                 }
             }
         } else {
             state.is_debug = is_debug;
             process_service_file(
-                endpoint_prefix.clone(),
-                base_input_path,
+                &endpoint_prefix,
+                &base_input_path,
                 input_path,
                 &mut state,
-                qsync_input.clone(),
+                qsync_input,
             );
         }
     }
 
     let is_debug = input_paths
-        .clone()
+        .as_ref()
         .iter()
         .any(|input| input.options.is_debug);
     if is_debug {
@@ -675,9 +658,9 @@ pub fn process(input_paths: Vec<QsyncInput>, output_path: PathBuf) {
         println!("Note: Nothing is written in debug mode");
         println!("======================================");
     } else {
-        let mut file: File = File::create(&output_path).expect("Unable to write to file");
+        let mut file: File = File::create(output_path).expect("Unable to write to file");
         match file.write_all(state.types.as_bytes()) {
-            Ok(_) => println!("Successfully generated hooks, see {output_path:#?}"),
+            Ok(()) => println!("Successfully generated hooks, see {output_path:#?}"),
             Err(_) => println!("Failed to generate types, an error occurred."),
         }
     }

@@ -17,6 +17,9 @@ use watchexec::Watchexec;
 
 use super::{check_exit, DevServerEvent, DevState};
 
+/// TODO: this function is too long, break it up
+#[allow(clippy::too_many_lines)]
+#[allow(clippy::similar_names)]
 pub async fn start(
     project_dir: &'static str,
     dev_port: u16,
@@ -179,7 +182,7 @@ pub async fn start(
 
     tokio::spawn(async move {
         while let Ok(event) = signal_rx.recv().await {
-            if let DevServerEvent::SHUTDOWN = event {
+            if matches!(event, DevServerEvent::SHUTDOWN) {
                 let mut metadata = HashMap::new();
                 metadata.insert("exit-watchexec".to_string(), vec!["true".to_string()]);
                 we2.send_event(
@@ -207,6 +210,8 @@ pub async fn start(
     println!("backend compilation server stopped.");
 }
 
+/// TODO: do we need to pass the `ws_s` by value here?
+#[allow(clippy::needless_pass_by_value)]
 fn compile(project_dir: &'static str, ws_s: Sender<DevServerEvent>) -> bool {
     println!("🔨 Compiling backend...");
     let start_time = std::time::SystemTime::now();
@@ -233,18 +238,17 @@ fn compile(project_dir: &'static str, ws_s: Sender<DevServerEvent>) -> bool {
                 ws_s.send(DevServerEvent::CompileMessages(compiler_messages.clone()))
                     .ok();
             }
-            Message::CompilerArtifact(_) => {
-                // println!("{:?}", artifact);
-            }
-            Message::BuildScriptExecuted(_) => {
-                // println!("{:?}", script);
-            }
+            // Message::CompilerArtifact(_) => {
+            //     // println!("{:?}", artifact);
+            // }
+            // Message::BuildScriptExecuted(_) => {
+            //     // println!("{:?}", script);
+            // }
             Message::BuildFinished(finished) => {
                 let compile_time_s = std::time::SystemTime::now()
                     .duration_since(start_time)
                     .map(|d| d.as_secs_f32())
-                    .map(|d| format!("{d:.2}"))
-                    .unwrap_or_else(|_| "?".to_string());
+                    .map_or_else(|_| "?".to_string(), |d| format!("{d:.2}"));
 
                 if finished.success {
                     println!("✅ Compiled ({compile_time_s} seconds)");
@@ -252,7 +256,7 @@ fn compile(project_dir: &'static str, ws_s: Sender<DevServerEvent>) -> bool {
                     println!("❌ Compilation failed: see errors in app ({compile_time_s} seconds)",);
                 }
             }
-            _ => (), // Unknown message
+            _ => (), // Unknown message, or Compiler Artifact, or Build Script Executed
         }
     }
 

@@ -18,6 +18,7 @@ impl Plugin for Auth {
         "Auth"
     }
 
+    #[allow(clippy::too_many_lines)]
     fn install(&self, install_config: InstallConfig) -> Result<()> {
         for filename in Asset::iter() {
             let file_contents = Asset::get(filename.as_ref()).unwrap();

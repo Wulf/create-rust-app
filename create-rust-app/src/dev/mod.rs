@@ -27,11 +27,9 @@ const NPM: &str = "npm.cmd";
 const NPM: &str = "npm";
 
 pub async fn vitejs_ping_down() {
-    let port = std::env::var("DEV_SERVER_PORT");
-    if port.is_err() {
+    let Ok(port) = std::env::var("DEV_SERVER_PORT") else {
         return;
-    }
-    let port = port.unwrap();
+    };
 
     let url = format!("http://localhost:{port}/vitejs-down");
 
@@ -45,11 +43,9 @@ pub async fn vitejs_ping_down() {
 }
 
 pub async fn vitejs_ping_up() {
-    let port = std::env::var("DEV_SERVER_PORT");
-    if port.is_err() {
+    let Ok(port) = std::env::var("DEV_SERVER_PORT") else {
         return;
-    }
-    let port = port.unwrap();
+    };
 
     let url = format!("http://localhost:{port}/vitejs-up");
 
@@ -63,11 +59,9 @@ pub async fn vitejs_ping_up() {
 }
 
 pub async fn setup_development() {
-    let port = std::env::var("DEV_SERVER_PORT");
-    if port.is_err() {
+    let Ok(port) = std::env::var("DEV_SERVER_PORT") else {
         return;
-    }
-    let port = port.unwrap();
+    };
 
     let url = format!("http://localhost:{port}/backend-up");
 
@@ -80,7 +74,7 @@ pub async fn setup_development() {
     };
 }
 
-#[allow(non_camel_case_types)]
+#[allow(non_camel_case_types, clippy::module_name_repetitions)]
 #[derive(Debug, Clone)]
 pub enum DevServerEvent {
     /*
@@ -121,60 +115,63 @@ pub struct CreateRustAppMigration {
 }
 
 impl DevServerEvent {
+    /// # Panics
+    /// * if the event cannot be serialized to JSON
+    #[must_use]
     pub fn json(self) -> String {
         match self {
-            DevServerEvent::CHECK_MIGRATIONS => json!({
+            Self::CHECK_MIGRATIONS => json!({
                 "type": "_",
             })
             .to_string(),
-            DevServerEvent::PendingMigrations(migrations_pending, migrations) => json!({
+            Self::PendingMigrations(migrations_pending, migrations) => json!({
                 "type": "migrationsPending",
                 "status": migrations_pending,
                 "migrations": migrations
             })
             .to_string(),
-            DevServerEvent::MigrationResponse(success, error_message) => json!({
+            Self::MigrationResponse(success, error_message) => json!({
                 "type": "migrateResponse",
                 "status": success,
                 "error": error_message,
             })
             .to_string(),
-            DevServerEvent::FeaturesList(list) => json!({
+            Self::FeaturesList(list) => json!({
                 "type": "featuresList",
                 "features": list
             })
             .to_string(),
-            DevServerEvent::ViteJSStatus(b) => json!({
+            Self::ViteJSStatus(b) => json!({
                 "type": "viteStatus",
                 "status": b
             })
             .to_string(),
-            DevServerEvent::CompileSuccess(b) => json!({
+            Self::CompileSuccess(b) => json!({
                 "type": "compileStatus",
                 "compiled": b
             })
             .to_string(),
-            DevServerEvent::BackendCompiling(b) => json!({
+            Self::BackendCompiling(b) => json!({
                 "type": "backendCompiling",
                 "compiling": b
             })
             .to_string(),
-            DevServerEvent::BackendStatus(b) => json!({
+            Self::BackendStatus(b) => json!({
                 "type": "backendStatus",
                 "status": b
             })
             .to_string(),
-            DevServerEvent::BackendRestarting(b) => json!({
+            Self::BackendRestarting(b) => json!({
                 "type": "backendRestarting",
                 "status": b
             })
             .to_string(),
-            DevServerEvent::SHUTDOWN => json!({
+            Self::SHUTDOWN => json!({
                 "type": "backendStatus",
                 "status": "false"
             })
             .to_string(),
-            DevServerEvent::CompileMessages(msgs) => {
+            Self::CompileMessages(msgs) => {
                 let messages = serde_json::to_value(&msgs).unwrap();
                 json!({
                     "type": "compilerMessages",
@@ -186,6 +183,7 @@ impl DevServerEvent {
     }
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
 pub struct DevState {
     pub frontend_server_running: bool,
@@ -213,6 +211,11 @@ fn get_features(project_dir: &'static str) -> Vec<String> {
     dep.req_features().to_vec()
 }
 
+/// # Panics
+/// * if the project directory doesn't exist
+/// * if the project directory doesn't contain a Cargo.toml file
+/// * if the Cargo.toml file doesn't list `create-rust-app` as a dependency
+/// * cannot start a tokio runtime
 pub fn run_server(project_dir: &'static str) {
     clearscreen::clear().expect("failed to clear screen");
 
@@ -223,15 +226,16 @@ pub fn run_server(project_dir: &'static str) {
     println!("..................................");
     let rt = tokio::runtime::Runtime::new().unwrap();
 
-    let dev_port = std::env::var("DEV_SERVER_PORT")
-        .map(|p| {
-            p.parse::<u16>()
-                .expect("Could not parse DEV_SERVER_PORT to u16")
-        })
-        .unwrap_or_else(|_| {
+    let dev_port = std::env::var("DEV_SERVER_PORT").map_or_else(
+        |_| {
             find_free_port(60012..65535)
                 .expect("FATAL: Could not find a free port for the development server.")
-        });
+        },
+        |p| {
+            p.parse::<u16>()
+                .expect("Could not parse DEV_SERVER_PORT to u16")
+        },
+    );
 
     rt.block_on(async move {
         let state = Arc::new(Mutex::new(DevState {
@@ -264,7 +268,7 @@ pub fn run_server(project_dir: &'static str) {
                 file_events_s2,
                 features,
             )
-            .await
+            .await;
         });
         tokio::spawn(async move {
             backend_compiling_server::start(
@@ -275,7 +279,7 @@ pub fn run_server(project_dir: &'static str) {
                 state2,
                 file_events_s,
             )
-            .await
+            .await;
         });
         tokio::spawn(async move {
             frontend_dev_server::start(
@@ -285,10 +289,10 @@ pub fn run_server(project_dir: &'static str) {
                 dev_server_events_s.clone(),
                 state,
             )
-            .await
+            .await;
         });
 
-        listen_for_signals(signal_tx).await
+        listen_for_signals(signal_tx).await;
     });
 }
 
@@ -300,7 +304,7 @@ fn check_exit(state: &DevState) {
 }
 
 async fn listen_for_signals(signal_tx: tokio::sync::broadcast::Sender<DevServerEvent>) {
-    let (ev_s, ev_r) = priority::bounded::<Event, Priority>(1024);
+    let (event_sender, event_receiver) = priority::bounded::<Event, Priority>(1024);
     let (er_s, mut er_r) = tokio::sync::mpsc::channel(64);
 
     // panic on errors
@@ -315,7 +319,7 @@ async fn listen_for_signals(signal_tx: tokio::sync::broadcast::Sender<DevServerE
 
     // broadcast signals
     tokio::spawn(async move {
-        while let Ok((event, _)) = ev_r.recv().await {
+        while let Ok((event, _)) = event_receiver.recv().await {
             if event.tags.contains(&Tag::Signal(MainSignal::Terminate))
                 || event.tags.contains(&Tag::Signal(MainSignal::Interrupt))
             {
@@ -324,5 +328,5 @@ async fn listen_for_signals(signal_tx: tokio::sync::broadcast::Sender<DevServerE
         }
     });
 
-    worker(er_s, ev_s).await.unwrap();
+    worker(er_s, event_sender).await.unwrap();
 }
