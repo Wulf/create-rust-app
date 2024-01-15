@@ -20,6 +20,7 @@ async fn main() -> Result<(), std::io::Error> {
     tracing_subscriber::fmt::init();
 
     let data = create_rust_app::setup();
+    simple_logger::init_with_env().unwrap();
 
     let mut api_routes = Route::new();
     api_routes = api_routes.nest("/todos", services::todo::api());
