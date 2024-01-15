@@ -1,6 +1,6 @@
 [package]
 name = "qsync"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 description = "Generate react-query hooks for your rust backend (see https://github.com/Wulf/create-rust-app)"
 license = "MIT OR Apache-2.0"

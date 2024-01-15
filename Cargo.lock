@@ -3726,7 +3726,7 @@ dependencies = [
 
 [[package]]
 name = "qsync"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "Inflector",
  "darling 0.14.4",
