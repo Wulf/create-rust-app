@@ -1196,6 +1196,7 @@ dependencies = [
  "derive_more",
  "diesel",
  "diesel_derives",
+ "diesel_logger",
  "diesel_migrations",
  "dotenv",
  "dyn-clone",
@@ -1467,6 +1468,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.18",
+]
+
+[[package]]
+name = "diesel_logger"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23010b507517129dc9b11fb35f36d76fd2d3dd4c85232733697622e345375f2f"
+dependencies = [
+ "diesel",
+ "log",
 ]
 
 [[package]]

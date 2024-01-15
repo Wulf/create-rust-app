@@ -1,4 +1,5 @@
 use diesel::r2d2::{self, ConnectionManager, PooledConnection};
+use diesel_logger::LoggingConnection;
 use once_cell::sync::OnceCell;
 
 #[cfg(feature = "database_postgres")]
@@ -16,7 +17,7 @@ pub type DieselBackend = diesel::pg::Pg;
 pub type DieselBackend = diesel::sqlite::Sqlite;
 
 pub type Pool = r2d2::Pool<ConnectionManager<DbCon>>;
-pub type Connection = PooledConnection<ConnectionManager<DbCon>>;
+pub type Connection = LoggingConnection<PooledConnection<ConnectionManager<DbCon>>>;
 
 #[derive(Clone)]
 /// wrapper function for a database pool
@@ -39,8 +40,8 @@ impl Database {
     }
 
     /// get a [`Connection`] to a database
-    pub fn get_connection(&self) -> Connection {
-        self.pool.get().unwrap()
+    pub fn get_connection(&self) -> Result<Connection, anyhow::Error> {
+        Ok(LoggingConnection::new(self.pool.get()?))
     }
 
     fn get_or_init_pool() -> &'static Pool {

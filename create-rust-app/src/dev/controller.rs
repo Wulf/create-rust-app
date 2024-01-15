@@ -29,7 +29,7 @@ pub struct HealthCheckResponse {
 /// /db/query
 pub fn query_db(db: &Database, body: &MySqlQuery) -> Result<String, diesel::result::Error> {
     let q = format!("SELECT json_agg(q) as json FROM ({}) q;", body.query);
-    let mut db = db.pool.get().unwrap();
+    let mut db = db.get_connection().unwrap();
 
     Ok(sql_query(q.as_str())
         .get_result::<MyQueryResult>(&mut db)?
