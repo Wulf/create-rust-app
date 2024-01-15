@@ -1,9 +1,9 @@
 use create_rust_app::Connection;
-use fang::{FangError, Queueable, Scheduled};
-use fang::PgConnection;
-use fang::Runnable;
 use fang::serde::{Deserialize, Serialize};
 use fang::typetag;
+use fang::PgConnection;
+use fang::Runnable;
+use fang::{FangError, Queueable, Scheduled};
 
 use crate::models::todos::{CreateTodo, Todo};
 
@@ -19,11 +19,15 @@ impl Runnable for DailyTodo {
         println!("Adding daily todo {}", self.text);
         let db = create_rust_app::Database::new();
 
-        let con = &mut db.get_connection();
+        let con = &mut db.get_connection().unwrap();
 
-        Todo::create(con, &CreateTodo {
-            text: self.text.clone(),
-        }).unwrap();
+        Todo::create(
+            con,
+            &CreateTodo {
+                text: self.text.clone(),
+            },
+        )
+        .unwrap();
 
         Ok(())
     }

@@ -1,7 +1,7 @@
-use fang::{AsyncRunnable, FangError, Scheduled, typetag};
+use fang::async_trait;
 use fang::asynk::async_queue::AsyncQueueable;
 use fang::serde::{Deserialize, Serialize};
-use fang::async_trait;
+use fang::{typetag, AsyncRunnable, FangError, Scheduled};
 
 use crate::models::todos::{CreateTodo, Todo};
 
@@ -18,11 +18,15 @@ impl AsyncRunnable for DailyTodoAsync {
         println!("(async) Adding daily todo {}", self.text);
         let db = create_rust_app::Database::new();
 
-        let con = &mut db.get_connection();
+        let con = &mut db.get_connection().unwrap();
 
-        Todo::create(con, &CreateTodo {
-            text: self.text.clone(),
-        }).unwrap();
+        Todo::create(
+            con,
+            &CreateTodo {
+                text: self.text.clone(),
+            },
+        )
+        .unwrap();
 
         Ok(())
     }
@@ -32,7 +36,6 @@ impl AsyncRunnable for DailyTodoAsync {
     fn task_type(&self) -> String {
         "async".to_string()
     }
-
 
     // If `uniq` is set to true and the task is already in the storage, it won't be inserted again
     // The existing record will be returned for for any insertions operation

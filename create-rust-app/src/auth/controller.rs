@@ -126,7 +126,7 @@ pub fn get_sessions(
     auth: &Auth,
     info: &PaginationParams,
 ) -> Result<UserSessionResponse, (StatusCode, Message)> {
-    let mut db = db.pool.get().unwrap();
+    let mut db = db.get_connection().unwrap();
 
     let sessions = UserSession::read_all(&mut db, info, auth.user_id);
 
@@ -178,7 +178,7 @@ pub fn destroy_session(
     auth: &Auth,
     item_id: ID,
 ) -> Result<(), (StatusCode, Message)> {
-    let mut db = db.pool.get().unwrap();
+    let mut db = db.get_connection().unwrap();
 
     let user_session = UserSession::read(&mut db, item_id);
 
@@ -208,7 +208,7 @@ pub fn destroy_session(
 /// - Ok(`()`)
 /// - Err([`StatusCode`], [`Message`])
 pub fn destroy_sessions(db: &Database, auth: &Auth) -> Result<(), (StatusCode, Message)> {
-    let mut db = db.pool.get().unwrap();
+    let mut db = db.get_connection().unwrap();
 
     if UserSession::delete_all_for_user(&mut db, auth.user_id).is_err() {
         return Err((500, "Could not delete sessions."));
@@ -234,7 +234,7 @@ pub fn login(
     db: &Database,
     item: &LoginInput,
 ) -> Result<(AccessToken, RefreshToken), (StatusCode, Message)> {
-    let mut db = db.pool.get().unwrap();
+    let mut db = db.get_connection().unwrap();
 
     // verify device
     let mut device = None;
@@ -364,7 +364,7 @@ pub fn create_user_session(
 /// - Ok(`()`)
 /// - Err([`StatusCode`], [`Message`])
 pub fn logout(db: &Database, refresh_token: Option<&'_ str>) -> Result<(), (StatusCode, Message)> {
-    let mut db = db.pool.get().unwrap();
+    let mut db = db.get_connection().unwrap();
 
     if refresh_token.is_none() {
         return Err((401, "Invalid session."));
@@ -402,7 +402,7 @@ pub fn refresh(
     db: &Database,
     refresh_token_str: Option<&'_ str>,
 ) -> Result<(AccessToken, RefreshToken), (StatusCode, Message)> {
-    let mut db = db.pool.get().unwrap();
+    let mut db = db.get_connection().unwrap();
 
     if refresh_token_str.is_none() {
         return Err((401, "Invalid session."));
@@ -512,7 +512,7 @@ pub fn register(
     item: &RegisterInput,
     mailer: &Mailer,
 ) -> Result<(), (StatusCode, Message)> {
-    let mut db = db.pool.get().unwrap();
+    let mut db = db.get_connection().unwrap();
 
     let user = User::find_by_email(&mut db, item.email.to_string());
 
@@ -569,7 +569,7 @@ pub fn activate(
     item: &ActivationInput,
     mailer: &Mailer,
 ) -> Result<(), (StatusCode, Message)> {
-    let mut db = db.pool.get().unwrap();
+    let mut db = db.get_connection().unwrap();
 
     let token = decode::<RegistrationClaims>(
         &item.activation_token,
@@ -639,7 +639,7 @@ pub fn forgot_password(
     item: &ForgotInput,
     mailer: &Mailer,
 ) -> Result<(), (StatusCode, Message)> {
-    let mut db = db.pool.get().unwrap();
+    let mut db = db.get_connection().unwrap();
 
     let user_result = User::find_by_email(&mut db, item.email.clone());
 
@@ -697,7 +697,7 @@ pub fn change_password(
         return Err((400, "The new password must be different"));
     }
 
-    let mut db = db.pool.get().unwrap();
+    let mut db = db.get_connection().unwrap();
 
     let user = User::read(&mut db, auth.user_id);
 
@@ -765,7 +765,7 @@ pub fn reset_password(
     item: &ResetInput,
     mailer: &Mailer,
 ) -> Result<(), (StatusCode, Message)> {
-    let mut db = db.pool.get().unwrap();
+    let mut db = db.get_connection().unwrap();
 
     if item.new_password.is_empty() {
         return Err((400, "Missing password"));

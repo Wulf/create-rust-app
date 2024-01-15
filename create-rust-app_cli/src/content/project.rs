@@ -41,7 +41,7 @@ struct Asset;
 //     version.to_string()
 // }
 fn get_current_cra_lib_version() -> String {
-    "10.0.0".to_string()
+    "11.0.0".to_string()
 }
 
 #[derive(Clone)]
@@ -411,6 +411,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
             )?;
         }
     }
+    add_dependency(&project_dir, "simple_logger", r#"simple_logger = "4.3.3""#)?;
     add_dependency(&project_dir, "futures-util", r#"futures-util = "0.3.21""#)?;
     add_dependency(
         &project_dir,

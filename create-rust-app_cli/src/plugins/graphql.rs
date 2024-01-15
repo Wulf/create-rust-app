@@ -110,9 +110,9 @@ ReactDOM.createRoot"#,
             "frontend/package.json",
             r#""dependencies": {"#,
             r#""dependencies": {
-    "@apollo/client": "^3.5.10",
-    "graphql-ws": "^5.6.4",
-    "graphql": "^16.3.0","#,
+    "@apollo/client": "^5.14.3",
+    "graphql-ws": "^5.14.3",
+    "graphql": "^16.8.1","#,
         )?;
 
         fs::replace("backend/main.rs", "mod mail;", "mod mail;\nmod graphql;")?;

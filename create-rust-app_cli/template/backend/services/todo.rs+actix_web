@@ -14,7 +14,7 @@ async fn index(
     db: Data<Database>,
     Query(info): Query<PaginationParams>,
 ) -> HttpResponse {
-    let mut con = db.get_connection();
+    let mut con = db.get_connection().unwrap();
 
     let result = Todo::paginate(&mut con, info.page, info.page_size);
 
@@ -30,7 +30,7 @@ async fn read(
     db: Data<Database>,
     item_id: Path<i32>,
 ) -> HttpResponse {
-    let mut con = db.get_connection();
+    let mut con = db.get_connection().unwrap();
 
     let result = Todo::read(&mut con, item_id.into_inner());
 
@@ -48,7 +48,7 @@ async fn create(
     db: Data<Database>,
     Json(item): Json<CreateTodo>,
 ) -> Result<HttpResponse, Error> {
-    let mut con = db.get_connection();
+    let mut con = db.get_connection().unwrap();
 
     let result = Todo::create(&mut con, &item).expect("Creation error");
 
@@ -61,7 +61,7 @@ async fn update(
     item_id: Path<i32>,
     Json(item): Json<UpdateTodo>,
 ) -> HttpResponse {
-    let mut con = db.get_connection();
+    let mut con = db.get_connection().unwrap();
 
     let result = Todo::update(&mut con, item_id.into_inner(), &item);
 
@@ -77,7 +77,7 @@ async fn destroy(
     db: Data<Database>,
     item_id: Path<i32>,
 ) -> HttpResponse {
-    let mut con = db.get_connection();
+    let mut con = db.get_connection().unwrap();
 
     let result = Todo::delete(&mut con, item_id.into_inner());
 
