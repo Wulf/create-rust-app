@@ -257,6 +257,14 @@ fn create_project(
         }
     };
 
+    println!("Press Enter will use default backend database url as config");
+
+    let backend_database_url: String = Input::new()
+        .with_prompt(format!("{:?} url", backend_database))
+        .default("postgres://postgres:postgres@localhost/database".into())
+        .show_default(false)
+        .interact_text()?;
+
     // get the backend framework
     let backend_framework: BackendFramework = match framework {
         Some(framework) => framework,
@@ -474,7 +482,7 @@ fn create_project(
 
     let contents = std::fs::read_to_string(example_env_file)
         .expect("Error: Tried to read .env.example contents but an error occurred");
-    std::fs::write(env_file, contents)?;
+    std::fs::write(env_file, format!("{}DATABASE_URL={}", contents, backend_database_url))?;
     logger::add_file_msg(".env");
 
     logger::project_created_msg(install_config);
