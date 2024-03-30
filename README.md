@@ -155,6 +155,17 @@ create-rust-app create <project_name>
   - Add a task to the queue with `create_rust_app::tasks::queue()`
   - Run the queue with `cargo run --bin tasks`
 
+- **Workspace Support** (Enabled by default, not tied to a feature flag)
+  - allows you to organize your rust app in workspaces, and changes the defaults for the environment variables that specify paths to various important places.
+  - to organize you project as a workspace:
+    - enable this feature
+    - refactor your codebase into workspaces (see [#194](https://github.com/Wulf/create-rust-app/issues/194))
+    - Optional: set the following environment variables (paths are relative to the directory you call cargo fullstack/backend/run from)
+      - `CRA_MANIFEST_PATH`: default `./frontend/dist/manifest.json` when called from workspace root, `../frontend/dist/manifest.json` otherwise.
+      - `CRA_FRONTEND_DIR`: default `./frontend` when called from workspace root, `../frontend` otherwise.
+      - `CRA_VIEWS_GLOB`: default `backend/views/\*\*/\*.html` when called from workspace root, `views/\*\*/\*.html` otherwise.
+    - Note that in any non-standard setup, you will need to set the above environment variables to the correct values for your project to ensure correct behavior.
+
 ### 2. Code-gen to reduce boilerplate
 
 ```sh

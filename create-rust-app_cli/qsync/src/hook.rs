@@ -106,7 +106,10 @@ impl Hook {
         }
 
         if !self.query_params.is_empty() {
-            variables.push_str("  const queryParams: Record<string, any> = Object.assign({}, ");
+            variables.push_str(
+                "  // we use JSON.parse(JSON.stringify()) to remove nested undefined values\n",
+            );
+            variables.push_str("  const queryParams: Record<string, any> = JSON.parse(JSON.stringify(Object.assign({}, ");
             let query_param_iter = self.query_params.iter();
             for (index, param) in query_param_iter.clone().enumerate() {
                 let is_primitive_type = is_primitive_type(&param.hook_arg_type);
@@ -129,7 +132,7 @@ impl Hook {
                     variables.push_str(", ");
                 }
             }
-            variables.push_str(")\n");
+            variables.push_str(")))\n");
         }
 
         if !self.path_params.is_empty() {

@@ -4,6 +4,7 @@ use std::str::FromStr;
 use std::sync::Mutex;
 
 use super::template_utils::SinglePageApplication;
+use super::workspace_utils::frontend_dir;
 use crate::util::template_utils::{to_template_name, DEFAULT_TEMPLATE, TEMPLATES};
 use actix_files::NamedFile;
 #[cfg(debug_assertions)]
@@ -108,13 +109,14 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
         #[cfg(debug_assertions)]
         {
             // dev asset serving
-            let asset_path = &format!("./frontend{path}");
+            let asset_path = &format!("{frontend_dir}{path}", frontend_dir = frontend_dir());
             if std::path::PathBuf::from(asset_path).is_file() {
                 println!("ASSET_FILE {path} => {asset_path}");
                 return NamedFile::open(asset_path).unwrap().into_response(&req);
             }
 
-            let public_path = &format!("./frontend/public{path}");
+            let public_path =
+                &format!("{frontend_dir}/public{path}", frontend_dir = frontend_dir());
             if std::path::PathBuf::from(public_path).is_file() {
                 println!("PUBLIC_FILE {path} => {public_path}");
                 return NamedFile::open(public_path).unwrap().into_response(&req);
@@ -124,7 +126,7 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
         #[cfg(not(debug_assertions))]
         {
             // production asset serving
-            let static_path = &format!("./frontend/dist{path}");
+            let static_path = &format!("{frontend_dir}/dist{path}", frontend_dir = frontend_dir());
             if std::path::PathBuf::from(static_path).is_file() {
                 return NamedFile::open(static_path).unwrap().into_response(&req);
             }

@@ -1,7 +1,7 @@
 [package]
 name = "create-rust-app"
 description = "Set up a modern rust+react web app by running one command."
-version = "10.0.0"
+version = "11.0.0"
 edition = "2018"
 authors = ["Haris <4259838+Wulf@users.noreply.github.com>"]
 readme = "../README.md"
@@ -32,6 +32,7 @@ diesel = { version = "2.1.0", default-features = false, features = [
   "chrono",
 ] } # + plugin_dev, plugin_auth
 once_cell = "1.17.1"
+diesel_logger = "0.3.0"
 
 ##
 ## Database
@@ -174,10 +175,13 @@ plugin_storage = [
   "md5",
   "mime_guess",
   "base64",
-  "futures-util"
+  "futures-util",
 ]
 plugin_graphql = []
-plugin_utoipa = ["utoipa", "backend_actix-web"] # for now, only works with actix-web!
+plugin_utoipa = [
+  "utoipa",
+  "backend_actix-web",
+] # for now, only works with actix-web!
 plugin_tasks = ["fang", "tokio"]
 backend_poem = ["poem", "anyhow", "mime_guess", "tokio"]
 backend_actix-web = [

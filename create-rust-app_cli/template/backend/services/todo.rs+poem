@@ -20,7 +20,7 @@ async fn index(
     db: Data<&Database>,
     Query(pagination): Query<PaginationParams>,
 ) -> Result<impl IntoResponse> {
-    let mut con = db.get_connection();
+    let mut con = db.get_connection().unwrap();
 
     let result = Todo::paginate(&mut con, pagination.page, pagination.page_size)
         .map(|items| Json(items))
@@ -31,7 +31,7 @@ async fn index(
 
 #[handler]
 async fn read(db: Data<&Database>, Path(item_id): Path<i32>) -> Result<impl IntoResponse> {
-    let mut con = db.get_connection();
+    let mut con = db.get_connection().unwrap();
 
     let result = Todo::read(&mut con, item_id)
         .map(|item| Json(item))
@@ -45,7 +45,7 @@ async fn create(
     db: Data<&Database>,
     Json(item): Json<CreateTodo>,
 ) -> Result<impl IntoResponse> {
-    let mut con = db.get_connection();
+    let mut con = db.get_connection().unwrap();
 
     let result = Todo::create(&mut con, &item)
         .map(|item| Json(item))
@@ -60,7 +60,7 @@ async fn update(
     Path(item_id): Path<i32>,
     Json(item): Json<UpdateTodo>,
 ) -> Result<impl IntoResponse> {
-    let mut con = db.get_connection();
+    let mut con = db.get_connection().unwrap();
 
     let result = Todo::update(&mut con, item_id, &item)
         .map(|item| Json(item))
@@ -71,7 +71,7 @@ async fn update(
 
 #[handler]
 async fn destroy(db: Data<&Database>, Path(item_id): Path<i32>) -> Result<impl IntoResponse> {
-    let mut con = db.get_connection();
+    let mut con = db.get_connection().unwrap();
 
     let result = Todo::delete(&mut con, item_id)
         .map(|amount| {

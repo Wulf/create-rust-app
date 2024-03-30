@@ -44,7 +44,7 @@ pub async fn oidc_login_url(
     auth_config: &AuthConfig,
     provider_name: String,
 ) -> Result<Option<String>> {
-    let mut db = db.get_connection();
+    let mut db = db.get_connection().unwrap();
 
     let Some(provider) = auth_config
         .clone()
@@ -113,7 +113,7 @@ pub async fn oauth_login(
     query_param_error: Option<String>,
     query_param_state: Option<String>,
 ) -> Result<(AccessToken, RefreshToken), (StatusCode, Message)> {
-    let db = &mut db.get_connection();
+    let db = &mut db.get_connection().unwrap();
 
     // 1. Make sure this provider is setup
     let Some(provider) = auth_config
