@@ -44,7 +44,6 @@ impl Database {
     #[must_use]
     pub fn get_connection(&self) -> Result<Connection, anyhow::Error> {
         Ok(LoggingConnection::new(self.pool.get()?))
-
     }
 
     fn get_or_init_pool() -> &'static Pool {
