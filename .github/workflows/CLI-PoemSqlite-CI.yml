@@ -2,23 +2,23 @@ name: CLI Continuous Integration (Compilation tests for variations of Poem + Sql
 on:
   workflow_dispatch:
   push:
-    branches: 
+    branches:
       - "main"
-    paths: 
+    paths:
       - "**.rs"
       - "Cargo.lock"
       - "Cargo.toml"
   pull_request:
-    paths: 
+    paths:
       - "**.rs"
       - "Cargo.lock"
       - "Cargo.toml"
 env:
   CARGO_TERM_COLOR: always
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
-  
+
 concurrency:
-  group:  CI-PS-${{ github.ref }}
+  group: CI-PS-${{ github.ref }}
   cancel-in-progress: true
 
 jobs: {}
@@ -27,11 +27,11 @@ jobs: {}
 #    name: Poem w/ Sqlite and no plugins
 #    runs-on: ubuntu-latest
 #    steps:
-#      - uses: actions/checkout@v3.6.0
+#      - uses: actions/checkout@v4.1.4
 #      - uses: rui314/setup-mold@v1
 #      - run: rustup install stable
 #      - run: rustup update
-#      - uses: actions/cache@v3.3.1
+#      - uses: actions/cache@v4.0.2
 #        with:
 #          path: |
 #            .cargo/.build
@@ -56,11 +56,11 @@ jobs: {}
 #    name: Poem w/ Sqlite and all valid plugins
 #    runs-on: ubuntu-latest
 #    steps:
-#      - uses: actions/checkout@v3.6.0
+#      - uses: actions/checkout@v4.1.4
 #      - uses: rui314/setup-mold@v1
 #      - run: rustup install stable
 #      - run: rustup update
-#      - uses: actions/cache@v3.3.1
+#      - uses: actions/cache@v4.0.2
 #        with:
 #          path: |
 #            .cargo/.build

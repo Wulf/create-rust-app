@@ -2,23 +2,23 @@ name: CLI Continuous Integration (Compilation tests for variations of Actix + Po
 on:
   workflow_dispatch:
   push:
-    branches: 
+    branches:
       - "main"
-    paths: 
+    paths:
       - "**.rs"
       - "Cargo.lock"
       - "Cargo.toml"
   pull_request:
-    paths: 
+    paths:
       - "**.rs"
       - "Cargo.lock"
       - "Cargo.toml"
 env:
   CARGO_TERM_COLOR: always
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
-  
+
 concurrency:
-  group:  CI-AP-${{ github.ref }}
+  group: CI-AP-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -27,11 +27,11 @@ jobs:
     name: Actix w/ Postgres and no plugins
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.6.0
+      - uses: actions/checkout@v4.1.4
       - uses: rui314/setup-mold@v1
       - run: rustup install stable
       - run: rustup update
-      - uses: actions/cache@v3.3.1
+      - uses: actions/cache@v4.0.2
         with:
           path: |
             .cargo/.build
@@ -40,7 +40,7 @@ jobs:
       - run: git config --global user.email example@email.com
       - uses: actions-rs/cargo@v1.0.3
         with:
-          command: run 
+          command: run
           args: --bin create-rust-app -- create -c -d postgres -b actix-web test-project
       - name: test test-project
         working-directory: ./test-project
@@ -55,11 +55,11 @@ jobs:
     name: Actix w/ Postgres and all valid plugins
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.6.0
+      - uses: actions/checkout@v4.1.4
       - uses: rui314/setup-mold@v1
       - run: rustup install stable
       - run: rustup update
-      - uses: actions/cache@v3.3.1
+      - uses: actions/cache@v4.0.2
         with:
           path: |
             .cargo/.build
@@ -83,11 +83,11 @@ jobs:
   #   name: Actix w/ Postgres and the container plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.6.0
+  #     - uses: actions/checkout@v4.1.4
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
-  #     - uses: actions/cache@v3.3.1
+  #     - uses: actions/cache@v4.0.2
   #       with:
   #         path: |
   #           **/.cargo/.build
@@ -106,11 +106,11 @@ jobs:
   #   name: Actix w/ Postgres and the auth plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.6.0
+  #     - uses: actions/checkout@v4.1.4
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
-  #     - uses: actions/cache@v3.3.1
+  #     - uses: actions/cache@v4.0.2
   #       with:
   #         path: |
   #           **/.cargo/.build
@@ -129,11 +129,11 @@ jobs:
   #   name: Actix w/ Postgres and the storage plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.6.0
+  #     - uses: actions/checkout@v4.1.4
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
-  #     - uses: actions/cache@v3.3.1
+  #     - uses: actions/cache@v4.0.2
   #       with:
   #         path: |
   #           **/.cargo/.build
@@ -152,11 +152,11 @@ jobs:
   #   name: Actix w/ Postgres and the graphql plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.6.0
+  #     - uses: actions/checkout@v4.1.4
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
-  #     - uses: actions/cache@v3.3.1
+  #     - uses: actions/cache@v4.0.2
   #       with:
   #         path: |
   #           **/.cargo/.build
@@ -175,11 +175,11 @@ jobs:
   #   name: Actix w/ Postgres and the utoipa plugin
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v3.6.0
+  #     - uses: actions/checkout@v4.1.4
   #     - uses: rui314/setup-mold@v1
   #     - run: rustup install stable
   #     - run: rustup update
-  #     - uses: actions/cache@v3.3.1
+  #     - uses: actions/cache@v4.0.2
   #       with:
   #         path: |
   #           **/.cargo/.build

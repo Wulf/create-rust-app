@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 concurrency:
-  group:  CI-${{ github.ref }}
+  group: CI-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -18,12 +18,12 @@ jobs:
 #    name: Clippy with debug-assertions
 #    runs-on: ubuntu-latest
 #    steps:
-#      - uses: actions/checkout@v3.6.0
+#      - uses: actions/checkout@v4.1.4
 #      - uses: rui314/setup-mold@v1
 #      - run: rustup install stable
 #      - run: rustup update
 #      - run: rustup component add clippy
-#      - uses: actions/cache@v3.3.1
+#      - uses: actions/cache@v4.0.2
 #        with:
 #          path: |
 #            ./.cargo/.build
@@ -40,12 +40,12 @@ jobs:
 #    name: Clippy without debug-assertions
 #    runs-on: ubuntu-latest
 #    steps:
-#      - uses: actions/checkout@v3.6.0
+#      - uses: actions/checkout@v4.1.4
 #      - uses: rui314/setup-mold@v1
 #      - run: rustup install stable
 #      - run: rustup update
 #      - run: rustup component add clippy
-#      - uses: actions/cache@v3.3.1
+#      - uses: actions/cache@v4.0.2
 #        with:
 #          path: |
 #            ./.cargo/.build
@@ -63,11 +63,11 @@ jobs:
     name: Test Suite and Initialize profile.test Cache
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.6.0
+      - uses: actions/checkout@v4.1.4
       - uses: rui314/setup-mold@v1
       - run: rustup install stable
       - run: rustup update
-      - uses: actions/cache@v3.3.1
+      - uses: actions/cache@v4.0.2
         with:
           path: |
             ./.cargo/.build
@@ -78,13 +78,12 @@ jobs:
         with:
           command: test
 
-
   # Things that don't need a cache
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3.6.0
+      - uses: actions/checkout@v4.1.4
       - run: rustup install stable
       - run: rustup update
       - run: rustup component add rustfmt
