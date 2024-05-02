@@ -15,6 +15,8 @@ use crate::{dev::controller, Database};
 
 use super::{CreateRustAppMigration, DevServerEvent};
 
+/// TODO: use a state machine or refactor into an enum
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug)]
 struct CurrentDevState {
     backend_status: bool,
@@ -45,9 +47,10 @@ pub async fn start(
     file_events_s: Sender<String>,
     features: Vec<String>,
 ) {
-    if dotenv::dotenv().is_err() {
-        panic!("ERROR: Could not load environment variables from dotenv file");
-    }
+    assert!(
+        dotenv::dotenv().is_ok(),
+        "ERROR: Could not load environment variables from dotenv file"
+    );
 
     let app_state = Arc::new(AppState {
         project_dir,
@@ -120,6 +123,8 @@ async fn ws_handler(ws: WebSocketUpgrade, State(state): State<Arc<AppState>>) ->
     ws.on_upgrade(|socket| handle_socket(socket, state))
 }
 
+/// TODO break this function up into smaller sub functions
+#[allow(clippy::too_many_lines)]
 async fn handle_socket(stream: WebSocket, state: Arc<AppState>) {
     use axum::extract::ws::Message;
     let (mut sender, mut receiver) = stream.split();
@@ -304,10 +309,10 @@ async fn handle_socket(stream: WebSocket, state: Arc<AppState>) {
                             }
                         });
                     }
-                    Message::Binary(_) => {}
-                    Message::Ping(_) => {}
-                    Message::Pong(_) => {}
-                    Message::Close(_) => {}
+                    Message::Binary(_)
+                    | Message::Ping(_)
+                    | Message::Pong(_)
+                    | Message::Close(_) => {}
                 }
             }
         }

@@ -27,6 +27,12 @@ pub struct HealthCheckResponse {
 }
 
 /// /db/query
+///
+/// # Errors
+/// * query fails
+///
+/// # Panics
+/// * cannot connect to the database
 pub fn query_db(db: &Database, body: &MySqlQuery) -> Result<String, diesel::result::Error> {
     let q = format!("SELECT json_agg(q) as json FROM ({}) q;", body.query);
     let mut db = db.get_connection().unwrap();
@@ -37,12 +43,20 @@ pub fn query_db(db: &Database, body: &MySqlQuery) -> Result<String, diesel::resu
 }
 
 /// /db/is-connected
+///
+/// # Panics
+/// * cannot connect to the database
+#[must_use]
 pub fn is_connected(db: &Database) -> bool {
     let mut db = db.pool.clone().get().unwrap();
     let is_connected = sql_query("SELECT 1;").execute(&mut db);
     is_connected.is_err()
 }
 
+/// # Panics
+/// * cannot connect to the database
+/// * cannot find the migrations directory
+#[must_use]
 pub fn get_migrations(db: &Database) -> Vec<CreateRustAppMigration> {
     // Vec<diesel::migration::Migration> {
     let mut db = db.pool.clone().get().unwrap();
@@ -61,25 +75,25 @@ pub fn get_migrations(db: &Database) -> Vec<CreateRustAppMigration> {
 
     let mut all_migrations = vec![];
 
-    file_migrations.iter().for_each(|fm| {
+    for fm in &file_migrations {
         all_migrations.push(CreateRustAppMigration {
             name: fm.name().to_string(),
             version: fm.name().version().to_string(),
             status: MigrationStatus::Unknown,
-        })
-    });
+        });
+    }
 
     // update the status for any pending file_migrations
-    pending_migrations.iter().for_each(|pm| {
+    for pm in &pending_migrations {
         if let Some(existing) = all_migrations.iter_mut().find(|m| {
             m.version
                 .eq_ignore_ascii_case(&pm.name().version().to_string())
         }) {
             existing.status = MigrationStatus::Pending;
         }
-    });
+    }
 
-    db_migrations.iter().for_each(|dm| {
+    for dm in &db_migrations {
         match all_migrations
             .iter_mut()
             .find(|m| m.version.eq_ignore_ascii_case(&dm.to_string()))
@@ -93,13 +107,20 @@ pub fn get_migrations(db: &Database) -> Vec<CreateRustAppMigration> {
                 status: MigrationStatus::AppliedButMissingLocally,
             }),
         }
-    });
+    }
 
     all_migrations
 }
 
 /// /db/needs-migration
 /// checks if a migration is needed
+///
+/// # Panics
+/// * cannot connect to the database
+/// * cannot find the migrations directory
+///
+/// TODO: return a Result instead of panicking
+#[must_use]
 pub fn needs_migration(db: &Database) -> bool {
     let mut db = db.pool.clone().get().unwrap();
 
@@ -109,6 +130,14 @@ pub fn needs_migration(db: &Database) -> bool {
 
 /// /db/migrate
 /// performs any pending migrations
+///
+/// # Panics
+/// * cannot connect to the database
+/// * cannot find the migrations directory
+/// * cannot run the migrations
+///
+/// TODO: return a Result instead of a tuple (bool, Option<String>), this is Rust, not Go
+#[must_use]
 pub fn migrate_db(db: &Database) -> (bool, /* error message: */ Option<String>) {
     let mut db = db.pool.clone().get().unwrap();
 
@@ -131,4 +160,4 @@ pub fn migrate_db(db: &Database) -> (bool, /* error message: */ Option<String>) 
 }
 
 /// /health
-pub fn health() {}
+pub const fn health() {}

@@ -2,13 +2,13 @@ use crate::inflector::Inflector;
 use anyhow::Result;
 use indoc::indoc;
 
-#[allow(dead_code)]
+#[allow(clippy::module_name_repetitions)]
 pub struct Model {
     pub config: ModelConfig,
     pub file_contents: String,
 }
 
-#[allow(dead_code)]
+#[allow(clippy::module_name_repetitions)]
 pub struct ModelConfig {
     pub model_name: String,
     pub table_name: String,
@@ -36,8 +36,8 @@ fn config(resource_name: &str) -> ModelConfig {
 
     ModelConfig {
         model_name,
-        file_name,
         table_name,
+        file_name,
     }
 }
 

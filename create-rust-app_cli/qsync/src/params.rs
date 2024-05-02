@@ -1,6 +1,6 @@
-pub fn is_primitive_type(ty: String) -> bool {
+pub fn is_primitive_type(ty: &str) -> bool {
     matches!(
-        ty.as_str(),
+        ty,
         "i8" | "u8"
             | "i16"
             | "u16"
@@ -41,26 +41,11 @@ pub fn to_typescript_type(ty: &syn::Type) -> String {
             let arguments = &segment.arguments;
             let identifier = ident.to_string();
             match identifier.as_str() {
-                "i8" => "number".to_string(),
-                "u8" => "number".to_string(),
-                "i16" => "number".to_string(),
-                "u16" => "number".to_string(),
-                "i32" => "number".to_string(),
-                "u32" => "number".to_string(),
-                "i64" => "number".to_string(),
-                "u64" => "number".to_string(),
-                "i128" => "number".to_string(),
-                "u128" => "number".to_string(),
-                "isize" => "number".to_string(),
-                "usize" => "number".to_string(),
-                "f32" => "number".to_string(),
-                "f64" => "number".to_string(),
+                "i8" | "u8" | "i16" | "u16" | "i32" | "u32" | "i64" | "u64" | "i128" | "u128"
+                | "isize" | "usize" | "f32" | "f64" => "number".to_string(),
                 "bool" => "boolean".to_string(),
-                "char" => "string".to_string(),
-                "str" => "string".to_string(),
-                "String" => "string".to_string(),
-                "NaiveDateTime" => "Date".to_string(),
-                "DateTime" => "Date".to_string(),
+                "char" | "str" | "String" => "string".to_string(),
+                "NaiveDateTime" | "DateTime" => "Date".to_string(),
                 "Option" => match arguments {
                     syn::PathArguments::Parenthesized(parenthesized_argument) => {
                         format!("{parenthesized_argument:?}")
@@ -69,7 +54,7 @@ pub fn to_typescript_type(ty: &syn::Type) -> String {
                         "{} | undefined",
                         generic_to_typsecript_type(anglebracketed_argument.args.first().unwrap())
                     ),
-                    _ => "unknown".to_string(),
+                    syn::PathArguments::None => "unknown".to_string(),
                 },
                 "Vec" => match arguments {
                     syn::PathArguments::Parenthesized(parenthesized_argument) => {
@@ -79,7 +64,7 @@ pub fn to_typescript_type(ty: &syn::Type) -> String {
                         "Array<{}>",
                         generic_to_typsecript_type(anglebracketed_argument.args.first().unwrap())
                     ),
-                    _ => "unknown".to_string(),
+                    syn::PathArguments::None => "unknown".to_string(),
                 },
                 _ => identifier.to_string(),
             }

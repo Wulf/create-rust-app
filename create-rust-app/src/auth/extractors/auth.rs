@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use crate::auth::{Permission, ID};
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone)]
 /// roles and permissions available to a User
 ///
@@ -14,6 +15,7 @@ pub struct Auth {
 
 impl Auth {
     /// does the user with the id [`self.user_id`](`ID`) have the given `permission`
+    #[must_use]
     pub fn has_permission(&self, permission: String) -> bool {
         self.permissions.contains(&Permission {
             permission,
@@ -22,27 +24,37 @@ impl Auth {
     }
 
     /// does the user with the id [`self.user_id`](`ID`) have all of the given `perms`
-    pub fn has_all_permissions(&self, perms: Vec<String>) -> bool {
-        perms.iter().all(|p| self.has_permission(p.to_string()))
+    #[must_use]
+    pub fn has_all_permissions(&self, perms: impl AsRef<[String]>) -> bool {
+        perms
+            .as_ref()
+            .iter()
+            .all(|p| self.has_permission(p.to_string()))
     }
 
     /// does the user with the id [`self.user_id`](`ID`) have any of the given `perms`
-    pub fn has_any_permission(&self, perms: Vec<String>) -> bool {
-        perms.iter().any(|p| self.has_permission(p.to_string()))
+    #[must_use]
+    pub fn has_any_permission(&self, perms: impl AsRef<[String]>) -> bool {
+        perms
+            .as_ref()
+            .iter()
+            .any(|p| self.has_permission(p.to_string()))
     }
 
     /// does the user with the id [`self.user_id`](`ID`) have the given `role`
-    pub fn has_role(&self, role: String) -> bool {
-        self.roles.contains(&role)
+    #[must_use]
+    pub fn has_role(&self, role: impl AsRef<str>) -> bool {
+        self.roles.contains(role.as_ref())
     }
 
     /// does the user with the id [`self.user_id`](`ID`) have all of the given `roles`
-    pub fn has_all_roles(&self, roles: Vec<String>) -> bool {
-        roles.iter().all(|r| self.has_role(r.to_string()))
+    #[must_use]
+    pub fn has_all_roles(&self, roles: impl AsRef<[String]>) -> bool {
+        roles.as_ref().iter().all(|r| self.has_role(r))
     }
 
     /// does the user with the id [`self.user_id`](`ID`) have any of the given `roles`
-    pub fn has_any_roles(&self, roles: Vec<String>) -> bool {
-        roles.iter().any(|r| self.has_role(r.to_string()))
+    pub fn has_any_roles(&self, roles: impl AsRef<[String]>) -> bool {
+        roles.as_ref().iter().any(|r| self.has_role(r))
     }
 }

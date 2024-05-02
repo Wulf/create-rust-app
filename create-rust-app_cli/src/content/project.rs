@@ -54,8 +54,7 @@ fn is_restricted_project_name(project_name: &str, project_binaries: &[ProjectBin
     project_binaries
         .iter()
         .map(|bin| bin.name)
-        .collect::<Vec<&str>>()
-        .contains(&project_name)
+        .any(|x| x == project_name)
 }
 
 fn add_bins_to_cargo_toml(
@@ -77,6 +76,7 @@ fn add_bins_to_cargo_toml(
     let project_name: String;
     let found_project_name: bool;
 
+    #[allow(clippy::option_if_let_else)]
     match deps_table.get("name") {
         Some(name) => {
             project_name = name.as_str().unwrap().to_string();
@@ -278,6 +278,8 @@ pub fn remove_non_database_files(project_dir: &PathBuf, database: BackendDatabas
 /**
  * create-rust-app project generation
  */
+#[allow(clippy::too_many_lines)] //TODO: refactor to reduce complexity
+#[allow(clippy::cognitive_complexity)]
 pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<()> {
     /*
        Temporary guard until we get poem supported again
@@ -295,7 +297,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
 
         project_dir = match std::fs::canonicalize(project_dir) {
             Ok(p) => p,
-            Err(err) => logger::exit_error("std::fs::canonicalize():", err),
+            Err(err) => logger::exit_error("std::fs::canonicalize():", &err),
         };
 
         let proceed = !creation_options.cli_mode
@@ -306,8 +308,8 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
 
         if proceed {
             match std::fs::remove_dir_all(&project_dir) {
-                Ok(_) => {}
-                Err(err) => logger::exit_error("std::fs::remove_dir_all():", err),
+                Ok(()) => {}
+                Err(err) => logger::exit_error("std::fs::remove_dir_all():", &err),
             }
         } else {
             std::process::exit(0);
@@ -330,8 +332,8 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
 
     logger::message("Creating Project Directory");
     match std::fs::create_dir_all(&project_dir) {
-        Ok(_) => {}
-        Err(err) => logger::exit_error("std::fs::create_dir_all():", err),
+        Ok(()) => {}
+        Err(err) => logger::exit_error("std::fs::create_dir_all():", &err),
     }
 
     logger::command_msg("cargo init");
@@ -698,21 +700,19 @@ pub fn create_resource(
     Ok(())
 }
 
-pub fn check_cli_version() -> Result<()> {
+pub fn check_cli_version() {
     let name = env!("CARGO_PKG_NAME");
     let version = env!("CARGO_PKG_VERSION");
     let informer = update_informer::new(registry::Crates, name, version)
         .timeout(Duration::from_secs(2))
         .interval(Duration::ZERO);
-    if let Some(new_version) = informer.check_version().ok().flatten() {
+    informer.check_version().ok().flatten().map_or_else(|| {
+        logger::message(&format!("v{version}"));
+    }, |new_version| {
         logger::message(&style(&format!("You are running `{name}` v{version}, which is behind the latest release ({new_version}).")).yellow().to_string());
         logger::message(&format!(
             "If you want to update, try: {}",
             style("cargo install --force create-rust-app_cli").yellow()
         ));
-    } else {
-        // we aren't sure whether the version check succeeded here (it could have been timed out)
-        logger::message(&format!("v{version}"));
-    }
-    Ok(())
+    });
 }

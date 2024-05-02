@@ -151,6 +151,7 @@ fn generate_poem(service_name: &str) -> Service {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn generate_actix(service_name: &str, include_qsync_attr: bool) -> Service {
     let config = config(service_name);
     let contents_template: &str = indoc! {r#"
@@ -319,7 +320,7 @@ fn generate_actix(service_name: &str, include_qsync_attr: bool) -> Service {
     }
 }
 
-/// use fs::replace instead and also fs::append for the services/mod.rs entry
+/// use `fs::replace` instead and also `fs::append` for the services/mod.rs entry
 // #[deprecated]
 pub fn register_poem(
     name: &str,
@@ -343,7 +344,7 @@ pub fn register_poem(
     Ok(())
 }
 
-/// use fs::replace instead and also fs::append for the services/mod.rs entry
+/// use `fs::replace` instead and also `fs::append` for the services/mod.rs entry
 // #[deprecated]
 pub fn register_actix(name: &str, service: &str) -> Result<()> {
     register_service_msg(name);

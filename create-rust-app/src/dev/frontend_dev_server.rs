@@ -35,7 +35,7 @@ pub async fn start(
     // ).await.unwrap();
 
     while let Ok(event) = signal_rx.recv().await {
-        if let DevServerEvent::SHUTDOWN = event {
+        if matches!(event, DevServerEvent::SHUTDOWN) {
             println!("Shutting down frontend server...");
             if child_process.id().is_some() {
                 child_process.kill().await.unwrap();

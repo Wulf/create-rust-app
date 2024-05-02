@@ -28,6 +28,7 @@ pub fn render_single_page_application(route: &str, view: &str) -> Scope {
         .route("", web::get().to(render_spa_handler))
 }
 
+#[allow(clippy::future_not_send)]
 async fn render_spa_handler(
     req: HttpRequest,
     spa_info: web::Data<SinglePageApplication>,
@@ -35,14 +36,15 @@ async fn render_spa_handler(
     let content = TEMPLATES
         .render(spa_info.view_name.as_str(), &Context::new())
         .unwrap();
-    template_response(req, content)
+    template_response(&req, content)
 }
 
 // used to count number of refresh requests sent when viteJS dev server is down
+#[allow(clippy::mutex_integer)] // TODO: can we use an atomic integer here?
 #[cfg(debug_assertions)]
 static REQUEST_REFRESH_COUNT: Mutex<i32> = Mutex::new(0);
 
-/// takes a request to, say, www.you_webapp.com/foo/bar and looks in the ./backend/views folder
+/// takes a request to, say, `www.you_webapp.com/foo/bar` and looks in the ./backend/views folder
 /// for a html file/template at the matching path (in this case, ./foo/bar.html),
 /// defaults to index.html
 ///
@@ -52,6 +54,10 @@ static REQUEST_REFRESH_COUNT: Mutex<i32> = Mutex::new(0);
 /// then, that compiled html is sent to the client
 ///
 /// NOTE the frontend/dist/manifest.json file referenced is generated in the frontend when it compiles
+///
+/// # Panics
+/// - the mutex lock is poisoned
+#[allow(clippy::future_not_send)]
 pub async fn render_views(req: HttpRequest) -> HttpResponse {
     let path = req.path();
 
@@ -69,27 +75,27 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
             {
                 crate::dev::vitejs_ping_down().await;
             }
+            #[allow(clippy::mutex_integer)]
             let mut count = REQUEST_REFRESH_COUNT.lock().unwrap();
             if *count < 3 {
                 *count += 1;
                 println!("The vite dev server seems to be down... refreshing page ({count}).");
+                drop(count);
                 return HttpResponse::build(StatusCode::TEMPORARY_REDIRECT)
                     .append_header(("Location", "."))
                     .finish();
-            } else {
-                println!("The vite dev server is down.");
-                return HttpResponse::NotFound().finish();
             }
+            println!("The vite dev server is down.");
+            return HttpResponse::NotFound().finish();
         }
         // If this is a non-viteJS ping request, let's reset the refresh attempt count
-        else {
-            #[cfg(feature = "plugin_dev")]
-            {
-                crate::dev::vitejs_ping_up().await;
-            }
-            let mut count = REQUEST_REFRESH_COUNT.lock().unwrap();
-            *count = 0;
+        #[cfg(feature = "plugin_dev")]
+        {
+            crate::dev::vitejs_ping_up().await;
         }
+        #[allow(clippy::mutex_integer)]
+        let mut count = REQUEST_REFRESH_COUNT.lock().unwrap();
+        *count = 0;
     }
 
     let mut template_path = to_template_name(req.path());
@@ -138,21 +144,21 @@ pub async fn render_views(req: HttpRequest) -> HttpResponse {
 
     let content = content_result.unwrap();
 
-    template_response(req, content)
+    template_response(&req, content)
 }
 
-fn template_response(_req: HttpRequest, content: String) -> HttpResponse {
+#[allow(unused_variables)]
+fn template_response(req: &HttpRequest, content: String) -> HttpResponse {
     #[cfg(not(debug_assertions))]
     let content = content;
     #[cfg(debug_assertions)]
     let mut content = content;
     #[cfg(debug_assertions)]
     {
-        let uri = Uri::from_str(_req.connection_info().host());
-        let hostname = match &uri {
-            Ok(uri) => uri.host().unwrap_or("localhost"),
-            Err(_) => "localhost",
-        };
+        let uri = Uri::from_str(req.connection_info().host());
+        let hostname = uri
+            .as_ref()
+            .map_or("localhost", |uri| uri.host().unwrap_or("localhost"));
 
         let inject: &str = &format!(
             r##"
