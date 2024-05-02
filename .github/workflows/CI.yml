@@ -14,49 +14,49 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-#  development-lint:
-#    name: Clippy with debug-assertions
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v4.1.4
-#      - uses: rui314/setup-mold@v1
-#      - run: rustup install stable
-#      - run: rustup update
-#      - run: rustup component add clippy
-#      - uses: actions/cache@v4.0.2
-#        with:
-#          path: |
-#            ./.cargo/.build
-#            ./target
-#            ~/.cargo
-#          key: ${{ runner.os }}-cargo-dev-${{ hashFiles('**/Cargo.lock') }}
-#      - name: Clippy
-#        uses: actions-rs/cargo@v1.0.3
-#        with:
-#          command: clippy
-#          args: -- -D warnings -C debug-assertions=y
+  #  development-lint:
+  #    name: Clippy with debug-assertions
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #      - uses: actions/checkout@v4.1.4
+  #      - uses: rui314/setup-mold@v1
+  #      - run: rustup install stable
+  #      - run: rustup update
+  #      - run: rustup component add clippy
+  #      - uses: actions/cache@v4.0.2
+  #        with:
+  #          path: |
+  #            ./.cargo/.build
+  #            ./target
+  #            ~/.cargo
+  #          key: ${{ runner.os }}-cargo-dev-${{ hashFiles('**/Cargo.lock') }}
+  #      - name: Clippy
+  #        uses: actions-rs/cargo@v1.0.3
+  #        with:
+  #          command: clippy
+  #          args: -- -D warnings -C debug-assertions=y
 
-#  production-lint:
-#    name: Clippy without debug-assertions
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v4.1.4
-#      - uses: rui314/setup-mold@v1
-#      - run: rustup install stable
-#      - run: rustup update
-#      - run: rustup component add clippy
-#      - uses: actions/cache@v4.0.2
-#        with:
-#          path: |
-#            ./.cargo/.build
-#            ./target
-#            ~/.cargo
-#          key: ${{ runner.os }}-cargo-prod-${{ hashFiles('**/Cargo.lock') }}
-#      - name: Clippy
-#        uses: actions-rs/cargo@v1.0.3
-#        with:
-#          command: clippy
-#          args: -- -D warnings -C debug-assertions=n
+  #  production-lint:
+  #    name: Clippy without debug-assertions
+  #    runs-on: ubuntu-latest
+  #    steps:
+  #      - uses: actions/checkout@v4.1.4
+  #      - uses: rui314/setup-mold@v1
+  #      - run: rustup install stable
+  #      - run: rustup update
+  #      - run: rustup component add clippy
+  #      - uses: actions/cache@v4.0.2
+  #        with:
+  #          path: |
+  #            ./.cargo/.build
+  #            ./target
+  #            ~/.cargo
+  #          key: ${{ runner.os }}-cargo-prod-${{ hashFiles('**/Cargo.lock') }}
+  #      - name: Clippy
+  #        uses: actions-rs/cargo@v1.0.3
+  #        with:
+  #          command: clippy
+  #          args: -- -D warnings -C debug-assertions=n
 
   # things that use the cargo-test cache
   test:
