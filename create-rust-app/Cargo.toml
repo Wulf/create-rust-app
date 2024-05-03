@@ -114,7 +114,7 @@ futures = { optional = true, version = "0.3.28" }
 
 # axum dependencies (not yet released; only used for plugin_dev)
 
-axum = { optional = true, version = "0.6.18" }
+axum = { optional = true, version = "0.7.5" }
 
 ##
 ## MISC - here, we list deps which are required by multiple features but are not required in all configurations
