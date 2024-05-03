@@ -49,7 +49,7 @@ libsqlite3-sys = { version = "0.26", optional = true, features = ["bundled"] }
 rust-argon2 = { optional = true, version = "1.0" }
 rand = { optional = true, version = "0.8.5" }
 jsonwebtoken = { optional = true, version = "8.3.0" }
-tsync = { optional = true, version = "1.7.0" }
+tsync = { optional = true, version = "2.1.0" }
 chrono = { optional = true, version = "0.4.24", default-features = false, features = [
   "clock",
   "serde",

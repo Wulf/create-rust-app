@@ -427,7 +427,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         r#"chrono = { version = "0.4.19", features = ["serde"] }"#,
     )?;
     // todo: move these deps to the helper crate (./create-rust-app/Cargo.toml) behind feature flags
-    add_dependency(&project_dir, "tsync", r#"tsync = "1""#)?;
+    add_dependency(&project_dir, "tsync", r#"tsync = "2""#)?;
     add_dependency(&project_dir, "dsync", r#"dsync = "0""#)?;
     add_dependency(
         &project_dir,
