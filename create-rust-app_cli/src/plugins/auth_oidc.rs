@@ -123,7 +123,7 @@ impl Plugin for AuthOIDC {
         crate::content::migration::create(
             "plugin_auth-oidc",
             match install_config.backend_database {
-                BackendDatabase::Postgres => indoc! {r#"
+                BackendDatabase::Postgres => indoc! {r"
       CREATE TABLE user_oauth2_links (
         id SERIAL PRIMARY KEY,
         provider TEXT NOT NULL,
@@ -145,8 +145,8 @@ impl Plugin for AuthOIDC {
       );
 
       SELECT manage_updated_at('user_oauth2_links');
-    "#},
-                BackendDatabase::Sqlite => indoc! {r#"
+    "},
+                BackendDatabase::Sqlite => indoc! {r"
       CREATE TABLE user_oauth2_links (
         id SERIAL PRIMARY KEY,
         provider TEXT NOT NULL,
@@ -166,11 +166,11 @@ impl Plugin for AuthOIDC {
         created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
       );
 
-    "#},
+    "},
             },
-            indoc! {r#"
+            indoc! {r"
       DROP TABLE user_oauth2_links;
-    "#},
+    "},
         )?;
 
         // ===============================
@@ -180,15 +180,15 @@ impl Plugin for AuthOIDC {
         fs::replace(
             "frontend/src/hooks/useAuth.tsx",
             "logout,",
-            indoc! {r#"logout,
+            indoc! {r"logout,
 loginOIDC,
-completeOIDCLogin"#},
+completeOIDCLogin"},
         )?;
 
         fs::replace(
             "frontend/src/hooks/useAuth.tsx",
             "const logout = async ()",
-            indoc! {r#"
+            indoc! {r"
 const loginOIDC = async (
     provider: string,
     options?: { redirectUrl?: 'current-url' | string }
@@ -239,14 +239,14 @@ const completeOIDCLogin = (): boolean => {
     }
 }
 
-const logout = async ()"#},
+const logout = async ()"},
         )?;
 
         fs::replace(
             "frontend/src/App.tsx",
             "import { LoginPage } from './containers/LoginPage'",
-            r#"import { LoginPage } from './containers/LoginPage'
-import { OauthLoginResultPage } from './containers/OauthLoginResultPage'"#,
+            r"import { LoginPage } from './containers/LoginPage'
+import { OauthLoginResultPage } from './containers/OauthLoginResultPage'",
         )?;
 
         fs::replace(
@@ -259,11 +259,11 @@ import { OauthLoginResultPage } from './containers/OauthLoginResultPage'"#,
 
         fs::replace(
             "frontend/src/containers/LoginPage.tsx",
-            r#"<div style={{ display: 'flex', flexFlow: 'column' }}>
+            r"<div style={{ display: 'flex', flexFlow: 'column' }}>
         <button disabled={processing} onClick={login}>
           Login
         </button>
-      </div>"#,
+      </div>",
             r##"<div style={{ display: 'flex', flexFlow: 'column' }}>
         <button disabled={processing} onClick={login}>
           Login

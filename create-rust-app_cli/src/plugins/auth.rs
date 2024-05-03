@@ -40,13 +40,13 @@ impl Plugin for Auth {
         // currently, this works because we assume the current working directory is the project's root
         fs::prepend(
             "frontend/src/App.tsx",
-            r#"import { useAuth, useAuthCheck } from './hooks/useAuth'
+            r"import { useAuth, useAuthCheck } from './hooks/useAuth'
 import { AccountPage } from './containers/AccountPage'
 import { LoginPage } from './containers/LoginPage'
 import { ActivationPage } from './containers/ActivationPage'
 import { RegistrationPage } from './containers/RegistrationPage'
 import { RecoveryPage } from './containers/RecoveryPage'
-import { ResetPage } from './containers/ResetPage'"#,
+import { ResetPage } from './containers/ResetPage'",
         )?;
         fs::prepend(
             "frontend/bundles/index.tsx",
@@ -55,14 +55,14 @@ import { ResetPage } from './containers/ResetPage'"#,
         fs::replace(
             "frontend/src/App.tsx",
             "const App = () => {",
-            r#"const App = () => {
+            r"const App = () => {
   useAuthCheck()
   const auth = useAuth()
-    "#,
+    ",
         )?;
         fs::replace(
             "frontend/src/App.tsx",
-            r#"{/* CRA: routes */}"#,
+            r"{/* CRA: routes */}",
             r#"{/* CRA: routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/recovery" element={<RecoveryPage />} />
@@ -99,7 +99,7 @@ import { ResetPage } from './containers/ResetPage'"#,
         crate::content::migration::create(
             "plugin_auth",
             match install_config.backend_database {
-                BackendDatabase::Postgres => indoc! {r#"
+                BackendDatabase::Postgres => indoc! {r"
       CREATE TABLE users (
         id SERIAL PRIMARY KEY,
         email TEXT NOT NULL,
@@ -142,8 +142,8 @@ import { ResetPage } from './containers/ResetPage'"#,
         created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (role, permission)
       );
-    "#},
-                BackendDatabase::Sqlite => indoc! {r#"
+    "},
+                BackendDatabase::Sqlite => indoc! {r"
       CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         email TEXT NOT NULL,
@@ -180,15 +180,15 @@ import { ResetPage } from './containers/ResetPage'"#,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (role, permission)
       );
-    "#},
+    "},
             },
-            indoc! {r#"
+            indoc! {r"
       DROP TABLE user_permissions;
       DROP TABLE role_permissions;
       DROP TABLE user_roles;
       DROP TABLE user_sessions;
       DROP TABLE users;
-    "#},
+    "},
         )?;
 
         match install_config.backend_framework {

@@ -39,7 +39,7 @@ impl Plugin for Container {
         // currently, this works because we assume the current working directory is the project's root
         fs::append(
             "README.md",
-            r##"
+            r"
 # Containerize your application
       
 ## Building a container
@@ -48,7 +48,7 @@ impl Plugin for Container {
 ## Running the container
 `docker run -e SECRET_KEY=123 -e DATABASE_URL=postgres://postgres:postgres@localhost/database -p 3000:3000 image-name`
 
-"##,
+",
         )?;
 
         Ok(())

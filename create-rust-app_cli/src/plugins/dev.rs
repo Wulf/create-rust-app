@@ -67,7 +67,7 @@ if (import.meta.env.DEV_SERVER_PORT) {
                 register_service_msg("(dev-only) /admin");
                 fs::replace(
                     "backend/main.rs",
-                    r#"/* Development-only routes */"#,
+                    r"/* Development-only routes */",
                     r#"/* Development-only routes */
             // Mount development-only API routes
             api_scope = api_scope.service(create_rust_app::dev::endpoints(web::scope("/development")));
@@ -80,7 +80,7 @@ if (import.meta.env.DEV_SERVER_PORT) {
                 register_service_msg("(dev-only) /admin");
                 fs::replace(
                     "backend/main.rs",
-                    r#"/* Development-only routes */"#,
+                    r"/* Development-only routes */",
                     r#"/* Development-only routes */
         // Mount development-only API routes
         api_routes = api_routes.nest("/development", create_rust_app::dev::api());

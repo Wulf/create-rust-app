@@ -210,7 +210,6 @@ pub async fn start(
     println!("backend compilation server stopped.");
 }
 
-/// TODO: do we need to pass the `ws_s` by value here?
 #[allow(clippy::needless_pass_by_value)]
 fn compile(project_dir: &'static str, ws_s: Sender<DevServerEvent>) -> bool {
     println!("🔨 Compiling backend...");

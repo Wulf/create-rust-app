@@ -22,7 +22,7 @@ impl Plugin for Utoipa {
         // add link to Swagger UI docs
         fs::replace(
             "frontend/src/App.tsx",
-            r#"{/* CRA: right-aligned nav buttons */}"#,
+            r"{/* CRA: right-aligned nav buttons */}",
             r#"{/* CRA: right-aligned nav buttons */}
             <a className="NavButton" onClick={() => window.location.href = "/swagger-ui/" }>API</a>"#,
         )?;

@@ -60,7 +60,7 @@ pub struct AppConfig {
 }
 
 #[derive(Clone)]
-///
+/// Struct that holds shared data for the application
 pub struct AppData {
     /// wrapper for SMTP mailing server accessed by chosen web framework
     ///

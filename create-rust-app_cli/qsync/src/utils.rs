@@ -1,6 +1,6 @@
 use inflector::Inflector;
 
-/// Converts a `/home/user/path/to/file.rs` to ["home", "user", "path", "to", "file"]
+/// Converts a `/home/user/path/to/file.rs` to `["home", "user", "path", "to", "file"]`
 /// Note: this trims the `.rs` extension from the filename (the last element in the vec)
 pub fn file_path_to_vec_string(input_path: &std::path::Path) -> Vec<String> {
     let mut s: Vec<String> = vec![];

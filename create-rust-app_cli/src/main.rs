@@ -478,7 +478,7 @@ fn create_project(
         .expect("Error: Tried to read .env.example contents but an error occurred");
     std::fs::write(
         env_file,
-        format!("{}DATABASE_URL={}", contents, backend_database_url),
+        format!("{contents}DATABASE_URL={backend_database_url}"),
     )?;
     logger::add_file_msg(".env");
 

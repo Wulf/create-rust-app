@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::sync::OnceLock; // use LazyLock instead once that's stable
 
-/// OnceLock wrapper around output of `cargo locate-project --workspace --message-format=plain`
+/// `OnceLock` wrapper around output of `cargo locate-project --workspace --message-format=plain`
 ///
 /// if the command fails (e.g. if we're in a container or otherwise don't have access to the projects source code), or output can't be parsed,  we return None
 fn cargo_locate_project_workspace() -> Option<&'static str> {
@@ -26,7 +26,7 @@ fn cargo_locate_project_workspace() -> Option<&'static str> {
         .as_deref()
 }
 
-/// OnceLock wrapper around output of `cargo locate-project --message-format=plain`
+/// `OnceLock` wrapper around output of `cargo locate-project --message-format=plain`
 ///
 /// if the command fails (e.g. if we're in a container or otherwise don't have access to the projects source code), or output can't be parsed, we return None
 fn cargo_locate_project() -> Option<&'static str> {
