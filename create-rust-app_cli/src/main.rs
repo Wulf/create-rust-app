@@ -262,7 +262,7 @@ fn create_project(
         println!("Press Enter will use default backend database url as config");
 
         Input::new()
-            .with_prompt(format!("{:?} url", backend_database))
+            .with_prompt(format!("{backend_database:?} url"))
             .default("postgres://postgres:postgres@localhost/database".into())
             .show_default(false)
             .interact_text()?
