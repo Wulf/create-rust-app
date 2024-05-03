@@ -246,7 +246,7 @@ async fn handle_socket(stream: WebSocket, state: Arc<AppState>) {
                 }
                 DevServerEvent::CompileMessages(messages) => {
                     let mut s = state2.dev.lock().unwrap();
-                    s.compiler_messages = messages.clone();
+                    s.compiler_messages.clone_from(&messages);
                 }
                 DevServerEvent::SHUTDOWN => {
                     let mut s = state2.dev.lock().unwrap();
