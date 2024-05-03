@@ -147,60 +147,52 @@ impl Permission {
 
     /// grants `permission` to the User whose id is [`user_id`](`ID`)
     ///
-    /// returns true if successful
+    /// returns `Ok(())`, if successful
     ///
     /// # Errors
-    /// * infallible
-    ///
-    /// TODO: don't return a result if we never fail, or return a result and not a bool
-    pub fn grant_to_user(db: &mut Connection, user_id: ID, permission: &str) -> Result<bool> {
-        let granted = UserPermission::create(
+    /// * if `UserPermission::create` fails, returns the error
+    pub fn grant_to_user(db: &mut Connection, user_id: ID, permission: &str) -> Result<()> {
+        let _granted = UserPermission::create(
             db,
             &UserPermissionChangeset {
                 permission: permission.to_string(),
                 user_id,
             },
-        );
+        )?;
 
-        Ok(granted.is_ok())
+        Ok(())
     }
 
     /// grant `permission` to `role`
     ///
-    /// returns true if successful
+    /// returns `Ok(())`, if successful
     ///
     /// # Errors
-    /// * infallible
-    ///
-    /// TODO: don't return a result if we never fail, or return a result and not a bool
-    pub fn grant_to_role(db: &mut Connection, role: &str, permission: &str) -> Result<bool> {
-        let granted = RolePermission::create(
+    /// * if `RolePermission::create` fails, returns the error
+    pub fn grant_to_role(db: &mut Connection, role: &str, permission: &str) -> Result<()> {
+        let _granted = RolePermission::create(
             db,
             &RolePermissionChangeset {
                 permission: permission.to_string(),
                 role: role.to_string(),
             },
-        );
+        )?;
 
-        Ok(granted.is_ok())
+        Ok(())
     }
 
     /// grants every permission in `permissions` to `role`
     ///
-    /// returns true if successful
+    /// returns `Ok(())`, if successful
     ///
     /// # Errors
-    /// * infallible
-    ///
-    /// TODO: don't return a result if we never fail, or return a result and not a bool
-    /// TODO: take a &str instead of a String
-    #[allow(clippy::needless_pass_by_value)]
+    /// * if `RolePermission::create_many` fails, returns the error
     pub fn grant_many_to_role(
         db: &mut Connection,
         role: String,
         permissions: Vec<String>,
-    ) -> Result<bool> {
-        let granted = RolePermission::create_many(
+    ) -> Result<()> {
+        let _granted = RolePermission::create_many(
             db,
             permissions
                 .into_iter()
@@ -209,25 +201,23 @@ impl Permission {
                     role: role.clone(),
                 })
                 .collect::<Vec<_>>(),
-        );
+        )?;
 
-        Ok(granted.is_ok())
+        Ok(())
     }
 
     /// grants every permission in `permissions` to `role`
     ///
-    /// returns true if successful
+    /// returns `Ok(())`, if successful
     ///
     /// # Errors
-    /// * infallible
-    ///
-    /// TODO: don't return a result if we never fail, or return a result and not a bool
+    /// * If `UserPermission::create_many` fails, returns the error
     pub fn grant_many_to_user(
         db: &mut Connection,
         user_id: i32,
         permissions: Vec<String>,
-    ) -> Result<bool> {
-        let granted = UserPermission::create_many(
+    ) -> Result<()> {
+        let _granted = UserPermission::create_many(
             db,
             permissions
                 .into_iter()
@@ -236,101 +226,91 @@ impl Permission {
                     permission,
                 })
                 .collect::<Vec<_>>(),
-        );
+        )?;
 
-        Ok(granted.is_ok())
+        Ok(())
     }
 
     /// revokes `permission` from the User whose id is [`user_id`](`ID`)
     ///
-    /// returns true if successful
+    /// returns `Ok(())`, if successful
     ///
     /// # Errors
-    /// * infallible
-    ///
-    /// TODO: don't return a result if we never fail, or return a result and not a bool
-    pub fn revoke_from_user(db: &mut Connection, user_id: ID, permission: &str) -> Result<bool> {
-        let deleted = UserPermission::delete(db, user_id, permission.to_string());
+    /// * If `UserPermission::delete` fails, returns the error
+    pub fn revoke_from_user(db: &mut Connection, user_id: ID, permission: &str) -> Result<()> {
+        let _deleted = UserPermission::delete(db, user_id, permission.to_string())?;
 
-        Ok(deleted.is_ok())
+        Ok(())
     }
 
     /// revokes `permission` from `role`
     ///
-    /// returns true if successful
+    /// returns `Ok(())`, if successful
     ///
     /// # Errors
-    /// * infallible
+    /// * if `RolePermission::delete` fails, returns the error
     ///
     /// TODO: don't return a result if we never fail, or return a result and not a bool
-    pub fn revoke_from_role(db: &mut Connection, role: String, permission: String) -> Result<bool> {
-        let deleted = RolePermission::delete(db, role, permission);
+    pub fn revoke_from_role(db: &mut Connection, role: String, permission: String) -> Result<()> {
+        let _deleted = RolePermission::delete(db, role, permission)?;
 
-        Ok(deleted.is_ok())
+        Ok(())
     }
 
     /// revokes every permission in `permissions` from the User whose id is [`user_id`](`ID`)
     ///
-    /// returns true if successful
+    /// returns `Ok(())`, if successful
     ///
     /// # Errors
-    /// * infallible
-    ///
-    /// TODO: don't return a result if we never fail, or return a result and not a bool
+    /// * if `UserPermission::delete_many` fails, returns the error
     pub fn revoke_many_from_user(
         db: &mut Connection,
         user_id: ID,
         permissions: Vec<String>,
-    ) -> Result<bool> {
-        let deleted = UserPermission::delete_many(db, user_id, permissions);
+    ) -> Result<()> {
+        let _deleted = UserPermission::delete_many(db, user_id, permissions)?;
 
-        Ok(deleted.is_ok())
+        Ok(())
     }
 
     /// revokes every permission in `permissions` from `role`
     ///
-    /// returns true if successful
+    /// returns `Ok(())`, if successful
     ///
     /// # Errors
-    /// * infallible
-    ///
-    /// TODO: don't return a result if we never fail, or return a result and not a bool
+    /// * if `RolePermission::delete_many` fails, returns the error
     pub fn revoke_many_from_role(
         db: &mut Connection,
         role: String,
         permissions: Vec<String>,
-    ) -> Result<bool> {
-        let deleted = RolePermission::delete_many(db, role, permissions);
+    ) -> Result<()> {
+        let _deleted = RolePermission::delete_many(db, role, permissions)?;
 
-        Ok(deleted.is_ok())
+        Ok(())
     }
 
     /// revokes every permission granted to `role`
     ///
-    /// returns true if successful
+    /// returns `Ok(())`, if successful
     ///
     /// # Errors
-    /// * infallible
-    ///
-    /// TODO: don't return a result if we never fail, or return a result and not a bool
-    pub fn revoke_all_from_role(db: &mut Connection, role: &str) -> Result<bool> {
-        let deleted = RolePermission::delete_all(db, role);
+    /// * If `RolePermission::delete_all` fails, returns the error
+    pub fn revoke_all_from_role(db: &mut Connection, role: &str) -> Result<()> {
+        let _deleted = RolePermission::delete_all(db, role)?;
 
-        Ok(deleted.is_ok())
+        Ok(())
     }
 
     /// revokes every permission granted to the User whose id is [`user_id`](`ID`)
     ///
-    /// returns true if successful
+    /// returns `Ok(())`, if successful
     ///
     /// # Errors
-    /// * infallible
-    ///
-    /// TODO: don't return a result if we never fail, or return a result and not a bool
-    pub fn revoke_all_from_user(db: &mut Connection, user_id: i32) -> Result<bool> {
-        let deleted = UserPermission::delete_all(db, user_id);
+    /// * if `UserPermission::delete_all` fails, returns the error
+    pub fn revoke_all_from_user(db: &mut Connection, user_id: i32) -> Result<()> {
+        let _deleted = UserPermission::delete_all(db, user_id)?;
 
-        Ok(deleted.is_ok())
+        Ok(())
     }
 
     /// returns every permission granted to the User whose id is [`user_id`](`ID`)
