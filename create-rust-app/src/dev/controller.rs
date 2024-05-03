@@ -43,12 +43,11 @@ pub fn query_db(db: &Database, body: &MySqlQuery) -> Result<String, diesel::resu
 }
 
 /// /db/is-connected
-///
-/// # Panics
-/// * cannot connect to the database
 #[must_use]
 pub fn is_connected(db: &Database) -> bool {
-    let mut db = db.pool.clone().get().unwrap();
+    let Ok(mut db) = db.pool.clone().get() else {
+        return false;
+    };
     let is_connected = sql_query("SELECT 1;").execute(&mut db);
     is_connected.is_err()
 }
