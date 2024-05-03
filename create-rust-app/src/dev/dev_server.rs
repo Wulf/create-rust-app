@@ -300,7 +300,11 @@ async fn handle_socket(stream: WebSocket, state: Arc<AppState>) {
                                     println!("📝 Could not open file `{file_name}`");
                                 });
                             } else if t.eq_ignore_ascii_case("migrate") {
-                                let (success, error_message) = controller::migrate_db(&state3.db);
+                                let (success, error_message) =
+                                    match controller::migrate_db(&state3.db) {
+                                        Ok(_) => (true, None),
+                                        Err(e) => (false, Some(e.to_string())),
+                                    };
 
                                 state3
                                     .tx
