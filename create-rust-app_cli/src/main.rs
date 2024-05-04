@@ -255,13 +255,18 @@ fn create_project(
         }
     };
 
-    println!("Press Enter will use default backend database url as config");
+    // get the backend database url
+    let backend_database_url: String = if cli_mode {
+        "postgres://postgres:postgres@localhost/database".to_string()
+    } else {
+        println!("Press Enter will use default backend database url as config");
 
-    let backend_database_url: String = Input::new()
-        .with_prompt(format!("{:?} url", backend_database))
-        .default("postgres://postgres:postgres@localhost/database".into())
-        .show_default(false)
-        .interact_text()?;
+        Input::new()
+            .with_prompt(format!("{backend_database:?} url"))
+            .default("postgres://postgres:postgres@localhost/database".into())
+            .show_default(false)
+            .interact_text()?
+    };
 
     // get the backend framework
     let backend_framework: BackendFramework = if let Some(framework) = framework {
