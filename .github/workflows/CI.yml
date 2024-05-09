@@ -74,9 +74,7 @@ jobs:
             ./target
             ~/.cargo
           key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: test
+      - run: cargo test --all
 
   # Things that don't need a cache
   fmt:
@@ -87,7 +85,4 @@ jobs:
       - run: rustup install stable
       - run: rustup update
       - run: rustup component add rustfmt
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: fmt
-          args: --all -- --check
+      - run: cargo fmt --all -- --check

@@ -38,10 +38,7 @@ jobs:
           key: ${{ runner.os }}-cargo-cli-AP-${{ hashFiles('**/Cargo.lock') }}
       - run: git config --global user.name test
       - run: git config --global user.email example@email.com
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: run
-          args: --bin create-rust-app -- create -c -d postgres -b actix-web test-project
+      - run: cargo run --bin create-rust-app -- create -c -d postgres -b actix-web test-project
       - name: test test-project
         working-directory: ./test-project
         run: |
@@ -66,10 +63,7 @@ jobs:
           key: ${{ runner.os }}-cargo-cli-AP-all-${{ hashFiles('**/Cargo.lock') }}
       - run: git config --global user.name test
       - run: git config --global user.email example@email.com
-      - uses: actions-rs/cargo@v1.0.3
-        with:
-          command: run
-          args: --bin create-rust-app -- create -c -d postgres -b actix-web --plugins=auth,container,graphql,storage,utoipa test-project
+      - run: cargo run --bin create-rust-app -- create -c -d postgres -b actix-web --plugins=auth,container,graphql,storage,utoipa test-project
       - name: test test-project
         working-directory: ./test-project
         run: |
