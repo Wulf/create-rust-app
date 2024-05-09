@@ -21,7 +21,12 @@ concurrency:
   group: CI-PP-${{ github.ref }}
   cancel-in-progress: true
 
-jobs: {}
+jobs:
+  Dummy-Job:
+    name: dummy job so workflow is valid
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "lorem ipsum dolor sit amet"
   # naming convention is: [backend]-[database]-[plugins]
 #  Poem-Postgres-None:
 #    name: Poem w/ Postgres and no plugins

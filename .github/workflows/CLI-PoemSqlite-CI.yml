@@ -21,7 +21,12 @@ concurrency:
   group: CI-PS-${{ github.ref }}
   cancel-in-progress: true
 
-jobs: {}
+jobs:
+  Dummy-Job:
+    name: dummy job so workflow is valid
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "lorem ipsum dolor sit amet"
 #  # naming convention is: [backend]-[database]-[plugins]
 #  Poem-Sqlite-None:
 #    name: Poem w/ Sqlite and no plugins
