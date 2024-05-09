@@ -77,7 +77,7 @@ CREATE INDEX fang_tasks_type_index ON fang_tasks(task_type);
 CREATE INDEX fang_tasks_scheduled_at_index ON fang_tasks(scheduled_at);
 CREATE INDEX fang_tasks_uniq_hash ON fang_tasks(uniq_hash);
 "#},
-            r#"DROP TABLE fang_tasks;"#,
+            r"DROP TABLE fang_tasks;",
         )?;
 
         // ===============================

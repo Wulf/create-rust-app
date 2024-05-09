@@ -44,7 +44,7 @@ pub struct Mailer {
     pub smtp_username: String,
     /// the password used to log into `SMTP_SERVER`
     ///
-    /// set by the `SMTP_PASSWORD' environment variable
+    /// set by the `SMTP_PASSWORD` environment variable
     pub smtp_password: String,
     /// whether or not emails should actually be sent when requested
     ///

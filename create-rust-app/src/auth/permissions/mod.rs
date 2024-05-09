@@ -339,7 +339,7 @@ impl Permission {
     /// * [`diesel::result::Error`](`diesel::result::Error`) if the query fails
     pub fn fetch_all(db: &mut Connection, user_id: ID) -> Result<Vec<Self>> {
         let permissions = sql_query(
-            r#"
+            r"
       SELECT 
         permission AS permission,
         NULL AS from_role
@@ -354,7 +354,7 @@ impl Permission {
       FROM user_roles
       INNER JOIN role_permissions ON user_roles.role = role_permissions.role
       WHERE user_roles.user_id = $1
-      "#,
+      ",
         );
 
         let permissions = permissions

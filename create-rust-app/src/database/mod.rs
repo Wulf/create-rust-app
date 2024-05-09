@@ -41,7 +41,10 @@ impl Database {
     }
 
     /// get a [`Connection`] to a database
-    #[must_use]
+    ///
+    /// # Errors
+    ///
+    /// * if the pool is unable to get a connection
     pub fn get_connection(&self) -> Result<Connection, anyhow::Error> {
         Ok(LoggingConnection::new(self.pool.get()?))
     }

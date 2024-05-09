@@ -66,8 +66,8 @@ impl Plugin for GraphQL {
 
         fs::prepend(
             "frontend/src/App.tsx",
-            r#"import { useApolloClient } from '@apollo/client'
-import { GraphQLPage } from './containers/GraphQLPage'"#,
+            r"import { useApolloClient } from '@apollo/client'
+import { GraphQLPage } from './containers/GraphQLPage'",
         )?;
 
         fs::replace(
@@ -102,7 +102,7 @@ ReactDOM.createRoot"#,
 
         fs::replace(
             "frontend/src/App.tsx",
-            r#"{/* CRA: routes */}"#,
+            r"{/* CRA: routes */}",
             r#"{/* CRA: routes */}
             <Route path="/gql" element={<GraphQLPage />} />"#,
         )?;
@@ -140,16 +140,16 @@ ReactDOM.createRoot"#,
                 fs::replace(
                     "backend/main.rs",
                     "extern crate diesel;",
-                    r##"extern crate diesel;
+                    r"extern crate diesel;
 
-use actix_web::guard;"##,
+use actix_web::guard;",
                 )?;
 
                 fs::replace(
                     "backend/main.rs",
                     "app = app.app_data(Data::new(app_data.mailer.clone()));",
-                    r#"app = app.app_data(Data::new(app_data.mailer.clone()));
-        app = app.app_data(Data::new(schema.clone()));"#,
+                    r"app = app.app_data(Data::new(app_data.mailer.clone()));
+        app = app.app_data(Data::new(schema.clone()));",
                 )?;
 
                 // GraphQL subscription endpoint
@@ -174,8 +174,8 @@ use actix_web::guard;"##,
                 let mut other_data = String::new();
                 if install_config.plugin_storage {
                     other_data.push_str(
-                        r#"
-        .data(app_data.storage.clone())"#,
+                        r"
+        .data(app_data.storage.clone())",
                     );
                 }
                 fs::replace(
@@ -198,7 +198,7 @@ use actix_web::guard;"##,
 
                 fs::replace(
                     "backend/main.rs",
-                    r#"/* Development-only routes */"#,
+                    r"/* Development-only routes */",
                     r#"/* Development-only routes */
             // Mount the GraphQL playground on /graphql
             app = app.route("/graphql", web::get().to(graphql::index_playground));"#,
@@ -210,14 +210,14 @@ use actix_web::guard;"##,
                 fs::replace(
                     "backend/main.rs",
                     "create_rust_app::setup();",
-                    r##"create_rust_app::setup();
+                    r"create_rust_app::setup();
 
     let schema = async_graphql::Schema::build(graphql::QueryRoot, graphql::MutationRoot, graphql::SubscriptionRoot)
         .data(data.database.clone())
         .data(data.mailer.clone())
         .data(data.storage.clone())
         .finish();
-"##,
+",
                 )?;
 
                 // GraphQL subscription + query endpoints
@@ -236,7 +236,7 @@ use actix_web::guard;"##,
 
                 fs::replace(
                     "backend/main.rs",
-                    r#"/* Development-only routes */"#,
+                    r"/* Development-only routes */",
                     r#"/* Development-only routes */
             // Mount the GraphQL playground on /graphql
         app = app.at("/graphql", poem::get(graphql::playground));"#,
