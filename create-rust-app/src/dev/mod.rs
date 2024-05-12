@@ -305,11 +305,14 @@ fn check_exit(state: &DevState) {
 
 async fn listen_for_signals(signal_tx: tokio::sync::broadcast::Sender<DevServerEvent>) {
     let (event_sender, event_receiver) = priority::bounded::<Event, Priority>(1024);
-    let (er_s, mut er_r) = tokio::sync::mpsc::channel(64);
+    let (error_sender, mut error_receiver) = tokio::sync::mpsc::channel(64);
 
     // panic on errors
     tokio::spawn(async move {
-        while let Some(error) = er_r.recv().await {
+        // we panic on the first error we receive, so we only need to recv once
+        // if, in the future, we change the error handling to be more robust (not panic), we'll need to loop here
+        // like `while let Some(error) = error_receiver.recv().await { ... }`
+        if let Some(error) = error_receiver.recv().await {
             panic!(
                 "Error handling process signal:\n==============================\n{:#?}",
                 error
@@ -328,5 +331,5 @@ async fn listen_for_signals(signal_tx: tokio::sync::broadcast::Sender<DevServerE
         }
     });
 
-    worker(er_s, event_sender).await.unwrap();
+    worker(error_sender, event_sender).await.unwrap();
 }

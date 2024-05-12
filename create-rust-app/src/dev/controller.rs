@@ -1,4 +1,5 @@
 use crate::Database;
+use anyhow::{bail, Result};
 use diesel::{
     migration::{Migration, MigrationSource},
     query_dsl::RunQueryDsl,
@@ -43,12 +44,11 @@ pub fn query_db(db: &Database, body: &MySqlQuery) -> Result<String, diesel::resu
 }
 
 /// /db/is-connected
-///
-/// # Panics
-/// * cannot connect to the database
 #[must_use]
 pub fn is_connected(db: &Database) -> bool {
-    let mut db = db.pool.clone().get().unwrap();
+    let Ok(mut db) = db.pool.clone().get() else {
+        return false;
+    };
     let is_connected = sql_query("SELECT 1;").execute(&mut db);
     is_connected.is_err()
 }
@@ -136,9 +136,8 @@ pub fn needs_migration(db: &Database) -> bool {
 /// * cannot find the migrations directory
 /// * cannot run the migrations
 ///
-/// TODO: return a Result instead of a tuple (bool, Option<String>), this is Rust, not Go
-#[must_use]
-pub fn migrate_db(db: &Database) -> (bool, /* error message: */ Option<String>) {
+/// TODO: Propagate more of these errors instead of panicking
+pub fn migrate_db(db: &Database) -> Result<()> {
     let mut db = db.pool.clone().get().unwrap();
 
     let source = FileBasedMigrations::find_migrations_directory().unwrap();
@@ -146,15 +145,15 @@ pub fn migrate_db(db: &Database) -> (bool, /* error message: */ Option<String>) 
         MigrationHarness::has_pending_migration(&mut db, source.clone()).unwrap();
 
     if !has_pending_migrations {
-        return (true, None);
+        return Ok(());
     }
 
     let op = MigrationHarness::run_pending_migrations(&mut db, source);
     match op {
-        Ok(_) => (true, None),
+        Ok(_) => Ok(()),
         Err(err) => {
             println!("{err:#?}");
-            (false, Some(err.to_string()))
+            bail!(err)
         }
     }
 }
