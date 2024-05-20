@@ -20,18 +20,18 @@ categories = [
 ##
 ## COMMON / DEFAULT - required dependencies
 ##
-dotenv = "0.15.0" # + plugin_dev
-serde_json = "1.0.96"
-lettre = "0.10.4"
-tera = { version = "1.18.1" }
-lazy_static = { version = "1.4.0" }
-serde = { version = "1.0.163", features = ["derive"] }
-diesel = { version = "2.1.0", default-features = false, features = [
+dotenv = "0.15" # + plugin_dev
+serde_json = "1"
+lettre = "0.11.7"
+tera = { version = "1.19" }
+lazy_static = { version = "1.4" }
+serde = { version = "1", features = ["derive"] }
+diesel = { version = "2.1", default-features = false, features = [
   "uuid",
   "r2d2",
   "chrono",
 ] } # + plugin_dev, plugin_auth
-once_cell = "1.17.1"
+once_cell = "1.19"
 diesel_logger = "0.3.0"
 
 ##
@@ -39,47 +39,47 @@ diesel_logger = "0.3.0"
 ##
 
 # sqlite dependencies
-libsqlite3-sys = { version = "0.26", optional = true, features = ["bundled"] }
+libsqlite3-sys = { version = "0.26.0", optional = true, features = ["bundled"] }
 
 ##
 ## PLUGINS
 ##
 
 # plugin_auth
-rust-argon2 = { optional = true, version = "1.0" }
+rust-argon2 = { optional = true, version = "2.1" }
 rand = { optional = true, version = "0.8.5" }
-jsonwebtoken = { optional = true, version = "8.3.0" }
-tsync = { optional = true, version = "1.7.0" }
-chrono = { optional = true, version = "0.4.24", default-features = false, features = [
+jsonwebtoken = { optional = true, version = "9.3" }
+tsync = { optional = true, version = "2.1" }
+chrono = { optional = true, version = "0.4.38", default-features = false, features = [
   "clock",
   "serde",
 ] }
 dyn-clone = { optional = true, version = "1.0" } # needed to allow the Mailer struct to be cloned
 
 # plugin_dev
-diesel_migrations = { optional = true, version = "2.1.0" }
-cargo_metadata = { optional = true, version = "0.15.4" }
-watchexec = { optional = true, version = "2.3.0" }
+diesel_migrations = { optional = true, version = "2.1" }
+cargo_metadata = { optional = true, version = "0.18.1" }
+watchexec = { optional = true, version = "2.3" }
 #### tracing = { optional=true, version="0.1" }
 #### tracing-subscriber = { optional=true, version="0.3.16", features=["env-filter"] }
 clearscreen = { optional = true, version = "2.0" }
-open = { optional = true, version = "4.1.0" }
-cargo_toml = { optional = true, version = "0.15.2" }
-reqwest = { optional = true, version = "0.11.18" }
+open = { optional = true, version = "5.1" }
+cargo_toml = { optional = true, version = "0.15.3" }
+reqwest = { optional = true, version = "0.11.27" }
 
 # plugin_storage
 # aws-config = { optional = true, version = "0.14.0" }
 aws-types = { optional = true, version = "0.8.0" }
 # aws-endpoint = { optional = true, version = "0.14.0" }
 aws-sdk-s3 = { optional = true, version = "0.8.0" }
-http = { optional = true, version = "0.2.9" }
-diesel_derives = { optional = true, version = "2.1.0" }
-uuid = { optional = true, version = "1.3.3", features = ["v4", "serde"] }
+http = { optional = true, version = "0.2.12" }
+diesel_derives = { optional = true, version = "2.1" }
+uuid = { optional = true, version = "1.8", features = ["v4", "serde"] }
 md5 = { optional = true, version = "0.7.0" }
-base64 = { optional = true, version = "0.21.2" }
+base64 = { optional = true, version = "0.22.1" }
 
 # plugin_auth-oidc
-openidconnect = { optional = true, version = "3.3.0" }
+openidconnect = { optional = true, version = "3.5" }
 
 # plugin_utoipa dependencies
 utoipa = { optional = true, version = "4", features = [
@@ -96,7 +96,7 @@ fang = { optional = true, version = "0.10.4", features = ["asynk"] }
 ##
 
 # poem dependencies
-poem = { optional = true, version = "1.3.55", features = [
+poem = { optional = true, version = "1.3", features = [
   "anyhow",
   "cookie",
   "static-files",
@@ -104,29 +104,29 @@ poem = { optional = true, version = "1.3.55", features = [
 
 # actix_web dependencies
 # actix-multipart = { optional = true, version = "0.6.0" }
-actix-files = { optional = true, version = "0.6.2" }
-actix-http = { optional = true, version = "3.3.1" }
-actix-web = { optional = true, version = "4.3.1" }
+actix-files = { optional = true, version = "0.6.5" }
+actix-http = { optional = true, version = "3.6" }
+actix-web = { optional = true, version = "4.5" }
 # actix-web-httpauth = { optional = true, version = "0.8.0" }
 derive_more = { optional = true, version = "0.99.17" }
-futures = { optional = true, version = "0.3.28" }
+futures = { optional = true, version = "0.3.30" }
 # env_logger = { optional = true, version = "0.10.0" }
 
 # axum dependencies (not yet released; only used for plugin_dev)
 
-axum = { optional = true, version = "0.6.18" }
+axum = { optional = true, version = "0.7.5" }
 
 ##
 ## MISC - here, we list deps which are required by multiple features but are not required in all configurations
 ##
 
 mime_guess = { optional = true, version = "2.0.4" } # backend_poem, plugin_storage
-anyhow = { optional = true, version = "1.0.71" } # backend_poem, plugin_auth, plugin_dev
+anyhow = { optional = true, version = "1" } # backend_poem, plugin_auth, plugin_dev
 tokio = { optional = true, version = "1", features = [
   "full",
 ] } # backend_poem, backend_axum, plugin_storage, plugin_tasks
 async-priority-channel = "0.1.0" # plugin_dev
-futures-util = { optional = true, version = "0.3.28" } # plugin_dev, plugin_storage
+futures-util = { optional = true, version = "0.3.30" } # plugin_dev, plugin_storage
 
 [features]
 default = [

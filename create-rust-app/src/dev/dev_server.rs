@@ -90,9 +90,10 @@ pub async fn start(
         .with_state(app_state);
 
     println!("Starting dev server @ http://localhost:{dev_port}/");
-
-    axum::Server::bind(&format!("0.0.0.0:{dev_port}").parse().unwrap())
-        .serve(app.into_make_service())
+    let listener = tokio::net::TcpListener::bind(&format!("0.0.0.0:{dev_port}"))
+        .await
+        .unwrap();
+    axum::serve(listener, app.into_make_service())
         .await
         .unwrap();
 }

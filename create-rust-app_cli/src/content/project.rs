@@ -379,15 +379,16 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         enabled_features = ", features=[".to_string() + &enabled_features + "]";
     }
 
+    // TODO: update dependencies to use the latest versions
     match framework {
         BackendFramework::ActixWeb => {
             add_dependency(&project_dir, "actix-files", r#"actix-files = "0.6.0""#)?;
-            add_dependency(&project_dir, "actix-http", r#"actix-http = "3.0.0""#)?;
-            add_dependency(&project_dir, "actix-web", r#"actix-web = "4.0.1""#)?;
+            add_dependency(&project_dir, "actix-http", r#"actix-http = "3.6""#)?;
+            add_dependency(&project_dir, "actix-web", r#"actix-web = "4.5""#)?;
             add_dependency(
                 &project_dir,
                 "actix-multipart",
-                r#"actix-multipart = "0.4.0""#,
+                r#"actix-multipart = "0.6.0""#,
             )?;
             add_dependency(
                 &project_dir,
@@ -399,12 +400,12 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
             add_dependency(
                 &project_dir,
                 "poem",
-                r#"poem = { version="1.3.18", features=["anyhow", "cookie", "static-files", "multipart"] }"#,
+                r#"poem = { version="1.3", features=["anyhow", "cookie", "static-files", "multipart"] }"#,
             )?;
             add_dependency(
                 &project_dir,
                 "tokio",
-                r#"tokio = { version = "1.15.0", features = ["rt-multi-thread", "macros"] }"#,
+                r#"tokio = { version = "1", features = ["rt-multi-thread", "macros"] }"#,
             )?;
             add_dependency(
                 &project_dir,
@@ -413,27 +414,27 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
             )?;
         }
     }
-    add_dependency(&project_dir, "simple_logger", r#"simple_logger = "4.3.3""#)?;
-    add_dependency(&project_dir, "futures-util", r#"futures-util = "0.3.21""#)?;
+    add_dependency(&project_dir, "simple_logger", r#"simple_logger = "5.0""#)?;
+    add_dependency(&project_dir, "futures-util", r#"futures-util = "0.3.30""#)?;
     add_dependency(
         &project_dir,
         "serde",
-        r#"serde = { version = "1.0.133", features = ["derive"] }"#,
+        r#"serde = { version = "1", features = ["derive"] }"#,
     )?;
-    add_dependency(&project_dir, "serde_json", r#"serde_json = "1.0.79""#)?;
+    add_dependency(&project_dir, "serde_json", r#"serde_json = "1""#)?;
     add_dependency(
         &project_dir,
         "chrono",
-        r#"chrono = { version = "0.4.19", features = ["serde"] }"#,
+        r#"chrono = { version = "0.4.38", features = ["serde"] }"#,
     )?;
     // todo: move these deps to the helper crate (./create-rust-app/Cargo.toml) behind feature flags
-    add_dependency(&project_dir, "tsync", r#"tsync = "1""#)?;
+    add_dependency(&project_dir, "tsync", r#"tsync = "2""#)?;
     add_dependency(&project_dir, "dsync", r#"dsync = "0""#)?;
     add_dependency(
         &project_dir,
         "diesel",
         &format!(
-            r#"diesel = {{ version="2.0.0-rc.1", default-features = false, features = ["{db}", "r2d2", "chrono"] }}"#,
+            r#"diesel = {{ version="2.1", default-features = false, features = ["{db}", "r2d2", "chrono"] }}"#,
             db = match database {
                 BackendDatabase::Postgres => "postgres",
                 BackendDatabase::Sqlite => "sqlite",

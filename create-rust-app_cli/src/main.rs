@@ -9,6 +9,7 @@ use clap::{
     builder::{EnumValueParser, PossibleValue, ValueHint},
     Parser, Subcommand, ValueEnum,
 };
+use qsync::{QsyncInput, QsyncOptions};
 use std::path::PathBuf;
 
 use crate::project::CreationOptions;
@@ -555,10 +556,18 @@ fn configure_project(
                 };
 
                 qsync::process(
-                    qsync_input_files.unwrap_or_else(|| vec![PathBuf::from("backend/services")]),
+                    qsync_input_files
+                        .unwrap_or_else(|| vec![PathBuf::from("backend/services")])
+                        .into_iter()
+                        .map(|path| {
+                            QsyncInput::new(
+                                path,
+                                QsyncOptions::new(qsync_debug, "api".to_string(), vec![]),
+                            )
+                        })
+                        .collect(),
                     qsync_output_file
                         .unwrap_or_else(|| PathBuf::from("frontend/src/api.generated.ts")),
-                    qsync_debug,
                 );
             }
             1 => {
