@@ -6,5 +6,5 @@ pub fn main() {
     let inputs = vec![PathBuf::from_iter([dir, "backend"])];
     let output = PathBuf::from_iter([dir, "frontend/src/types/rust.d.ts"]);
 
-    tsync::generate_typescript_defs(inputs, output, false);
+    tsync::generate_typescript_defs(inputs, output, false, false);
 }
