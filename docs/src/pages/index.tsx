@@ -1,19 +1,19 @@
-import React from 'react'
-import clsx from 'clsx'
-import Layout from '@theme/Layout'
-import Link from '@docusaurus/Link'
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext'
-import styles from './index.module.css'
-import HomepageFeatures from '../components/HomepageFeatures'
+import React from "react";
+import clsx from "clsx";
+import Layout from "@theme/Layout";
+import Link from "@docusaurus/Link";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import styles from "./index.module.css";
+import HomepageFeatures from "../components/HomepageFeatures";
 // @ts-ignore
-import GetStarted from '../components/GetStarted.md'
+import GetStarted from "../components/GetStarted.md";
 
 function HomepageHeader() {
-  const { siteConfig } = useDocusaurusContext()
+  const { siteConfig } = useDocusaurusContext();
   return (
-    <header className={clsx('hero hero--dark', styles.heroBanner)}>
+    <header className={clsx("hero hero--dark", styles.heroBanner)}>
       <div className="container">
-        <img src="/img/cra-logo-rust-white.svg" width={170} />
+        <img src="img/cra-logo-rust-white.svg" width={170} />
         <h1 className="hero__title">{siteConfig.title}</h1>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
@@ -26,11 +26,11 @@ function HomepageHeader() {
         </div>
       </div>
     </header>
-  )
+  );
 }
 
 export default function Home(): JSX.Element {
-  const { siteConfig } = useDocusaurusContext()
+  const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
       title={`${siteConfig.title}`}
@@ -48,7 +48,7 @@ export default function Home(): JSX.Element {
               </div>
               <div className="col col--5 col--offset-1">
                 <a href="https://github.com/Wulf/create-rust-app/blob/main/docs/create-rust-app-v2.mp4">
-                  <img src="/img/create-rust-app-v2.gif" />
+                  <img src="img/create-rust-app-v2.gif" />
                 </a>
               </div>
             </div>
@@ -64,5 +64,5 @@ export default function Home(): JSX.Element {
         </div>
       </main>
     </Layout>
-  )
+  );
 }
