@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-    <id>https://create-rust-app.dev/blog</id>
+    <id>https://create-rust-app.dev/create-rust-app/blog</id>
     <title>Create Rust App Blog</title>
     <updated>2021-10-23T00:00:00.000Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
-    <link rel="alternate" href="https://create-rust-app.dev/blog"/>
+    <link rel="alternate" href="https://create-rust-app.dev/create-rust-app/blog"/>
     <subtitle>Create Rust App Blog</subtitle>
-    <icon>https://create-rust-app.dev/img/favicon.ico</icon>
+    <icon>https://create-rust-app.dev/create-rust-app/img/favicon.ico</icon>
     <entry>
         <title type="html"><![CDATA[Initial Commit]]></title>
         <id>initial-commit</id>
-        <link href="https://create-rust-app.dev/blog/initial-commit"/>
+        <link href="https://create-rust-app.dev/create-rust-app/blog/initial-commit"/>
         <updated>2021-10-23T00:00:00.000Z</updated>
         <summary type="html"><![CDATA[create-rust-app's documentation site]]></summary>
         <content type="html"><![CDATA[<p><code>create-rust-app</code>'s documentation site 🚀</p>]]></content>
