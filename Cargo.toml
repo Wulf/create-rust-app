@@ -1,7 +1,8 @@
 [workspace]
+resolver = "2"
 members = [
-  "create-rust-app",
-  "create-rust-app_cli",
-  "create-rust-app_cli/qsync",
+  "crates/create-rust-app",
+  "crates/create-rust-app_cli",
+  "crates/qsync",
 ]
-exclude = ["docs", "tests", "test-project"]
+exclude = ["docs"]
