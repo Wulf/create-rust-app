@@ -6,3 +6,4 @@
 build-log*.txt
 .DS_Store
 /.idea/
+target

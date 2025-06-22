@@ -1,7 +1,7 @@
 [workspace]
-package.version = "11.0.1"
+package.version = "11.0.2"
 package.readme = "README.md"
-package.edition = "2018"
+package.edition = "2021"
 package.description = "Set up a modern rust+react web app by running one command."
 package.authors = [
   "Haris <4259838+Wulf@users.noreply.github.com>",
