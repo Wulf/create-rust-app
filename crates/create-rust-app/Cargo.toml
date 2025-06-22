@@ -1,20 +1,14 @@
 [package]
 name = "create-rust-app"
-description = "Set up a modern rust+react web app by running one command."
-version = "11.0.1"
-edition = "2018"
-authors = ["Haris <4259838+Wulf@users.noreply.github.com>"]
-readme = "../README.md"
-repository = "https://github.com/Wulf/create-rust-app"
-license = "MIT OR Apache-2.0"
-keywords = ["react", "typescript", "generation", "backend", "frontend"]
-categories = [
-  "command-line-utilities",
-  "development-tools",
-  "web-programming",
-  "config",
-  "database",
-]
+description.workspace = true
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+readme.workspace = true
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
 
 [dependencies]
 ##
