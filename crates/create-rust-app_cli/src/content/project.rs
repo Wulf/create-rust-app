@@ -510,6 +510,18 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         );
         std::fs::write(env_example_file, contents.clone())?;
         std::fs::write(env_file, contents)?;
+
+        // update dsync bin
+        let mut dsync_bin = PathBuf::from(&project_dir);
+        dsync_bin.push(".cargo");
+        dsync_bin.push("bin");
+        dsync_bin.push("dsync.rs");
+        crate::utils::fs::replace(
+            dsync_bin.to_str().unwrap(),
+            "diesel::pg::Pg",
+            "diesel::sqlite::Sqlite",
+        )
+        .unwrap();
     }
 
     /*

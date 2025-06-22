@@ -1,5 +1,5 @@
 [workspace]
-package.version = "11.0.2"
+package.version = "11.0.3"
 package.readme = "README.md"
 package.edition = "2021"
 package.description = "Set up a modern rust+react web app by running one command."
