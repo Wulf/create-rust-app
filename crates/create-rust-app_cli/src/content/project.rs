@@ -437,7 +437,7 @@ pub fn create(project_name: &str, creation_options: CreationOptions) -> Result<(
         &project_dir,
         "diesel",
         &format!(
-            r#"diesel = {{ version="2.1", default-features = false, features = ["{db}", "r2d2", "chrono"] }}"#,
+            r#"diesel = {{ version="=2.2", default-features = false, features = ["{db}", "r2d2", "chrono"] }}"#,
             db = match database {
                 BackendDatabase::Postgres => "postgres",
                 BackendDatabase::Sqlite => "sqlite",
